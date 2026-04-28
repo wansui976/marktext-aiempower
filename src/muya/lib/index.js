@@ -103,6 +103,24 @@ class Muya {
   }
 
   dispatchChange = () => {
+    // Coalesce bursts of mutations (typing, paste, multi-step commands) into a
+    // single change event per frame. getMarkdown / getTOC walk the full block
+    // tree, so collapsing N calls per frame into 1 is a large win on long docs.
+    if (this._pendingChangeFrame) return
+    this._pendingChangeFrame = window.requestAnimationFrame(() => {
+      this._pendingChangeFrame = null
+      this._emitChange()
+    })
+  }
+
+  flushPendingChange = () => {
+    if (!this._pendingChangeFrame) return
+    window.cancelAnimationFrame(this._pendingChangeFrame)
+    this._pendingChangeFrame = null
+    this._emitChange()
+  }
+
+  _emitChange = () => {
     const { eventCenter } = this
     const markdown = this.markdown = this.getMarkdown()
     const wordCount = this.getWordCount(markdown)
@@ -148,11 +166,13 @@ class Muya {
   }
 
   exportStyledHTML (options) {
+    this.flushPendingChange()
     const { markdown } = this
     return new ExportHtml(markdown, this).generate(options)
   }
 
   exportHtml () {
+    this.flushPendingChange()
     const { markdown } = this
     return new ExportHtml(markdown, this).renderHtml()
   }
@@ -446,6 +466,7 @@ class Muya {
   }
 
   destroy () {
+    this.flushPendingChange()
     this.contentState.clear()
     this.quickInsert.destroy()
     this.codePicker.destroy()

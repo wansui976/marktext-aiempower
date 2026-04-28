@@ -103,6 +103,7 @@ import { SpellChecker } from '@/spellchecker'
 import { isOsx, animatedScrollTo } from '@/util'
 import { moveImageToFolder, moveToRelativeFolder, uploadImage } from '@/util/fileSystem'
 import { guessClipboardFilePath } from '@/util/clipboard'
+import { readDocumentPosition, writeDocumentPosition } from '@/util/documentPosition'
 import { getCssForOptions, getHtmlToc } from '@/util/pdf'
 import { addCommonStyle, setEditorWidth } from '@/util/theme'
 
@@ -182,6 +183,10 @@ export default {
 
     return {
       selectionChange: null,
+      pendingSelectionChange: null,
+      pendingSelectionFormats: null,
+      selectionFlushFrame: null,
+      positionSaveTimer: null,
       editor: null,
       pathname: '',
       isShowClose: false,
@@ -438,7 +443,8 @@ export default {
 
     currentFile: function (value, oldValue) {
       if (value && value !== oldValue) {
-        this.scrollToCursor(0)
+        this.saveDocumentPosition(oldValue)
+        bus.$emit('claude-selection-reference', null)
         // Hide float tools if needed.
         this.editor && this.editor.hideAllFloatTools()
       }
@@ -550,6 +556,7 @@ export default {
       }
 
       const { container } = this.editor = new Muya(ele, options)
+      container.addEventListener('scroll', this.scheduleSaveDocumentPosition, { passive: true })
 
       // Create spell check wrapper and enable spell checking if preferred.
       this.spellchecker = new SpellChecker(spellcheckerEnabled, spellcheckerLanguage)
@@ -564,6 +571,7 @@ export default {
 
       // listen for bus events.
       bus.$on('file-loaded', this.setMarkdownToEditor)
+      bus.$on('claude-apply-edit', this.handleClaudeApplyEdit)
       bus.$on('invalidate-image-cache', this.handleInvalidateImageCache)
       bus.$on('undo', this.handleUndo)
       bus.$on('redo', this.handleRedo)
@@ -592,6 +600,7 @@ export default {
       bus.$on('switch-spellchecker-language', this.switchSpellcheckLanguage)
       bus.$on('open-command-spellchecker-switch-language', this.openSpellcheckerLanguageCommand)
       bus.$on('replace-misspelling', this.replaceMisspelling)
+      bus.$on('cm-ask-claude', this.handleAskClaude)
 
       this.editor.on('change', changes => {
         // WORKAROUND: "id: 'muya'"
@@ -651,11 +660,11 @@ export default {
         }
 
         this.selectionChange = changes
-        this.$store.dispatch('SELECTION_CHANGE', changes)
+        this.queueSelectionChange(changes)
       })
 
       this.editor.on('selectionFormats', formats => {
-        this.$store.dispatch('SELECTION_FORMATS', formats)
+        this.queueSelectionFormats(formats)
       })
 
       document.addEventListener('keyup', this.keyup)
@@ -870,6 +879,92 @@ export default {
       }
     },
 
+    handleAskClaude (payload) {
+      const text = payload && typeof payload.text === 'string' ? payload.text.trim() : ''
+      if (!text) return
+      const reference = {
+        fileId: this.currentFile && this.currentFile.id,
+        filename: this.currentFile
+          ? this.currentFile.filename || (this.currentFile.pathname ? path.basename(this.currentFile.pathname) : '')
+          : '',
+        text
+      }
+      bus.$emit('claude-selection-reference', reference)
+      this.$store.commit('SET_LAYOUT', { rightColumn: 'claude' })
+    },
+
+    getClaudeSelectionReference (changes) {
+      if (!changes || !changes.start || !changes.end || !this.currentFile) {
+        return null
+      }
+
+      const { start, end } = changes
+      if (start.key === end.key && start.offset === end.offset) {
+        return null
+      }
+
+      let text = ''
+      try {
+        const clipboardData = this.editor.contentState.getClipBoardData()
+        text = clipboardData && clipboardData.text ? clipboardData.text : ''
+      } catch (err) {
+        text = ''
+      }
+
+      if (!text && start.key === end.key && start.block && typeof start.block.text === 'string') {
+        const from = Math.min(start.offset, end.offset)
+        const to = Math.max(start.offset, end.offset)
+        text = start.block.text.substring(from, to)
+      }
+
+      text = text.trim()
+      if (!text) return null
+
+      return {
+        fileId: this.currentFile.id,
+        filename: this.currentFile.filename || path.basename(this.currentFile.pathname || ''),
+        text
+      }
+    },
+
+    queueSelectionChange (changes) {
+      this.pendingSelectionChange = changes
+      this.requestSelectionFlush()
+    },
+
+    queueSelectionFormats (formats) {
+      this.pendingSelectionFormats = formats
+      this.requestSelectionFlush()
+    },
+
+    requestSelectionFlush () {
+      if (this.selectionFlushFrame) return
+
+      this.selectionFlushFrame = window.requestAnimationFrame(() => {
+        this.flushSelectionState()
+      })
+    },
+
+    flushSelectionState () {
+      this.selectionFlushFrame = null
+
+      const changes = this.pendingSelectionChange
+      this.pendingSelectionChange = null
+      if (changes) {
+        const reference = this.getClaudeSelectionReference(changes)
+        if (reference) {
+          bus.$emit('claude-selection-reference', reference)
+        }
+        this.$store.dispatch('SELECTION_CHANGE', changes)
+      }
+
+      const formats = this.pendingSelectionFormats
+      this.pendingSelectionFormats = null
+      if (formats) {
+        this.$store.dispatch('SELECTION_FORMATS', formats)
+      }
+    },
+
     insertImage (src) {
       if (!this.sourceCode) {
         this.editor && this.editor.insertImage({ src })
@@ -897,6 +992,46 @@ export default {
         const { container } = this.editor
         const { y } = this.editor.getSelection().cursorCoords
         animatedScrollTo(container, container.scrollTop + y - STANDAR_Y, duration)
+      })
+    },
+
+    getDocumentPositionPath (file = this.currentFile) {
+      return file && file.pathname ? file.pathname : ''
+    },
+
+    saveDocumentPosition (file = this.currentFile) {
+      const { editor } = this
+      const pathname = this.getDocumentPositionPath(file)
+      if (!editor || !editor.container || !pathname) return
+
+      writeDocumentPosition(pathname, {
+        scrollTop: Math.max(0, Math.round(editor.container.scrollTop || 0))
+      })
+    },
+
+    scheduleSaveDocumentPosition () {
+      if (this.positionSaveTimer) return
+
+      this.positionSaveTimer = window.setTimeout(() => {
+        this.positionSaveTimer = null
+        this.saveDocumentPosition()
+      }, 250)
+    },
+
+    restoreDocumentPosition (cursor) {
+      const { editor } = this
+      if (!editor || !editor.container) return
+
+      const position = readDocumentPosition(this.getDocumentPositionPath())
+      const hasSavedScrollTop = position && Number.isFinite(position.scrollTop)
+      const shouldRestoreTop = hasSavedScrollTop || !cursor
+      if (!shouldRestoreTop) return
+
+      const scrollTop = hasSavedScrollTop ? position.scrollTop : 0
+      window.requestAnimationFrame(() => {
+        if (this.editor && this.editor.container) {
+          this.editor.container.scrollTop = Math.max(0, scrollTop)
+        }
       })
     },
 
@@ -1074,6 +1209,18 @@ export default {
         } else {
           editor.setMarkdown(markdown)
         }
+        this.restoreDocumentPosition(cursor)
+      }
+    },
+
+    handleClaudeApplyEdit ({ id, markdown }) {
+      if (!this.currentFile || this.currentFile.id !== id) {
+        return
+      }
+
+      const { editor } = this
+      if (editor && typeof markdown === 'string') {
+        editor.setMarkdown(markdown)
       }
     },
 
@@ -1093,6 +1240,7 @@ export default {
           if (renderCursor) {
             this.scrollToCursor(0)
           }
+          this.restoreDocumentPosition(cursor)
         }
       })
     },
@@ -1118,6 +1266,7 @@ export default {
   },
   beforeDestroy () {
     bus.$off('file-loaded', this.setMarkdownToEditor)
+    bus.$off('claude-apply-edit', this.handleClaudeApplyEdit)
     bus.$off('invalidate-image-cache', this.handleInvalidateImageCache)
     bus.$off('undo', this.handleUndo)
     bus.$off('redo', this.handleRedo)
@@ -1146,9 +1295,22 @@ export default {
     bus.$off('switch-spellchecker-language', this.switchSpellcheckLanguage)
     bus.$off('open-command-spellchecker-switch-language', this.openSpellcheckerLanguageCommand)
     bus.$off('replace-misspelling', this.replaceMisspelling)
+    bus.$off('cm-ask-claude', this.handleAskClaude)
 
     document.removeEventListener('keyup', this.keyup)
+    this.saveDocumentPosition()
+    if (this.positionSaveTimer) {
+      window.clearTimeout(this.positionSaveTimer)
+      this.positionSaveTimer = null
+    }
+    if (this.selectionFlushFrame) {
+      window.cancelAnimationFrame(this.selectionFlushFrame)
+      this.selectionFlushFrame = null
+    }
 
+    if (this.editor && this.editor.container) {
+      this.editor.container.removeEventListener('scroll', this.scheduleSaveDocumentPosition)
+    }
     this.editor.destroy()
     this.editor = null
   }

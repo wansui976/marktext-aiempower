@@ -15,6 +15,8 @@ import {
 } from '../commands'
 
 const autoSaveTimers = new Map()
+let lastApplicationMenuState = null
+let lastSelectionFormatState = null
 
 const state = {
   currentFile: {},
@@ -933,7 +935,10 @@ const actions = {
     }
 
     markdown = adjustTrailingNewlines(markdown, trimTrailingNewline)
-    commit('SET_MARKDOWN', markdown)
+    const markdownChanged = markdown !== oldMarkdown
+    if (markdownChanged) {
+      commit('SET_MARKDOWN', markdown)
+    }
 
     // Ignore new line which is added if the editor text is empty (#422)
     if (oldMarkdown.length === 0 && markdown.length === 1 && markdown[0] === '\n') {
@@ -953,12 +958,12 @@ const actions = {
       commit('SET_HISTORY', history)
     }
     // Set toc
-    if (toc && !equal(toc, listToc)) {
+    if (toc && toc !== listToc && !equal(toc, listToc)) {
       commit('SET_TOC', toc)
     }
 
     // Change save status/save to file only when the markdown changed!
-    if (markdown !== oldMarkdown) {
+    if (markdownChanged) {
       commit('SET_SAVE_STATUS', false)
 
       // Save file is auto save is enable and file exist on disk.
@@ -1013,25 +1018,36 @@ const actions = {
     autoSaveTimers.set(id, timer)
   },
 
-  SELECTION_CHANGE ({ commit }, changes) {
+  SELECTION_CHANGE ({ commit, state }, changes) {
     const { start, end } = changes
     // Set search keyword to store.
     if (start.key === end.key && start.block.text) {
       const value = start.block.text.substring(start.offset, end.offset)
-      commit('SET_SEARCH', {
-        matches: [],
-        index: -1,
-        value
-      })
+      const searchMatches = state.currentFile.searchMatches || {}
+      if (searchMatches.value !== value) {
+        commit('SET_SEARCH', {
+          matches: [],
+          index: -1,
+          value
+        })
+      }
     }
 
     const { windowId } = global.marktext.env
-    ipcRenderer.send('mt::editor-selection-changed', windowId, createApplicationMenuState(changes))
+    const applicationMenuState = createApplicationMenuState(changes)
+    if (!equal(applicationMenuState, lastApplicationMenuState)) {
+      lastApplicationMenuState = applicationMenuState
+      ipcRenderer.send('mt::editor-selection-changed', windowId, applicationMenuState)
+    }
   },
 
   SELECTION_FORMATS (_, formats) {
     const { windowId } = global.marktext.env
-    ipcRenderer.send('mt::update-format-menu', windowId, createSelectionFormatState(formats))
+    const selectionFormatState = createSelectionFormatState(formats)
+    if (!equal(selectionFormatState, lastSelectionFormatState)) {
+      lastSelectionFormatState = selectionFormatState
+      ipcRenderer.send('mt::update-format-menu', windowId, selectionFormatState)
+    }
   },
 
   EXPORT ({ state }, { type, content, pageOptions }) {
@@ -1223,6 +1239,9 @@ const actions = {
     })
     ipcRenderer.on('mt::cm-insert-paragraph', (e, location) => {
       bus.$emit('insertParagraph', location)
+    })
+    ipcRenderer.on('mt::cm-ask-claude', (e, payload) => {
+      bus.$emit('cm-ask-claude', payload)
     })
 
     // Spelling

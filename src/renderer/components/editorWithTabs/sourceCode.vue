@@ -7,12 +7,13 @@
 </template>
 
 <script>
-import codeMirror, { setMode, setCursorAtLastLine, setTextDirection } from '../../codeMirror'
+import codeMirror, { setMode, setCursorAtFirstLine, setCursorAtLastLine, setTextDirection } from '../../codeMirror'
 import { wordCount as getWordCount } from 'muya/lib/utils'
 import { mapState } from 'vuex'
 import { adjustCursor } from '../../util'
 import bus from '../../bus'
 import { oneDarkThemes, railscastsThemes } from '@/config'
+import { readDocumentPosition, writeDocumentPosition } from '@/util/documentPosition'
 
 export default {
   props: {
@@ -37,8 +38,12 @@ export default {
       contentState: null,
       editor: null,
       commitTimer: null,
+      referenceFrame: null,
+      positionSaveTimer: null,
       viewDestroyed: false,
-      tabId: null
+      tabId: null,
+      tabPathname: '',
+      lastCommittedMarkdown: ''
     }
   },
 
@@ -64,12 +69,7 @@ export default {
         lineWrapping: true,
         styleActiveLine: true,
         direction: textDirection,
-        // The amount of updates needed when scrolling. Settings this to >Infinity< or use CSS
-        // >height: auto< result in bad performance because the whole document is always rendered.
-        // Since we are using >height: auto< setting this to >Infinity< to fix #171. The best
-        // solution would be to set a fixed height like in #791 but then the scrollbar is not on
-        // the right side. Please also see CodeMirror#1104.
-        viewportMargin: Infinity,
+        viewportMargin: 40,
         lineNumberFormatter (line) {
           if (line % 10 === 0 || line === 1) {
             return line
@@ -88,8 +88,11 @@ export default {
 
       // Init CodeMirror
       const editor = this.editor = codeMirror(container, codeMirrorConfig)
+      this.lastCommittedMarkdown = markdown
+      this.tabPathname = this.currentTab.pathname || ''
 
       bus.$on('file-loaded', this.handleFileChange)
+      bus.$on('claude-apply-edit', this.handleClaudeApplyEdit)
       bus.$on('invalidate-image-cache', this.handleInvalidateImageCache)
       bus.$on('file-changed', this.handleFileChange)
       bus.$on('selectAll', this.handleSelectAll)
@@ -97,6 +100,7 @@ export default {
 
       setMode(editor, 'markdown')
       this.listenChange()
+      editor.on('scroll', this.scheduleSaveDocumentPosition)
 
       editor.on('contextmenu', (cm, event) => {
         // Make sure no context menu is shown in source-code mode because we have to handle
@@ -110,8 +114,9 @@ export default {
         const { anchor, focus } = cursor
         editor.setSelection(anchor, focus, { scroll: true }) // Scroll the focus into view.
       } else {
-        setCursorAtLastLine(editor)
+        setCursorAtFirstLine(editor)
       }
+      this.restoreDocumentPosition(cursor)
       this.tabId = id
     })
   },
@@ -120,14 +125,24 @@ export default {
     // further key inputs, so ignore all inputs.
     this.viewDestroyed = true
     if (this.commitTimer) clearTimeout(this.commitTimer)
+    if (this.referenceFrame) {
+      window.cancelAnimationFrame(this.referenceFrame)
+      this.referenceFrame = null
+    }
+    if (this.positionSaveTimer) {
+      window.clearTimeout(this.positionSaveTimer)
+      this.positionSaveTimer = null
+    }
 
     bus.$off('file-loaded', this.handleFileChange)
+    bus.$off('claude-apply-edit', this.handleClaudeApplyEdit)
     bus.$off('invalidate-image-cache', this.handleInvalidateImageCache)
     bus.$off('file-changed', this.handleFileChange)
     bus.$off('selectAll', this.handleSelectAll)
     bus.$off('image-action', this.handleImageAction)
 
     const { editor } = this
+    this.saveDocumentPosition()
     const { cursor, markdown } = this.getMarkdownAndCursor(editor)
     bus.$emit('file-changed', { id: this.tabId, markdown, cursor, renderCursor: true })
   },
@@ -181,41 +196,124 @@ export default {
         }
       }
     },
+    handleClaudeApplyEdit ({ id, markdown }) {
+      if (id !== this.tabId || typeof markdown !== 'string') {
+        return
+      }
+
+      if (this.commitTimer) {
+        clearTimeout(this.commitTimer)
+        this.commitTimer = null
+      }
+
+      this.editor.setValue(markdown)
+      this.lastCommittedMarkdown = markdown
+      setCursorAtLastLine(this.editor)
+    },
+    queueClaudeSelectionReference (cm) {
+      if (this.referenceFrame) return
+
+      this.referenceFrame = window.requestAnimationFrame(() => {
+        this.referenceFrame = null
+        this.emitClaudeSelectionReference(cm.getSelection())
+      })
+    },
+    emitClaudeSelectionReference (text) {
+      const selectedText = String(text || '').trim()
+      if (!selectedText || !this.currentTab) return
+
+      bus.$emit('claude-selection-reference', {
+        fileId: this.currentTab.id || this.tabId,
+        filename: this.currentTab.filename || '',
+        text: selectedText
+      })
+    },
+    saveDocumentPosition (pathname = this.tabPathname) {
+      const { editor } = this
+      if (!editor || !pathname) return
+
+      const scroller = editor.getScrollerElement()
+      writeDocumentPosition(pathname, {
+        scrollTop: Math.max(0, Math.round(scroller.scrollTop || 0))
+      })
+    },
+    scheduleSaveDocumentPosition () {
+      if (this.positionSaveTimer) return
+
+      this.positionSaveTimer = window.setTimeout(() => {
+        this.positionSaveTimer = null
+        this.saveDocumentPosition()
+      }, 250)
+    },
+    restoreDocumentPosition (cursor) {
+      const { editor } = this
+      if (!editor) return
+
+      const position = readDocumentPosition(this.currentTab && this.currentTab.pathname)
+      const hasSavedScrollTop = position && Number.isFinite(position.scrollTop)
+      const shouldRestoreTop = hasSavedScrollTop || !cursor
+      if (!shouldRestoreTop) return
+
+      const scrollTop = hasSavedScrollTop ? position.scrollTop : 0
+      window.requestAnimationFrame(() => {
+        if (this.editor) {
+          this.editor.getScrollerElement().scrollTop = Math.max(0, scrollTop)
+        }
+      })
+    },
+    scheduleCommit () {
+      if (this.commitTimer) clearTimeout(this.commitTimer)
+      this.commitTimer = setTimeout(() => {
+        // See "beforeDestroy" note
+        if (!this.viewDestroyed) {
+          if (this.tabId) {
+            this.commitEditorState()
+          } else {
+            // This may occur during tab switching but should not occur otherwise.
+            console.warn('LISTEN_FOR_CONTENT_CHANGE: Cannot commit changes because not tab id was set!')
+          }
+        }
+      }, 1000)
+    },
+    commitEditorState () {
+      const { cursor, markdown } = this.getMarkdownAndCursor(this.editor)
+      const payload = { id: this.tabId, markdown, cursor }
+      if (markdown !== this.lastCommittedMarkdown) {
+        payload.wordCount = getWordCount(markdown)
+        this.lastCommittedMarkdown = markdown
+      }
+      this.$store.dispatch('LISTEN_FOR_CONTENT_CHANGE', payload)
+    },
     listenChange () {
       const { editor } = this
+      editor.on('changes', () => {
+        this.scheduleCommit()
+      })
       editor.on('cursorActivity', cm => {
-        const { cursor, markdown } = this.getMarkdownAndCursor(cm)
-        // Attention: the cursor may be `{focus: null, anchor: null}` when press `backspace`
-        const wordCount = getWordCount(markdown)
-        if (this.commitTimer) clearTimeout(this.commitTimer)
-        this.commitTimer = setTimeout(() => {
-          // See "beforeDestroy" note
-          if (!this.viewDestroyed) {
-            if (this.tabId) {
-              this.$store.dispatch('LISTEN_FOR_CONTENT_CHANGE', { id: this.tabId, markdown, wordCount, cursor })
-            } else {
-              // This may occur during tab switching but should not occur otherwise.
-              console.warn('LISTEN_FOR_CONTENT_CHANGE: Cannot commit changes because not tab id was set!')
-            }
-          }
-        }, 1000)
+        this.queueClaudeSelectionReference(cm)
+        this.scheduleCommit()
       })
     },
     // Another tab was selected - only listen to get changes but don't set history or other things.
     handleFileChange ({ id, markdown, cursor }) {
       this.prepareTabSwitch()
+      this.saveDocumentPosition()
+      bus.$emit('claude-selection-reference', null)
 
       const { editor } = this
       if (typeof markdown === 'string') {
         editor.setValue(markdown)
+        this.lastCommittedMarkdown = markdown
       }
       // Cursor is null when loading a file or creating a new tab in source code mode.
       if (cursor) {
         const { anchor, focus } = cursor
         editor.setSelection(anchor, focus, { scroll: true }) // Scroll the focus into view.
       } else {
-        setCursorAtLastLine(editor)
+        setCursorAtFirstLine(editor)
       }
+      this.tabPathname = this.currentTab.pathname || ''
+      this.restoreDocumentPosition(cursor)
       this.tabId = id
     },
     // Get markdown and cursor from CodeMirror.
@@ -249,6 +347,7 @@ export default {
         const { editor } = this
         const { cursor, markdown } = this.getMarkdownAndCursor(editor)
         this.$store.dispatch('LISTEN_FOR_CONTENT_CHANGE', { id: this.tabId, markdown, cursor })
+        this.lastCommittedMarkdown = markdown
         this.tabId = null // invalidate tab id
       }
     },
@@ -283,11 +382,12 @@ export default {
   .source-code {
     height: calc(100vh - var(--titleBarHeight));
     box-sizing: border-box;
-    overflow: auto;
+    overflow: hidden;
+    padding: 50px 0;
   }
   .source-code .CodeMirror {
-    height: auto;
-    margin: 50px auto;
+    height: 100%;
+    margin: 0 auto;
     max-width: var(--editorAreaWidth);
     background: transparent;
   }

@@ -42,6 +42,11 @@ export const PASTE_AS_PLAIN_TEXT = {
   }
 }
 
+export const ASK_CLAUDE = {
+  label: 'Ask Claude about Selection',
+  id: 'askClaudeMenuItem'
+}
+
 export const INSERT_BEFORE = {
   label: 'Insert Paragraph Before',
   id: 'insertParagraphBeforeMenuItem',

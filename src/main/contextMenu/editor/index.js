@@ -6,6 +6,7 @@ import {
   COPY_AS_MARKDOWN,
   COPY_AS_HTML,
   PASTE_AS_PLAIN_TEXT,
+  ASK_CLAUDE,
   SEPARATOR,
   INSERT_BEFORE,
   INSERT_AFTER
@@ -49,6 +50,15 @@ export const showEditorContextMenu = (win, event, params, isSpellcheckerEnabled)
     CONTEXT_ITEMS.forEach(item => {
       menu.append(new MenuItem(item))
     })
+    if (hasText) {
+      menu.append(new MenuItem(SEPARATOR))
+      menu.append(new MenuItem({
+        ...ASK_CLAUDE,
+        click () {
+          win.webContents.send('mt::cm-ask-claude', { text: selectionText })
+        }
+      }))
+    }
     menu.popup([{ window: win, x: event.clientX, y: event.clientY }])
   }
 }

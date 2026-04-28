@@ -43,6 +43,10 @@
       <toc
         v-else-if="rightColumn === 'toc'"
       ></toc>
+      <claude-chat
+        v-show="rightColumn === 'claude'"
+        :active="rightColumn === 'claude'"
+      ></claude-chat>
     </div>
     <div class="drag-bar" ref="dragBar" v-show="rightColumn"></div>
   </div>
@@ -53,6 +57,7 @@ import { sideBarIcons, sideBarBottomIcons } from './help'
 import Tree from './tree.vue'
 import SideBarSearch from './search.vue'
 import Toc from './toc.vue'
+import ClaudeChat from './claudeChat.vue'
 import { mapState } from 'vuex'
 
 export default {
@@ -67,7 +72,8 @@ export default {
   components: {
     Tree,
     SideBarSearch,
-    Toc
+    Toc,
+    ClaudeChat
   },
   computed: {
     ...mapState({
