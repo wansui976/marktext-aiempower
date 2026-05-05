@@ -1,5 +1,5 @@
-productName: "MarkText"
-appId: "com.github.marktext.marktext"
+productName: "MarkText-AIEmpower"
+appId: "com.github.wansui976.marktext-aiempower"
 
 asar: true
 asarUnpack:
@@ -103,8 +103,8 @@ nsis:
 linux:
   artifactName: "marktext-${arch}.${ext}"
   executableName: "marktext"
-  description: "A simple and elegant open-source markdown editor that focused on speed and usability."
-  maintainer: "MarkText Contributors"
+  description: "AI-empowered markdown editor with built-in writing assistant."
+  maintainer: "MarkText-AIEmpower"
   category: "Office;TextEditor;Utility"
   mimeTypes:
   - "text/markdown"

@@ -11,11 +11,13 @@
           v-for="(c, index) of sideBarIcons"
           :key="index"
           @click="handleLeftIconClick(c.name)"
-          :class="{ 'active': c.name === rightColumn }"
+          :class="[{ 'active': c.name === rightColumn }, `icon-${c.name}`]"
         >
-          <svg :viewBox="c.icon.viewBox">
-            <use :xlink:href="c.icon.url"></use>
-          </svg>
+          <span class="icon-wrap">
+            <svg :viewBox="c.icon.viewBox">
+              <use :xlink:href="c.icon.url"></use>
+            </svg>
+          </span>
         </li>
       </ul>
       <ul class="bottom">
@@ -185,21 +187,56 @@ export default {
     padding: 0;
     & > li {
       width: 45px;
-      height: 45px;
+      height: 42px;
       margin: 0;
       padding: 0;
       display: flex;
-      justify-content: space-around;
+      justify-content: center;
       align-items: center;
       cursor: pointer;
-      & > svg {
+      position: relative;
+      & .icon-wrap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        transition: background-color .15s ease-out;
+      }
+      & svg {
         width: 18px;
         height: 18px;
         fill: var(--sideBarIconColor);
         opacity: 1;
-        transition: transform .25s ease-in-out;
+        transition: fill .15s ease-out, transform .25s ease-in-out;
       }
-      &.active > svg {
+      &:hover .icon-wrap {
+        background: var(--itemBgColor);
+      }
+      &.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        border-radius: 0 2px 2px 0;
+        background: var(--themeColor);
+      }
+      &.active .icon-wrap {
+        background: var(--itemBgColor);
+      }
+      &.active svg {
+        fill: var(--themeColor);
+      }
+      &.icon-claude.active::before {
+        background: var(--themeColor);
+      }
+      &.icon-claude.active svg {
+        fill: var(--themeColor);
+      }
+      &.icon-claude:hover svg {
         fill: var(--themeColor);
       }
     }

@@ -1,272 +1,171 @@
-<p align="center"><img src="static/logo-small.png" alt="MarkText" width="100" height="100"></p>
+<p align="center">
+  <img src="static/logo-small.png" alt="MarkText-AIEmpower" width="96" height="96">
+</p>
 
-<h1 align="center">MarkText</h1>
+<h1 align="center">MarkText-AIEmpower</h1>
 
-<div align="center">
-  <a href="https://twitter.com/intent/tweet?via=marktextme&url=https://github.com/marktext/marktext/&text=What%20do%20you%20want%20to%20say%20to%20app?&hashtags=happyMarkText">
-    <img src="https://img.shields.io/twitter/url/https/github.com/marktext/marktext.svg?style=for-the-badge" alt="twitter">
-  </a>
-</div>
-<div align="center">
-  <strong>:high_brightness: Next generation markdown editor :crescent_moon:</strong><br>
-  A simple and elegant open-source markdown editor that focused on speed and usability.<br>
-  <sub>Available for Linux, macOS and Windows.</sub>
-</div>
+<p align="center">
+  A distraction-free Markdown editor with a built-in AI writing assistant.<br>
+  Based on <a href="https://github.com/marktext/marktext">MarkText</a>, extended with AI chat, inline editing, 38 themes, and more.
+</p>
 
-<br>
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue" alt="Platform">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+  <img src="https://img.shields.io/badge/AI-Anthropic%20%7C%20OpenAI%20compatible-orange" alt="AI">
+</p>
 
-<div align="center">
-  <!-- License -->
-  <a href="LICENSE">
-    <img src="https://img.shields.io/github/license/marktext/marktext.svg" alt="LICENSE">
-  </a>
-  <!-- Build Status -->
-  <a href="https://travis-ci.org/marktext/marktext/">
-    <img src="https://travis-ci.org/marktext/marktext.svg?branch=master" alt="build">
-  </a>
-  <a href="https://ci.appveyor.com/project/marktext/marktext/branch/master">
-    <img src="https://ci.appveyor.com/api/projects/status/l4gxgydj0i95hmxg/branch/master?svg=true" alt="build">
-  </a>
-  <!-- Downloads total -->
-  <a href="https://github.com/marktext/marktext/releases">
-    <img src="https://img.shields.io/github/downloads/marktext/marktext/total.svg" alt="total download">
-  </a>
-  <!-- Downloads latest release -->
-  <a href="https://github.com/marktext/marktext/releases/latest">
-    <img src="https://img.shields.io/github/downloads/marktext/marktext/v0.17.1/total.svg" alt="latest download">
-  </a>
-  <!-- sponsors -->
-  <a href="https://opencollective.com/marktext">
-    <img src="https://opencollective.com/marktext/tiers/silver-sponsors/badge.svg?label=SilverSponsors&color=brightgreen" alt="sponsors">
-  </a>
-</div>
+---
 
-<div align="center">
-  <h3>
-    <a href="https://github.com/marktext/marktext">
-      Website
-    </a>
-    <span> | </span>
-    <a href="https://github.com/marktext/marktext#features">
-      Features
-    </a>
-    <span> | </span>
-    <a href="https://github.com/marktext/marktext#download-and-installation">
-      Downloads
-    </a>
-    <span> | </span>
-    <a href="https://github.com/marktext/marktext#development">
-      Development
-    </a>
-    <span> | </span>
-    <a href="https://github.com/marktext/marktext#contribution">
-      Contribution
-    </a>
-  </h3>
-</div>
+## What's different
 
-<div align="center">
-  <sub>Translations:</sub>
-  <a href="docs/i18n/ar.md#readme">
-    <span>:saudi_arabia:</span>
-  </a>
-  <a href="docs/i18n/zh_cn.md#readme">
-    <span>:cn:</span>
-  </a>
-  <a href="docs/i18n/zh_tw.md#readme">
-    <span>:taiwan:</span>
-  </a>
-  <a href="docs/i18n/pl.md#readme">
-    <span>:poland:</span>
-  </a>
-  <a href="docs/i18n/ja.md#readme">
-    <span>:jp:</span>
-  </a>
-  <a href="docs/i18n/french.md#readme">
-    <span>:fr:</span>
-  </a>
-  <a href="docs/i18n/tr.md#readme">
-    <span>:tr:</span>
-  </a>
-  <a href="docs/i18n/spanish.md#readme">
-    <span>:es:</span>
-  </a>
-  <a href="docs/i18n/pt.md#readme">
-    <span>:portugal:</span>
-  </a>
-  <a href="docs/i18n/ko.md#readme">
-    <span>:kr:</span>
-  </a>
-</div>
+This fork adds an AI layer and a refreshed theme system on top of the original MarkText experience. Everything that made MarkText good — the clean editor, focus mode, live preview, keyboard-first workflow — stays exactly as it was.
 
-<div align="center">
-  <sub>This Markdown editor that could. Built with ❤︎ by
-    <a href="https://github.com/Jocs">Jocs</a> and
-    <a href="https://github.com/marktext/marktext/graphs/contributors">
-      contributors
-    </a>
-    .
-  </sub>
-</div>
+### AI sidebar
 
-<br />
+A chat panel lives in the right sidebar. It's document-aware: the model can read your current file, propose edits, and apply them with your approval.
 
-<h2 align="center">Supporting MarkText</h2>
+- **Streaming responses** with live Markdown rendering and Mermaid diagram previews
+- **Tool calling** — the AI can `get_document`, `replace_text`, `insert_text`, `apply_edit`, `read_file`, and `list_directory`
+- **Edit modes** — *Ask before edits* (shows a diff, you approve), *Edit automatically*, or *Plan mode* (AI explains, you decide)
+- **Undo stack** — one click to revert any AI edit
+- **File references** — type `#` to attach a project file, `@` to attach a document section
+- **Image context** — paste or drag images into the chat (up to 4)
+- **Slash commands** — `/summarize`, `/improve`, `/translate`, and more built-in prompt templates
+- **Input history** — press ↑ to recall previous messages
+- **Session persistence** — conversations are saved per document and survive app restarts
+- **Conversation compaction** — when the context gets long, summarize history with one click
 
-MarkText is an MIT licensed open source project, and the latest version will always be downloadable for free from the GitHub release page. MarkText is still in development, and its development is inseparable from all sponsors. I hope you join them:
+### Inline AI
 
-- [Become a backer or sponsor on Patreon](https://www.patreon.com/ranluo) or [One time donation](https://github.com/Jocs/sponsor.me)
-- [Become a backer or sponsor on Open Collective](https://opencollective.com/marktext)
+Select any text and press `Cmd/Ctrl + Alt + K` (or click **AI** in the format toolbar) to open a lightweight floating prompt:
 
-##### What's the difference between Patreon and Open Collective?
+- **Ask** — get an answer about the selection without leaving the editor
+- **Rewrite** — stream a rewrite of the selected text, then Accept or discard
 
-Patreon: Funds will be directly sponsored to Luo Ran (@jocs) who created MarkText and continues to maintain it.
-Open Collective: All expenses are transparent. The funds will be used for the development and maintenance of MarkText, funding online and offline activities, and acquiring other necessary resources.
-Names and company logos of all sponsors (from both Patreon and Open Collective) will appear on the official website for MarkText and in its README.md file.
+### Provider support
 
-**Looking for MarkText-like editing with cloud storage? try [Inkio](https://inkio.me)**
+| Provider | Notes |
+|---|---|
+| Anthropic | Default. Requires an API key. Supports all Claude models. |
+| OpenAI-compatible | Works with OpenAI, local servers (Ollama, LM Studio), and any `/v1/chat/completions` endpoint. API key is optional for local endpoints. |
 
-<a href="https://inkio.me/" target="_blank">
- <img src="https://inkio.me/static/media/logo.35f605dc31b1a0615087.png" width="100">
-</a>
+### Theme system
 
-**Platinum Sponsors**
+38 hand-crafted themes, selectable from a card-grid preview page with **search** and **Light / Dark** filter tabs.
 
-<a href="https://opencollective.com/marktext#platinum-sponsors">
- <img src="https://opencollective.com/marktext/tiers/platinum-sponsors.svg?avatarHeight=36&width=600">
-</a>
+<details>
+<summary>Full theme list</summary>
 
-**Gold Sponsors**
+| Light themes | Dark themes |
+|---|---|
+| Graphite Red | Graphite Black |
+| Graphite Blue | Charcoal Grey |
+| Broad Daylight | Dark Night |
+| Dead Leaf | Anxiety Mode |
+| Icefield | Gotham City |
+| Moonlight | Dracula |
+| Ayu Light | Toothpaste |
+| Gandalf | Cobalt Blue |
+| Deer Park | Ten Gold |
+| Boring | Ayu Mirage |
+| Day | Nord |
+| Notes Light | Notes Dark |
+| Rosé Pine Dawn | Lighthouse |
+| Norwegian Light | Rosé Pine |
+| Vinyl | Tokyo Night |
+| Catppuccin Latte | Academic |
+| Clear Realm | Atom One Dark |
+| | Catppuccin Macchiato |
+| | Shibuya Jazz |
+| | Shibuya Lo-fi |
+| | Dark Forest |
 
-<a href="https://opencollective.com/marktext#platinum-sponsors">
-  <img src="https://opencollective.com/marktext/tiers/gold-sponsors.svg?avatarHeight=36&width=600">
-</a>
+</details>
 
-**Silver Sponsors**
+---
 
-<a href="https://opencollective.com/marktext#platinum-sponsors">
-  <img src="https://opencollective.com/marktext/tiers/silver-sponsors.svg?avatarHeight=36&width=600">
-</a>
+## Quick start
 
-**Bronze Sponsors**
+### Download a release
 
-<a href="https://opencollective.com/marktext#platinum-sponsors">
-  <img src="https://opencollective.com/marktext/tiers/bronze-sponsors.svg?avatarHeight=36&width=600">
-</a>
+Pre-built binaries are not yet published in this fork. Build from source (see below) or grab the [original MarkText releases](https://github.com/marktext/marktext/releases) as a baseline.
 
-**Backers**
-
-<a href="https://opencollective.com/marktext#backers">
-  <img src="https://opencollective.com/marktext/tiers/backer.svg?avatarHeight=36&width=600">
-</a>
-
-## Screenshot
-
-![](docs/marktext.png?raw=true)
-
-## Features
-
-- Realtime preview (WYSIWYG) and a clean and simple interface to get a distraction-free writing experience.
-- Support [CommonMark Spec](https://spec.commonmark.org/0.29/), [GitHub Flavored Markdown Spec](https://github.github.com/gfm/) and selective support [Pandoc markdown](https://pandoc.org/MANUAL.html#pandocs-markdown).
-- Markdown extensions such as math expressions (KaTeX), front matter and emojis.
-- Support paragraphs and inline style shortcuts to improve your writing efficiency.
-- Output **HTML** and **PDF** files.
-- Various themes: **Cadmium Light**, **Material Dark** etc.
-- Various editing modes: **Source Code mode**, **Typewriter mode**, **Focus mode**.
-- Paste images directly from clipboard.
-
-<h4 align="center">:crescent_moon:themes:high_brightness:</h4>
-
-| Cadmium Light                                     | Dark                                            |
-|:-------------------------------------------------:|:-----------------------------------------------:|
-| ![](docs/themeImages/cadmium-light.png?raw=true)  | ![](docs/themeImages/dark.png?raw=true)         |
-| Graphite Light                                    | Material Dark                                   |
-| ![](docs/themeImages/graphite-light.png?raw=true) | ![](docs/themeImages/materal-dark.png?raw=true) |
-| Ulysses Light                                     | One Dark                                        |
-| ![](docs/themeImages/ulysses-light.png?raw=true)  | ![](docs/themeImages/one-dark.png?raw=true)     |
-
-<h4 align="center">:smile_cat:Edit modes:dog:</h4>
-
-| Source Code          | Typewriter               | Focus               |
-|:--------------------:|:------------------------:|:-------------------:|
-| ![](docs/source.gif) | ![](docs/typewriter.gif) | ![](docs/focus.gif) |
-
-## Why make another editor?
-
-1. I love writing. I have used a lot of markdown editors, yet there is still not an editor that can fully meet my needs. I don't like to be disturbed when I write by some unbearable bug. **MarkText** uses virtual DOM to render pages which has the added benefits of being highly efficient and being open source. That way anyone who loves markdown and writing can use MarkText.
-2. As mentioned above, **MarkText** is completely free and open source and will be open source forever. We hope that all markdown lovers will contribute their own code and help develop **MarkText** into a popular markdown editor.
-3. There are many markdown editors and all have their own merits, some have features which others don't. It's difficult to satisfy each markdown users' needs but we hope **MarkText** will be able to satisfy each markdown user as much as possible. Although the latest **MarkText** is still not perfect, we will try to make it as best as we possibly can.
-
-## Download and Installation
-
-![platform](https://img.shields.io/static/v1.svg?label=Platform&message=Linux-64%20|%20macOS-64%20|%20Win-32%20|%20Win-64&style=for-the-badge)
-
-| ![](https://raw.githubusercontent.com/wiki/ryanoasis/nerd-fonts/screenshots/v1.0.x/mac-pass-sm.png)                                                                                                  | ![](https://raw.githubusercontent.com/wiki/ryanoasis/nerd-fonts/screenshots/v1.0.x/windows-pass-sm.png)                                                                                                          | ![](https://raw.githubusercontent.com/wiki/ryanoasis/nerd-fonts/screenshots/v1.0.x/linux-pass-sm.png)                                                                                                                        |
-|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| [![latest version](https://img.shields.io/github/downloads/marktext/marktext/latest/marktext-x64.dmg.svg)](https://github.com/marktext/marktext/releases/download/v0.17.1/marktext-x64.dmg) | [![latest version](https://img.shields.io/github/downloads/marktext/marktext/latest/marktext-setup.exe.svg)](https://github.com/marktext/marktext/releases/download/v0.17.1/marktext-setup.exe) | [![latest version](https://img.shields.io/github/downloads/marktext/marktext/latest/marktext-x86_64.AppImage.svg)](https://github.com/marktext/marktext/releases/download/v0.17.1/marktext-x86_64.AppImage) |
-
-Want to see new features of the latest version? Please refer to [CHANGELOG](.github/CHANGELOG.md).
-
-#### macOS
-
-You can either download the latest `marktext-%version%.dmg` from the [release page](https://github.com/marktext/marktext/releases/latest) or install MarkText using [**homebrew cask**](https://github.com/caskroom/homebrew-cask). To use Homebrew-Cask you just need to have [Homebrew](https://brew.sh/) installed.
+### Build from source
 
 ```bash
-brew install --cask mark-text
+# Node 18+ and Yarn required
+git clone https://github.com/wansui976/marktext.git
+cd marktext
+yarn
+yarn dev        # development mode
+yarn build      # production build
 ```
 
-#### Windows
+---
 
-Simply download and install MarkText via setup wizard (`marktext-setup-%version%.exe`) and choose whether to install per-user or machine wide. Alternatively, install MarkText using a package manager such as [Chocolatey](https://chocolatey.org/) or [Winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/).
+## AI setup
 
-To use Chocolatey, you need to have [Chocolatey](https://chocolatey.org/install) installed:
+1. Open the AI sidebar (right panel icon, or `Cmd/Ctrl + Shift + A`).
+2. Click the **Settings** (gear) icon inside the panel.
+3. Choose your provider and paste your API key.
+4. Optionally set a custom Base URL (for local servers or proxies) and model name.
+
+**Environment variables** are also supported and take lower priority than the settings panel:
 
 ```bash
-choco install marktext
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_BASE_URL=https://api.anthropic.com   # optional
+ANTHROPIC_MODEL=claude-sonnet-4-5-20250929      # optional
+
+# OpenAI-compatible
+OPENAI_API_KEY=sk-...
+OPENAI_BASE_URL=https://api.openai.com          # optional
+OPENAI_MODEL=gpt-4.1                            # optional
 ```
 
-To use Winget, you need to have [Winget](https://docs.microsoft.com/en-us/windows/package-manager/winget/#install-winget) installed:
+---
 
-```bash
-winget install marktext
+## Keyboard shortcuts
+
+| Action | Shortcut |
+|---|---|
+| Inline AI prompt | `Cmd/Ctrl + Alt + K` |
+| Undo last AI edit | `Cmd/Ctrl + Z` (inside AI panel) |
+| Recall previous input | `↑` (AI input box, at start of line) |
+
+---
+
+## Project structure (AI-relevant files)
+
+```
+src/renderer/
+├── node/claudeApi.js              # Provider abstraction, SSE streaming, tool loop
+├── components/sideBar/
+│   └── claudeChat.vue             # AI sidebar: chat, sessions, tools, edit approval
+├── components/editorWithTabs/
+│   ├── inlineAiPrompt.vue         # Floating Ask / Rewrite UI
+│   ├── editor.vue                 # Muya ↔ AI bridge, selection, edit apply
+│   └── sourceCode.vue             # CodeMirror ↔ AI bridge
+└── assets/themes/                 # 38 CSS theme files
 ```
 
-#### Linux
+---
 
-Please follow the [Linux installation instructions](docs/LINUX.md).
+## Credits
 
-#### Other
+This project is built on top of [MarkText](https://github.com/marktext/marktext) by [Luo Ran](https://github.com/Jocs) and the MarkText contributors.
 
-All binaries for Linux, macOS and Windows can be downloaded from the [release page](https://github.com/marktext/marktext/releases/latest). If a version is unavailable for your system, then please open an [issue](https://github.com/marktext/marktext/issues).
+Original copyright:
 
-## Development
+```
+Copyright (c) 2017-present Luo Ran
+Copyright (c) 2018-present MarkText Contributors
+```
 
-If you wish to build MarkText yourself, please check out our [build instructions](docs/dev/BUILD.md).
-
-- [User documentation](docs/README.md)
-- [Developer documentation](docs/dev/README.md)
-
-If you have any questions regarding MarkText, you are welcome to write an issue. When doing so please use the default format found when opening an issue. Of course, if you submit a PR directly, it will be greatly appreciated.
-
-## Integrations
-
-- [Alfred Workflow](http://www.packal.org/workflow/mark-text): A Workflow for the macOS app Alfred: Use "mt" to open files/folder with MarkText.
-
-## Contribution
-
-MarkText is in development, please make sure to read the [Contributing Guide](CONTRIBUTING.md) before making a pull request. Want to add some features to MarkText? Refer to our [roadmap](https://github.com/marktext/marktext/projects?type=classic) and open issues.
-
-
-## Contributors
-
-Thank you to all the people who have already contributed to MarkText[[contributors](https://github.com/marktext/marktext/graphs/contributors)].
-
-Special thanks to @[Yasujizr](https://github.com/Yasujizr) who designed the MarkText logo.
-
-<a href="https://github.com/marktext/marktext/graphs/contributors"><img src="https://opencollective.com/marktext/contributors.svg?width=890" /></a>
+---
 
 ## License
 
-[**MIT**](LICENSE).
-
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmarktext%2Fmarktext.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmarktext%2Fmarktext?ref=badge_large)
+MIT — see [LICENSE](LICENSE) for details.

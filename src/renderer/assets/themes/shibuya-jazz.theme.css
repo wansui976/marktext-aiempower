@@ -1,0 +1,225 @@
+:root {
+  /*editor*/
+  --themeColor: rgb(246, 135, 179);
+  --themeColor90: rgba(246, 135, 179, 0.9);
+  --themeColor80: rgba(246, 135, 179, 0.8);
+  --themeColor70: rgba(246, 135, 179, 0.7);
+  --themeColor60: rgba(246, 135, 179, 0.6);
+  --themeColor50: rgba(246, 135, 179, 0.5);
+  --themeColor40: rgba(246, 135, 179, 0.4);
+  --themeColor30: rgba(246, 135, 179, 0.3);
+  --themeColor20: rgba(246, 135, 179, 0.2);
+  --themeColor10: rgba(246, 135, 179, 0.1);
+
+  --highlightColor: rgba(246, 135, 179, 0.4);
+  --selectionColor: rgba(246, 135, 179, 0.3);
+  --editorColor: rgba(243, 244, 246, 0.8);
+  --editorColor80: rgba(243, 244, 246, 1);
+  --editorColor60: rgba(243, 244, 246, 0.6);
+  --editorColor50: rgba(243, 244, 246, 0.5);
+  --editorColor40: rgba(243, 244, 246, 0.4);
+  --editorColor30: rgba(243, 244, 246, 0.3);
+  --editorColor10: rgba(243, 244, 246, 0.1);
+  --editorColor04: rgba(243, 244, 246, 0.04);
+  --editorBgColor: #000000;
+  --deleteColor: #ff6969;
+  --iconColor: rgba(255, 255, 255, .56);
+  --codeBgColor: #262626;
+  --codeBlockBgColor: #1f1f1f;
+  --footnoteBgColor: rgba(38, 38, 38, 0.5);
+  --inputBgColor: rgba(0, 0, 0, 0.1);
+  --focusColor: var(--themeColor);
+
+  --buttonFontColor: rgba(243, 244, 246, 0.6);
+  --buttonBgColor: #262626;
+  --buttonBorder: 1px solid #000000;
+  --buttonShadow: none;
+  --buttonFontColorHover: var(--buttonFontColor);
+  --buttonBgColorHover: #333333;
+  --buttonBorderHover: var(--buttonBorder);
+  --buttonFontColorActive: var(--buttonFontColor);
+  --buttonBgColorActive: #000000;
+  --buttonBorderActive: var(--buttonBorder);
+  --buttonFocusBorder: 1px solid var(--themeColor);
+
+  --buttonPrimaryFontColor: #ffffff;
+  --buttonPrimaryBgColor: var(--themeColor);
+  --buttonPrimaryBorder: none;
+  --buttonPrimaryShadow: none;
+  --buttonPrimaryFontColorHover: var(--buttonPrimaryFontColor);
+  --buttonPrimaryBgColorHover: var(--buttonPrimaryBgColor);
+  --buttonPrimaryBorderHover: var(--buttonPrimaryBorder);
+  --buttonPrimaryFontColorActive: var(--buttonPrimaryFontColor);
+  --buttonPrimaryBgColorActive: var(--buttonPrimaryBgColor);
+  --buttonPrimaryBorderActive: var(--buttonPrimaryBorder);
+  --buttonPrimaryFocusBorder: none;
+  --buttonPrimaryFocusShadow: inset 0 0 0 1px rgba(123, 68, 90, 0.5), 0 0 0 1px var(--themeColor);
+  --tableBorderColor: #141414;
+
+  /*marktext*/
+  --sideBarColor: rgba(243, 244, 246, 0.6);
+  --sideBarIconColor: var(--iconColor);
+  --sideBarTitleColor: rgba(79, 209, 197, 1);
+  --sideBarTextColor: rgba(243, 244, 246, 0.4);
+  --sideBarBgColor: #000000;
+  --sideBarItemHoverBgColor: rgba(255, 255, 255, .03);
+  --itemBgColor: #1f1f1f;
+
+  --floatFontColor: rgba(243, 244, 246, 0.7);
+  --floatBgColor: #1f1f1f;
+  --floatHoverColor: rgba(255, 255, 255, .04);
+  --floatBorderColor: rgba(0, 0, 0, .05);
+  --floatShadow: rgba(0, 0, 0, 0.2);
+  --maskColor: rgba(0, 0, 0, .7);
+  --editorAreaWidth: 750px;
+}
+
+::-webkit-scrollbar,
+::-webkit-scrollbar-corner {
+  background: var(--editorBgColor);
+}
+::-webkit-scrollbar:vertical {
+  width: 10px;
+}
+::-webkit-scrollbar:vertical:hover {
+  width: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2e2e2e;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #404040;
+}
+
+.ag-front-menu .submenu,
+.ag-float-wrapper {
+  box-shadow: 0 4px 8px 0 var(--floatShadow) !important;
+}
+
+.title-bar .frameless-titlebar-button > div > svg {
+  fill: #ffffff;
+}
+.title-bar .frameless-titlebar-minimize:hover,
+.title-bar .frameless-titlebar-toggle:hover {
+  background-color: rgba(255, 255, 255, .05);
+}
+
+.side-bar {
+  border-right: 1px solid #000000 !important;
+}
+
+.recent-files-projects a,
+.open-project a {
+  box-shadow: none !important;
+}
+
+.editor-tabs {
+  box-shadow: none !important;
+}
+.editor-tabs:after {
+  position: absolute;
+  content: '';
+  border-bottom: 1px solid #000000;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+.editor-tabs ul.tabs-container:after {
+  position: absolute;
+  content: '';
+  border-bottom: 1px solid #000000;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
+
+.tabs-container > li,
+.tabs-container > li.active {
+  background: var(--editorBgColor) !important;
+}
+
+.open-project button,
+.recent-files-projects button {
+  box-shadow: none !important;
+}
+
+/* ------------------------------------ */
+
+:not(pre) > code[class*="language-"],
+pre:not(.CodeMirror-line),
+pre[class*="language-"],
+pre.ag-paragraph {
+  background: var(--codeBlockBgColor) !important;
+  border: none !important;
+}
+p:not(.ag-active)[data-role="hr"]::before {
+  border-top: 2px dashed var(--editorColor10) !important;
+  background: none !important;
+}
+figure.ag-active.ag-container-block > div.ag-container-preview {
+  box-shadow: 0 3px 8px 0 var(--floatShadow) !important;
+}
+
+li.ag-paragraph {
+  color: var(--editorColor);
+}
+
+/*task list*/
+li.ag-task-list-item {
+  list-style-type: none;
+  position: relative;
+}
+li.ag-task-list-item > input[type=checkbox] {
+  position: absolute;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  top: .1em;
+  transform: rotate(-90deg);
+  margin: 0;
+  left: -24px;
+  transform-origin: center;
+  transition: all .2s ease;
+}
+li.ag-task-list-item > input.ag-checkbox-checked {
+  transform: rotate(0);
+  opacity: .6;
+}
+li.ag-task-list-item > input[type=checkbox]::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  display: inline-block;
+  border: 2px solid var(--editorColor);
+  border-radius: 2px;
+  background-color: var(--editorBgColor);
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: all .2s ease;
+}
+li.ag-task-list-item > input.ag-checkbox-checked::before {
+  border: transparent;
+  background-color: var(--editorColor);
+}
+li.ag-task-list-item > input::after {
+  content: '';
+  transform: rotate(-45deg) scale(0);
+  width: 9px;
+  height: 5px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-right: none;
+  position: absolute;
+  display: inline-block;
+  top: 1px;
+  left: 5px;
+  transition: all .2s ease;
+}
+li.ag-task-list-item > input.ag-checkbox-checked::after {
+  transform: rotate(-45deg) scale(1);
+}
+

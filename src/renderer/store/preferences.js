@@ -53,7 +53,7 @@ const state = {
   isGitlabCompatibilityEnabled: false,
   sequenceTheme: 'hand',
 
-  theme: 'light',
+  theme: 'graphite-red',
   autoSwitchTheme: 2,
 
   spellcheckerEnabled: false,

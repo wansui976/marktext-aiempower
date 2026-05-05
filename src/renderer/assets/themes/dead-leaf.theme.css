@@ -1,30 +1,31 @@
 :root {
-  --themeColor: rgb(104, 134, 170);
-  --themeColor90: rgba(104, 134, 170, .9);
-  --themeColor80: rgba(104, 134, 170, .8);
-  --themeColor70: rgba(104, 134, 170, .7);
-  --themeColor60: rgba(104, 134, 170, .6);
-  --themeColor50: rgba(104, 134, 170, .5);
-  --themeColor40: rgba(104, 134, 170, .4);
-  --themeColor30: rgba(104, 134, 170, .3);
-  --themeColor20: rgba(104, 134, 170, .2);
-  --themeColor10: rgba(104, 134, 170, .1);
+  /*editor*/
+  --themeColor: rgb(63, 81, 181);
+  --themeColor90: rgba(63, 81, 181, 0.9);
+  --themeColor80: rgba(63, 81, 181, 0.8);
+  --themeColor70: rgba(63, 81, 181, 0.7);
+  --themeColor60: rgba(63, 81, 181, 0.6);
+  --themeColor50: rgba(63, 81, 181, 0.5);
+  --themeColor40: rgba(63, 81, 181, 0.4);
+  --themeColor30: rgba(63, 81, 181, 0.3);
+  --themeColor20: rgba(63, 81, 181, 0.2);
+  --themeColor10: rgba(63, 81, 181, 0.1);
 
-  --highlightColor: rgba(104, 134, 170, .4);
+  --highlightColor: rgba(63, 81, 181, 0.4);
   --selectionColor: rgba(0, 0, 0, .1);
-  --editorColor: rgba(43, 48, 50, .7);
-  --editorColor80: rgba(43, 48, 50, .8);
-  --editorColor60: rgba(43, 48, 50, .6);
-  --editorColor50: rgba(43, 48, 50, .5);
-  --editorColor40: rgba(43, 48, 50, .4);
-  --editorColor30: rgba(150, 150, 150, .8);
-  --editorColor10: rgba(43, 48, 50, .1);
-  --editorColor04: rgba(43, 48, 50, .04);
-  --editorBgColor: #f7f7f7;
+  --editorColor: rgba(121, 85, 72, 0.9);
+  --editorColor80: rgba(121, 85, 72, 1);
+  --editorColor60: rgba(121, 85, 72, 0.7);
+  --editorColor50: rgba(121, 85, 72, 0.6);
+  --editorColor40: rgba(121, 85, 72, 0.5);
+  --editorColor30: rgba(121, 85, 72, 0.4);
+  --editorColor10: rgba(121, 85, 72, 0.1);
+  --editorColor04: rgba(121, 85, 72, 0.04);
+  --editorBgColor: #fbf7ee;
   --deleteColor: #ff6969;
-  --iconColor: rgba(150, 150, 150, .8);
+  --iconColor: rgba(121, 85, 72, 0.8);
   --codeBgColor: #d8d8d869;
-  --codeBlockBgColor: rgba(104, 134, 170, .05);
+  --codeBlockBgColor: rgba(63, 81, 181, 0.05);
   --footnoteBgColor: rgba(0, 0, 0, .03);
   --inputBgColor: rgba(0, 0, 0, .06);
   --focusColor: var(--themeColor);
@@ -52,33 +53,34 @@
   --buttonPrimaryBgColorActive: var(--buttonPrimaryBgColor);
   --buttonPrimaryBorderActive: var(--buttonPrimaryBorder);
   --buttonPrimaryFocusBorder: none;
-  --buttonPrimaryFocusShadow: inset 0 0 0 1px rgba(53, 74, 99, 0.5), 0 0 0 1px var(--themeColor);
+  --buttonPrimaryFocusShadow: inset 0 0 0 1px rgba(32, 41, 91, 0.5), 0 0 0 1px var(--themeColor);
   --tableBorderColor: #e5e5e5;
 
-  --sideBarColor: rgba(188, 193, 197, .8);
-  --sideBarIconColor: rgba(175, 175, 175, .8);
-  --sideBarTitleColor: rgba(255, 255, 255, 1);
-  --sideBarTextColor: rgba(188, 193, 197, .4);
-  --sideBarBgColor: rgba(69, 75, 80, 1);
-  --sideBarItemHoverBgColor: rgba(255, 255, 255, .03);
-  --itemBgColor: rgba(43, 48, 50, .5);
+  /*marktext*/
+  --sideBarColor: rgba(121, 85, 72, 0.6);
+  --sideBarIconColor: var(--iconColor);
+  --sideBarTitleColor: rgba(93, 64, 55, 1);
+  --sideBarTextColor: rgba(121, 85, 72, 0.4);
+  --sideBarBgColor: rgba(252, 249, 241, 0.9);
+  --sideBarItemHoverBgColor: rgba(121, 85, 72, 0.03);
+  --itemBgColor: rgba(241, 237, 228, 0.6);
 
-  --floatFontColor: rgba(43, 48, 50, .7);
-  --floatBgColor: rgb(237, 237, 238);
-  --floatHoverColor: rgba(43, 48, 50, .04);
+  --floatFontColor: rgba(121, 85, 72, 0.7);
+  --floatBgColor: #fcf9f3;
+  --floatHoverColor: rgba(121, 85, 72, 0.04);
   --floatBorderColor: rgba(0, 0, 0, .03);
   --maskColor: rgba(232, 232, 232, .8);
   --editorAreaWidth: 750px;
 }
 
 .editor-tabs {
-  background: #f3f3f3 !important;
+  background: #f3f0e7 !important;
   box-shadow: none !important;
 }
 .editor-tabs:after {
   position: absolute;
   content: '';
-  border-bottom: 1px solid #dddddd;
+  border-bottom: 1px solid #ddd9d1;
   bottom: 0;
   left: 0;
   right: 0;
@@ -87,21 +89,21 @@
 .editor-tabs ul.tabs-container:after {
   position: absolute;
   content: '';
-  border-bottom: 1px solid #dddddd;
+  border-bottom: 1px solid #ddd9d1;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 2;
 }
 .title-bar-editor-bg.tabs-visible {
-  background: #f3f3f3 !important;
+  background: #f3f0e7 !important;
 }
 
 .tabs-container > li {
   background: none !important;
 }
 .tabs-container > li.active {
-  border: 1px solid #dddddd;
+  border: 1px solid #ddd9d1;
   border-top: none;
   border-bottom: none;
   background: var(--floatBgColor) !important;
@@ -113,6 +115,14 @@
 }
 
 /* ------------------------------------ */
+
+:not(pre) > code[class*="language-"],
+pre:not(.CodeMirror-line),
+pre[class*="language-"],
+pre.ag-paragraph {
+  background: var(--codeBlockBgColor) !important;
+  border: none !important;
+}
 
 li.ag-paragraph {
   color: var(--editorColor);
@@ -129,7 +139,7 @@ li.ag-task-list-item > input[type=checkbox] {
   width: 16px;
   height: 16px;
   top: .1em;
-  transform:  rotate(-90deg);
+  transform: rotate(-90deg);
   margin: 0;
   left: -24px;
   transform-origin: center;

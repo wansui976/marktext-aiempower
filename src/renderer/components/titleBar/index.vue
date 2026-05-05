@@ -9,7 +9,7 @@
       :class="[{ 'active': active }, { 'tabs-visible': showTabBar }, { 'frameless': titleBarStyle === 'custom' }, { 'isOsx': isOsx }]"
     >
       <div class="title" @dblclick.stop="toggleMaxmizeOnMacOS">
-        <span v-if="!filename">MarkText</span>
+        <span v-if="!filename">MarkText-AIEmpower</span>
         <span v-else>
           <span
             v-for="(path, index) of paths"
@@ -61,7 +61,7 @@
             :class="[{ 'title-no-drag': platform !== 'darwin' }]"
             @click.stop="handleWordClick"
           >
-            <span class="text-center-vertical">{{ `${HASH[show].short} ${wordCount[show]}` }}</span>
+            <span class="text-center-vertical">{{ formatWordCount(wordCount[show], show) }}</span>
           </div>
         </el-tooltip>
       </div>
@@ -171,15 +171,20 @@ export default {
       const hasOpenFolder = this.project && this.project.name
       let title = ''
       if (value) {
-        title = hasOpenFolder ? `${value} - ${this.project.name}` : `${value} - MarkText`
+        title = hasOpenFolder ? `${value} - ${this.project.name}` : `${value} - MarkText-AIEmpower`
       } else {
-        title = hasOpenFolder ? this.project.name : 'MarkText'
+        title = hasOpenFolder ? this.project.name : 'MarkText-AIEmpower'
       }
 
       document.title = title
     }
   },
   methods: {
+    formatWordCount (n, kind) {
+      const num = typeof n === 'number' ? n.toLocaleString('en-US') : String(n)
+      const label = this.HASH[kind] && this.HASH[kind].short ? this.HASH[kind].short : ''
+      return `${label} ${num}`
+    },
     handleWordClick () {
       const ITEMS = ['word', 'paragraph', 'character', 'all']
       const len = ITEMS.length
@@ -251,6 +256,7 @@ export default {
   .title-bar-editor-bg {
     height: var(--titleBarHeight);
     background: var(--editorBgColor);
+    border-bottom: 1px solid var(--editorColor10);
     position: relative;
     left: 0;
     top: 0;
@@ -262,7 +268,7 @@ export default {
     background: transparent;
     height: var(--titleBarHeight);
     box-sizing: border-box;
-    color: var(--editorColor50);
+    color: var(--sideBarColor);
     position: fixed;
     left: 0;
     top: 0;
@@ -272,7 +278,7 @@ export default {
     cursor: default;
   }
   .active {
-    color: var(--editorColor);
+    color: var(--sideBarTitleColor);
   }
   img {
     height: 90%;
@@ -283,10 +289,12 @@ export default {
     padding: 0 142px;
     height: 100%;
     line-height: var(--titleBarHeight);
-    font-size: 14px;
+    font-size: 13px;
     text-align: center;
     transition: all .25s ease-in-out;
     & .filename {
+      font-weight: 600;
+      color: var(--sideBarTitleColor);
       transition: all .25s ease-in-out;
     }
     &::after {
@@ -326,7 +334,7 @@ export default {
     visibility: visible;
   }
   .title:hover {
-    color: var(sideBarTitleColor);
+    color: var(--sideBarTitleColor);
   }
 
   .left-toolbar {
@@ -356,7 +364,7 @@ export default {
   .word-count {
     cursor: pointer;
     font-size: 14px;
-    color: var(--editorColor30);
+    color: var(--sideBarColor);
     text-align: center;
     line-height: 24px;
     padding: 0 5px;

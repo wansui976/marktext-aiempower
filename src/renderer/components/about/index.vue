@@ -33,9 +33,9 @@ import MarkTextLogo from '../../assets/images/logo.png'
 
 export default {
   data () {
-    this.name = 'MarkText'
+    this.name = 'MarkText-AIEmpower'
     this.copyright = `Copyright © 2017-${new Date().getFullYear()} Luo Ran`
-    this.copyrightContributors = `Copyright © 2018-${new Date().getFullYear()} MarkText Contributors`
+    this.copyrightContributors = `Based on MarkText · AI features © ${new Date().getFullYear()}`
     this.logo = MarkTextLogo
     return {
       showAboutDialog: false

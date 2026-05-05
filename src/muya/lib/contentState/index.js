@@ -188,10 +188,79 @@ class ContentState {
       matches: [], // matches
       index: -1 // active match
     }
+    this.persistentSelectionMatches = []
     this.cursor = {
       start: { key, offset },
       end: { key, offset }
     }
+  }
+
+  getRenderHighlights () {
+    const { searchMatches: { matches, index }, persistentSelectionMatches } = this
+    matches.forEach((m, i) => {
+      m.active = i === index
+    })
+    return matches.concat(persistentSelectionMatches)
+  }
+
+  getTextBlocksInOrder () {
+    const result = []
+    const travel = blocks => {
+      for (const block of blocks) {
+        if (typeof block.text === 'string') {
+          result.push(block)
+        }
+        if (block.children && block.children.length) {
+          travel(block.children)
+        }
+      }
+    }
+    travel(this.blocks)
+    return result
+  }
+
+  clearPersistentSelection () {
+    this.persistentSelectionMatches = []
+  }
+
+  setPersistentSelection (cursor) {
+    if (!cursor || !cursor.start || !cursor.end) {
+      this.clearPersistentSelection()
+      return
+    }
+
+    const blocks = this.getTextBlocksInOrder()
+    let startIndex = blocks.findIndex(block => block.key === cursor.start.key)
+    let endIndex = blocks.findIndex(block => block.key === cursor.end.key)
+
+    if (startIndex === -1 || endIndex === -1) {
+      this.clearPersistentSelection()
+      return
+    }
+
+    let startOffset = cursor.start.offset
+    let endOffset = cursor.end.offset
+    if (startIndex > endIndex || (startIndex === endIndex && startOffset > endOffset)) {
+      [startIndex, endIndex] = [endIndex, startIndex]
+      ;[startOffset, endOffset] = [endOffset, startOffset]
+    }
+
+    const matches = []
+    for (let index = startIndex; index <= endIndex; index++) {
+      const block = blocks[index]
+      const blockStart = index === startIndex ? startOffset : 0
+      const blockEnd = index === endIndex ? endOffset : block.text.length
+      if (blockEnd > blockStart) {
+        matches.push({
+          key: block.key,
+          start: blockStart,
+          end: blockEnd,
+          active: false
+        })
+      }
+    }
+
+    this.persistentSelectionMatches = matches
   }
 
   getHistory () {
@@ -222,14 +291,12 @@ class ContentState {
   }
 
   render (isRenderCursor = true, clearCache = false) {
-    const { blocks, searchMatches: { matches, index } } = this
+    const { blocks } = this
     const activeBlocks = this.getActiveBlocks()
+    const matches = this.getRenderHighlights()
     if (clearCache) {
       this.stateRender.tokenCache.clear()
     }
-    matches.forEach((m, i) => {
-      m.active = i === index
-    })
     this.setNextRenderRange()
     this.stateRender.collectLabels(blocks)
     this.stateRender.render(blocks, activeBlocks, matches)
@@ -242,12 +309,10 @@ class ContentState {
   }
 
   partialRender (isRenderCursor = true) {
-    const { blocks, searchMatches: { matches, index } } = this
+    const { blocks } = this
     const activeBlocks = this.getActiveBlocks()
+    const matches = this.getRenderHighlights()
     const [startKey, endKey] = this.renderRange
-    matches.forEach((m, i) => {
-      m.active = i === index
-    })
 
     // The `endKey` may already be removed from blocks if range was selected via keyboard (GH#1854).
     let startIndex = startKey ? blocks.findIndex(block => block.key === startKey) : 0
@@ -277,11 +342,9 @@ class ContentState {
   }
 
   singleRender (block, isRenderCursor = true) {
-    const { blocks, searchMatches: { matches, index } } = this
+    const { blocks } = this
     const activeBlocks = this.getActiveBlocks()
-    matches.forEach((m, i) => {
-      m.active = i === index
-    })
+    const matches = this.getRenderHighlights()
     this.setNextRenderRange()
     this.stateRender.collectLabels(blocks)
     this.stateRender.singleRender(block, activeBlocks, matches)

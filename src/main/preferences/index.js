@@ -40,7 +40,7 @@ class Preference extends EventEmitter {
 
       // Set best theme on first application start.
       if (nativeTheme.shouldUseDarkColors) {
-        defaultSettings.theme = 'dark'
+        defaultSettings.theme = 'graphite-black'
       }
     } catch (err) {
       log.error(err)

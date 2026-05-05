@@ -37,7 +37,7 @@ export const preferencesWinOptions = Object.freeze({
   fullscreen: false,
   minimizable: false,
   useContentSize: true,
-  show: true,
+  show: false,
   frame: false,
   thickFrame: !isOsx,
   titleBarStyle: 'hiddenInset',

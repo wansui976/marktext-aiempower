@@ -294,8 +294,9 @@ class WindowManager extends EventEmitter {
    * Closes the browser window and associated application window without asking to save documents.
    *
    * @param {Electron.BrowserWindow} browserWindow The browser window.
+   * @param {boolean} quitIfLast Whether to quit the app if this was the last window.
    */
-  forceClose (browserWindow) {
+  forceClose (browserWindow, quitIfLast = true) {
     if (!browserWindow) {
       return false
     }
@@ -319,7 +320,7 @@ class WindowManager extends EventEmitter {
     }
 
     // Quit application on macOS if not windows are opened.
-    if (_windows.size === 0) {
+    if (quitIfLast && _windows.size === 0) {
       app.quit()
     }
     return true

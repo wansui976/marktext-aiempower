@@ -6,9 +6,9 @@ import * as actions from '../actions/marktext'
 
 export default function (keybindings) {
   return {
-    label: 'MarkText',
+    label: 'MarkText-AIEmpower',
     submenu: [{
-      label: 'About MarkText',
+      label: 'About MarkText-AIEmpower',
       click (menuItem, focusedWindow) {
         showAboutDialog(focusedWindow)
       }

@@ -3,6 +3,7 @@
 Welcome to developer documentation of MarkText.
 
 - [Project architecture](ARCHITECTURE.md)
+- [AI implementation](AI.md)
 - [Build instructions](BUILD.md)
 - [Debugging](DEBUGGING.md)
 - [Interface](INTERFACE.md)

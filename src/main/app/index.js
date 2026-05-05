@@ -5,7 +5,7 @@ import dayjs from 'dayjs'
 import log from 'electron-log'
 import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, shell } from 'electron'
 import { isChildOfDirectory } from 'common/filesystem/paths'
-import { isLinux, isOsx, isWindows } from '../config'
+import { isOsx, isWindows } from '../config'
 import parseArgs from '../cli/parser'
 import { normalizeAndResolvePath } from '../filesystem'
 import { normalizeMarkdownPath } from '../filesystem/markdown'
@@ -28,6 +28,7 @@ class App {
     this._args = args || { _: [] }
     this._openFilesCache = []
     this._openFilesTimer = null
+    this._settingsWarmupTimer = null
     this._windowManager = this._accessor.windowManager
     // this.launchScreenshotWin = null // The window which call the screenshot.
     // this.shortcutCapture = null
@@ -153,9 +154,16 @@ class App {
     }
 
     // Set initial native theme for theme in preferences.
-    const isDarkTheme = /dark/i.test(theme)
+    const DARK_THEMES = new Set([
+      'graphite-black', 'charcoal-grey', 'dark-night', 'anxiety-mode',
+      'gotham-city', 'dracula', 'toothpaste', 'cobalt-blue', 'ten-gold',
+      'ayu-mirage', 'nord', 'notes-dark', 'lighthouse', 'rose-pine',
+      'tokyo-night', 'academic', 'atom-one-dark', 'catppuccin-macchiato',
+      'shibuya-jazz', 'shibuya-lofi', 'dark-forest'
+    ])
+    const isDarkTheme = DARK_THEMES.has(theme)
     if (autoSwitchTheme === 0 && isDarkTheme !== nativeTheme.shouldUseDarkColors) {
-      selectTheme(nativeTheme.shouldUseDarkColors ? 'dark' : 'light')
+      selectTheme(nativeTheme.shouldUseDarkColors ? 'graphite-black' : 'graphite-red')
       nativeTheme.themeSource = nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
     } else {
       nativeTheme.themeSource = isDarkTheme ? 'dark' : 'light'
@@ -165,12 +173,11 @@ class App {
     ipcMain.on('broadcast-preferences-changed', change => {
       // Set Chromium's color for native elements after theme change.
       if (change.theme) {
-        const isDarkTheme = /dark/i.test(change.theme)
+        const isDarkTheme = DARK_THEMES.has(change.theme)
         if (isDarkMode !== isDarkTheme) {
           isDarkMode = isDarkTheme
           nativeTheme.themeSource = isDarkTheme ? 'dark' : 'light'
         } else if (nativeTheme.themeSource === 'system') {
-          // Need to set dark or light theme because we set `system` to get the current system theme.
           nativeTheme.themeSource = isDarkMode ? 'dark' : 'light'
         }
       }
@@ -200,6 +207,8 @@ class App {
     } else {
       this._createEditorWindow()
     }
+
+    this._scheduleSettingsWindowWarmup()
 
     // this.shortcutCapture = new ShortcutCapture()
     // if (process.env.NODE_ENV === 'development') {
@@ -258,6 +267,9 @@ class App {
     const editor = new EditorWindow(this._accessor)
     editor.createWindow(rootDirectory, fileList, markdownList, options)
     this._windowManager.add(editor)
+    editor.on('window-closed', () => {
+      this._destroyHiddenSettingsWindowIfIdle()
+    })
     if (this._windowManager.windowCount === 1) {
       this._accessor.menu.setActiveWindow(editor.id)
     }
@@ -273,6 +285,38 @@ class App {
     this._windowManager.add(setting)
     if (this._windowManager.windowCount === 1) {
       this._accessor.menu.setActiveWindow(setting.id)
+    }
+  }
+
+  _scheduleSettingsWindowWarmup () {
+    if (this._settingsWarmupTimer) {
+      return
+    }
+    this._settingsWarmupTimer = setTimeout(() => {
+      this._settingsWarmupTimer = null
+      if (this._windowManager.getWindowsByType(WindowType.SETTINGS).length) {
+        return
+      }
+      const setting = new SettingWindow(this._accessor)
+      setting.createWindow(null, {
+        showImmediately: false,
+        showWhenReady: false
+      })
+      this._windowManager.add(setting)
+    }, 1200)
+  }
+
+  _destroyHiddenSettingsWindowIfIdle () {
+    const editorWins = this._windowManager.getWindowsByType(WindowType.EDITOR)
+    if (editorWins.length) {
+      return
+    }
+    const settingWins = this._windowManager.getWindowsByType(WindowType.SETTINGS)
+    for (const { win } of settingWins) {
+      const browserWindow = win.browserWindow
+      if (browserWindow && !browserWindow.isVisible()) {
+        this._windowManager.forceClose(browserWindow, false)
+      }
     }
   }
 
@@ -408,14 +452,10 @@ class App {
   _openSettingsWindow (category) {
     const settingWins = this._windowManager.getWindowsByType(WindowType.SETTINGS)
     if (settingWins.length >= 1) {
-      // A setting window is already created
       const browserSettingWindow = settingWins[0].win.browserWindow
       browserSettingWindow.webContents.send('settings::change-tab', category)
-      if (isLinux) {
-        browserSettingWindow.focus()
-      } else {
-        browserSettingWindow.moveTop()
-      }
+      browserSettingWindow.show()
+      browserSettingWindow.focus()
       return
     }
     this._createSettingWindow(category)

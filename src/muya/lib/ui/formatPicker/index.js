@@ -37,6 +37,15 @@ class FormatPicker extends BaseFloat {
     eventCenter.subscribe('muya-format-picker', ({ reference, formats }) => {
       if (reference) {
         this.formats = formats
+        this.savedSelectionText = ''
+        this.savedAnchorRect = null
+        try {
+          const sel = window.getSelection()
+          if (sel && sel.rangeCount > 0) {
+            this.savedSelectionText = sel.toString()
+            this.savedAnchorRect = sel.getRangeAt(0).getBoundingClientRect()
+          }
+        } catch (err) { /* ignore */ }
         setTimeout(() => {
           this.show(reference)
           this.render()
@@ -51,16 +60,17 @@ class FormatPicker extends BaseFloat {
     const { icons, oldVnode, formatContainer, formats } = this
     const children = icons.map(i => {
       let icon
-      let iconWrapperSelector
+      let iconWrapperSelector = 'div.icon-wrapper'
       if (i.icon) {
         // SVG icon Asset
-        iconWrapperSelector = 'div.icon-wrapper'
         icon = h('i.icon', h('i.icon-inner', {
           style: {
             background: `url(${i.icon}) no-repeat`,
             'background-size': '100%'
           }
         }, ''))
+      } else if (i.text) {
+        icon = h('span.text-icon', i.text)
       }
       const iconWrapper = h(iconWrapperSelector, icon)
 
@@ -93,6 +103,14 @@ class FormatPicker extends BaseFloat {
   selectItem (event, item) {
     event.preventDefault()
     event.stopPropagation()
+    if (item.type === 'ai') {
+      this.muya.eventCenter.dispatch('muya-inline-ai', {
+        selectionText: this.savedSelectionText || '',
+        anchorRect: this.savedAnchorRect || null
+      })
+      this.hide()
+      return
+    }
     const { contentState } = this.muya
     contentState.render()
     contentState.format(item.type)

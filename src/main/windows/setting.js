@@ -20,8 +20,12 @@ class SettingWindow extends BaseWindow {
    *
    * @param {*} [category] The settings category tab name.
    */
-  createWindow (category = null) {
+  createWindow (category = null, options = {}) {
     const { menu: appMenu, env, keybindings, preferences } = this._accessor
+    const {
+      showImmediately = false,
+      showWhenReady = true
+    } = options
     const winOptions = Object.assign({}, preferencesWinOptions)
     centerWindowOptions(winOptions)
     if (isLinux) {
@@ -52,6 +56,9 @@ class SettingWindow extends BaseWindow {
 
     win.once('ready-to-show', () => {
       this.lifecycle = WindowLifecycle.READY
+      if (showWhenReady && !win.isVisible()) {
+        win.show()
+      }
       this.emit('window-ready')
     })
 
@@ -67,10 +74,14 @@ class SettingWindow extends BaseWindow {
     })
 
     win.on('close', event => {
-      this.emit('window-close')
-
-      event.preventDefault()
-      ipcMain.emit('window-close-by-id', win.id)
+      const editors = this._accessor.windowManager.getWindowsByType(WindowType.EDITOR)
+      if (editors.length) {
+        event.preventDefault()
+        win.hide()
+      } else {
+        event.preventDefault()
+        ipcMain.emit('window-close-by-id', win.id)
+      }
     })
 
     // The window is now destroyed.
@@ -83,6 +94,9 @@ class SettingWindow extends BaseWindow {
 
     this.lifecycle = WindowLifecycle.LOADING
     win.loadURL(this._buildUrlString(this.id, env, preferences, category))
+    if (showImmediately) {
+      win.show()
+    }
     win.setSheetOffset(TITLE_BAR_HEIGHT)
 
     const devToolsAccelerator = keybindings.getAccelerator('view.toggle-dev-tools')

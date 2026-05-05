@@ -1,8 +1,8 @@
 {
-  "name": "marktext",
+  "name": "marktext-aiempower",
   "version": "0.17.1",
-  "homepage": "https://github.com/marktext/marktext/",
-  "description": "Next generation markdown editor",
+  "homepage": "https://github.com/wansui976/marktext",
+  "description": "AI-empowered markdown editor",
   "license": "MIT",
   "main": "./dist/electron/main.js",
   "scripts": {

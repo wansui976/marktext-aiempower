@@ -1,5 +1,5 @@
-import { THEME_STYLE_ID, COMMON_STYLE_ID, DEFAULT_CODE_FONT_FAMILY, oneDarkThemes, railscastsThemes } from '../config'
-import { dark, graphite, materialDark, oneDark, ulysses } from './themeColor'
+import { THEME_STYLE_ID, COMMON_STYLE_ID, DEFAULT_CODE_FONT_FAMILY } from '../config'
+import { getThemeCss, darkThemes } from './themeColor'
 import { isLinux } from './index'
 import elementStyle from 'element-ui/lib/theme-chalk/index.css'
 
@@ -47,9 +47,7 @@ const getThemeCluster = themeColor => {
 }
 
 export const addThemeStyle = theme => {
-  const isCmRailscasts = railscastsThemes.includes(theme)
-  const isCmOneDark = oneDarkThemes.includes(theme)
-  const isDarkTheme = isCmOneDark || isCmRailscasts
+  const isDark = darkThemes.has(theme)
   let themeStyleEle = document.querySelector(`#${THEME_STYLE_ID}`)
   if (!themeStyleEle) {
     themeStyleEle = document.createElement('style')
@@ -57,46 +55,26 @@ export const addThemeStyle = theme => {
     document.head.appendChild(themeStyleEle)
   }
 
-  switch (theme) {
-    case 'light':
-      themeStyleEle.innerHTML = ''
-      break
-    case 'dark':
-      themeStyleEle.innerHTML = patchTheme(dark())
-      break
-    case 'material-dark':
-      themeStyleEle.innerHTML = patchTheme(materialDark())
-      break
-    case 'ulysses':
-      themeStyleEle.innerHTML = patchTheme(ulysses())
-      break
-    case 'graphite':
-      themeStyleEle.innerHTML = patchTheme(graphite())
-      break
-    case 'one-dark':
-      themeStyleEle.innerHTML = patchTheme(oneDark())
-      break
-    default:
-      console.log('unknown theme')
-      break
-  }
+  const css = getThemeCss(theme)
+  const themeFix = `
+.title-bar-editor-bg.tabs-visible {
+  background: var(--editorBgColor) !important;
+}
+`
+  themeStyleEle.innerHTML = css ? patchTheme(css) + themeFix : ''
 
-  // workaround: use dark icons
   document.body.classList.remove('dark')
-  if (isDarkTheme) {
+  if (isDark) {
     document.body.classList.add('dark')
   }
 
-  // change CodeMirror theme
   const cm = document.querySelector('.CodeMirror')
   if (cm) {
     cm.classList.remove('cm-s-default')
     cm.classList.remove('cm-s-one-dark')
     cm.classList.remove('cm-s-railscasts')
-    if (isCmOneDark) {
+    if (isDark) {
       cm.classList.add('cm-s-one-dark')
-    } else if (isCmRailscasts) {
-      cm.classList.add('cm-s-railscasts')
     } else {
       cm.classList.add('cm-s-default')
     }
@@ -107,7 +85,6 @@ export const setEditorWidth = value => {
   const EDITOR_WIDTH_STYLE_ID = 'editor-width'
   let result = ''
   if (value && /^[0-9]+(?:ch|px|%)$/.test(value)) {
-    // Overwrite the theme value and add 100px for padding.
     result = `:root { --editorAreaWidth: calc(100px + ${value}); }`
   }
   let styleEle = document.querySelector(`#${EDITOR_WIDTH_STYLE_ID}`)
@@ -163,7 +140,6 @@ export const addElementStyle = () => {
   }
   sheet = document.createElement('style')
   sheet.id = ID
-  // NOTE: Prepend element UI style, otherwise we cannot overwrite the style with the default light theme.
   document.head.insertBefore(sheet, document.head.firstChild)
   sheet.innerHTML = newElementStyle
 }

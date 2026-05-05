@@ -69,6 +69,11 @@
     <search
       v-if="!sourceCode"
     ></search>
+    <inline-ai-prompt
+      ref="inlineAi"
+      @accept="handleInlineAiAccept"
+      @close="handleInlineAiClose"
+    ></inline-ai-prompt>
   </div>
 </template>
 
@@ -80,6 +85,7 @@ import { mapState } from 'vuex'
 // import ViewImage from 'view-image'
 import { isChildOfDirectory } from 'common/filesystem/paths'
 import Muya from 'muya/lib'
+import { wordCount as getWordCount } from 'muya/lib/utils'
 import TablePicker from 'muya/lib/ui/tablePicker'
 import QuickInsert from 'muya/lib/ui/quickInsert'
 import CodePicker from 'muya/lib/ui/codePicker'
@@ -94,6 +100,7 @@ import FootnoteTool from 'muya/lib/ui/footnoteTool'
 import TableBarTools from 'muya/lib/ui/tableTools'
 import FrontMenu from 'muya/lib/ui/frontMenu'
 import Search from '../search'
+import InlineAiPrompt from './inlineAiPrompt.vue'
 import bus from '@/bus'
 import { DEFAULT_EDITOR_FONT_FAMILY } from '@/config'
 import notice from '@/services/notification'
@@ -106,6 +113,7 @@ import { guessClipboardFilePath } from '@/util/clipboard'
 import { readDocumentPosition, writeDocumentPosition } from '@/util/documentPosition'
 import { getCssForOptions, getHtmlToc } from '@/util/pdf'
 import { addCommonStyle, setEditorWidth } from '@/util/theme'
+import { darkThemes } from '@/util/themeColor'
 
 import 'muya/themes/default.css'
 import '@/assets/themes/codemirror/one-dark.css'
@@ -116,7 +124,8 @@ const STANDAR_Y = 320
 
 export default {
   components: {
-    Search
+    Search,
+    InlineAiPrompt
   },
 
   props: {
@@ -183,9 +192,11 @@ export default {
 
     return {
       selectionChange: null,
+      lastClaudeSelectionChange: null,
       pendingSelectionChange: null,
       pendingSelectionFormats: null,
       selectionFlushFrame: null,
+      persistentSelectionFrame: null,
       positionSaveTimer: null,
       editor: null,
       pathname: '',
@@ -242,8 +253,7 @@ export default {
 
     theme: function (value, oldValue) {
       if (value !== oldValue && this.editor) {
-        // Agreement：Any black series theme needs to contain dark `word`.
-        if (/dark/i.test(value)) {
+        if (darkThemes.has(value)) {
           this.editor.setOptions({
             mermaidTheme: 'dark',
             vegaTheme: 'dark'
@@ -543,7 +553,7 @@ export default {
         imagePathAutoComplete: this.imagePathAutoComplete.bind(this)
       }
 
-      if (/dark/i.test(theme)) {
+      if (darkThemes.has(theme)) {
         Object.assign(options, {
           mermaidTheme: 'dark',
           vegaTheme: 'dark'
@@ -588,6 +598,7 @@ export default {
       bus.$on('file-changed', this.handleFileChange)
       bus.$on('editor-blur', this.blurEditor)
       bus.$on('editor-focus', this.focusEditor)
+      bus.$on('claude-preserve-selection', this.preserveClaudeSelection)
       bus.$on('copyAsMarkdown', this.handleCopyPaste)
       bus.$on('copyAsHtml', this.handleCopyPaste)
       bus.$on('pasteAsPlainText', this.handleCopyPaste)
@@ -667,7 +678,12 @@ export default {
         this.queueSelectionFormats(formats)
       })
 
+      this.editor.on('muya-inline-ai', payload => {
+        this.triggerInlineAi(undefined, payload || {})
+      })
+
       document.addEventListener('keyup', this.keyup)
+      document.addEventListener('keydown', this.handleInlineAiKeydown, true)
 
       setEditorWidth(editorLineWidth)
     })
@@ -879,6 +895,81 @@ export default {
       }
     },
 
+    handleInlineAiKeydown (event) {
+      if (event.defaultPrevented) return
+      if (event.key !== 'k' && event.key !== 'K' && event.code !== 'KeyK') return
+      const cmdOrCtrl = isOsx ? event.metaKey : event.ctrlKey
+      if (!cmdOrCtrl || !event.altKey || event.shiftKey) return
+      if (this.sourceCode) return
+      if (!this.triggerInlineAi()) return
+      event.preventDefault()
+      event.stopPropagation()
+    },
+
+    triggerInlineAi (mode, snapshot = {}) {
+      if (this.sourceCode) return false
+      if (!this.editor || !this.editor.contentState) return false
+
+      let selectionText = String(snapshot.selectionText || '')
+      if (!selectionText.trim()) {
+        try {
+          const clipboardData = this.editor.contentState.getClipBoardData()
+          selectionText = clipboardData && clipboardData.text ? clipboardData.text : ''
+        } catch (err) {
+          selectionText = ''
+        }
+      }
+      if (!selectionText.trim()) return false
+
+      let anchorRect = snapshot.anchorRect || null
+      if (!anchorRect) {
+        try {
+          const range = window.getSelection().getRangeAt(0)
+          anchorRect = range.getBoundingClientRect()
+        } catch (err) {
+          anchorRect = null
+        }
+      }
+
+      this.$refs.inlineAi.open({
+        selectionText,
+        anchorRect,
+        mode
+      })
+      return true
+    },
+
+    handleInlineAiAccept ({ selectionText, rewritten }) {
+      if (!this.currentFile || typeof this.currentFile.markdown !== 'string') return
+      const markdown = this.currentFile.markdown
+      const idx = markdown.indexOf(selectionText)
+      if (idx === -1) {
+        notice.notify({
+          title: 'Inline edit',
+          type: 'warning',
+          message: 'Could not locate the selected text in the document. The rewrite was copied to the clipboard instead.',
+          time: 6000
+        })
+        try {
+          navigator.clipboard.writeText(rewritten)
+        } catch (err) { /* ignore */ }
+        return
+      }
+      const newMarkdown = markdown.slice(0, idx) + rewritten + markdown.slice(idx + selectionText.length)
+      this.$store.dispatch('LISTEN_FOR_CONTENT_CHANGE', {
+        id: this.currentFile.id,
+        markdown: newMarkdown,
+        wordCount: getWordCount(newMarkdown)
+      })
+      this.editor.setMarkdown(newMarkdown)
+    },
+
+    handleInlineAiClose () {
+      if (this.editor && this.editor.focus) {
+        try { this.editor.focus() } catch (err) { /* ignore */ }
+      }
+    },
+
     handleAskClaude (payload) {
       const text = payload && typeof payload.text === 'string' ? payload.text.trim() : ''
       if (!text) return
@@ -953,7 +1044,16 @@ export default {
       if (changes) {
         const reference = this.getClaudeSelectionReference(changes)
         if (reference) {
+          this.lastClaudeSelectionChange = {
+            start: { key: changes.start.key, offset: changes.start.offset },
+            end: { key: changes.end.key, offset: changes.end.offset }
+          }
           bus.$emit('claude-selection-reference', reference)
+        } else {
+          this.lastClaudeSelectionChange = null
+          this.editor.contentState.clearPersistentSelection()
+          this.refreshPersistentClaudeSelection()
+          bus.$emit('claude-selection-reference', null)
         }
         this.$store.dispatch('SELECTION_CHANGE', changes)
       }
@@ -1254,6 +1354,23 @@ export default {
       this.editor.blur(false, true)
     },
 
+    refreshPersistentClaudeSelection () {
+      if (this.persistentSelectionFrame) {
+        window.cancelAnimationFrame(this.persistentSelectionFrame)
+      }
+      this.persistentSelectionFrame = window.requestAnimationFrame(() => {
+        this.persistentSelectionFrame = null
+        if (!this.editor || !this.editor.contentState) return
+        this.editor.contentState.partialRender(this.editor.hasFocus())
+      })
+    },
+
+    preserveClaudeSelection () {
+      if (!this.editor || !this.editor.contentState || !this.lastClaudeSelectionChange) return
+      this.editor.contentState.setPersistentSelection(this.lastClaudeSelectionChange)
+      this.refreshPersistentClaudeSelection()
+    },
+
     focusEditor () {
       this.editor.focus()
     },
@@ -1283,6 +1400,7 @@ export default {
     bus.$off('file-changed', this.handleFileChange)
     bus.$off('editor-blur', this.blurEditor)
     bus.$off('editor-focus', this.focusEditor)
+    bus.$off('claude-preserve-selection', this.preserveClaudeSelection)
     bus.$off('copyAsMarkdown', this.handleCopyPaste)
     bus.$off('copyAsHtml', this.handleCopyPaste)
     bus.$off('pasteAsPlainText', this.handleCopyPaste)
@@ -1298,6 +1416,7 @@ export default {
     bus.$off('cm-ask-claude', this.handleAskClaude)
 
     document.removeEventListener('keyup', this.keyup)
+    document.removeEventListener('keydown', this.handleInlineAiKeydown, true)
     this.saveDocumentPosition()
     if (this.positionSaveTimer) {
       window.clearTimeout(this.positionSaveTimer)
@@ -1306,6 +1425,10 @@ export default {
     if (this.selectionFlushFrame) {
       window.cancelAnimationFrame(this.selectionFlushFrame)
       this.selectionFlushFrame = null
+    }
+    if (this.persistentSelectionFrame) {
+      window.cancelAnimationFrame(this.persistentSelectionFrame)
+      this.persistentSelectionFrame = null
     }
 
     if (this.editor && this.editor.container) {

@@ -1,12 +1,13 @@
 import App from '@/pages/app'
 import Preference from '@/pages/preference'
-import General from '@/prefComponents/general'
-import Editor from '@/prefComponents/editor'
-import Markdown from '@/prefComponents/markdown'
-import SpellChecker from '@/prefComponents/spellchecker'
-import Theme from '@/prefComponents/theme'
-import Image from '@/prefComponents/image'
-import Keybindings from '@/prefComponents/keybindings'
+
+const General = () => import(/* webpackChunkName: "pref" */ '@/prefComponents/general')
+const Editor = () => import(/* webpackChunkName: "pref" */ '@/prefComponents/editor')
+const Markdown = () => import(/* webpackChunkName: "pref" */ '@/prefComponents/markdown')
+const SpellChecker = () => import(/* webpackChunkName: "pref" */ '@/prefComponents/spellchecker')
+const Theme = () => import(/* webpackChunkName: "pref-theme" */ '@/prefComponents/theme')
+const Image = () => import(/* webpackChunkName: "pref" */ '@/prefComponents/image')
+const Keybindings = () => import(/* webpackChunkName: "pref" */ '@/prefComponents/keybindings')
 
 const parseSettingsPage = type => {
   let pageUrl = '/preference'

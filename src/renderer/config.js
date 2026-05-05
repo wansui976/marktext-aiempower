@@ -10,8 +10,8 @@ export const DEFAULT_STYLE = Object.freeze({
   codeFontFamily: DEFAULT_CODE_FONT_FAMILY,
   codeFontSize: '14px',
   hideScrollbar: false,
-  theme: 'light'
+  theme: 'graphite-red'
 })
 
-export const railscastsThemes = Object.freeze(['dark', 'material-dark'])
-export const oneDarkThemes = Object.freeze(['one-dark'])
+export const railscastsThemes = Object.freeze([])
+export const oneDarkThemes = Object.freeze([])

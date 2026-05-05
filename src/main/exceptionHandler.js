@@ -111,8 +111,8 @@ const setupExceptionHandler = () => {
 
   // start crashReporter to save core dumps to temporary folder
   crashReporter.start({
-    companyName: 'marktext',
-    productName: 'marktext',
+    companyName: 'marktext-aiempower',
+    productName: 'marktext-aiempower',
     submitURL: 'http://0.0.0.0/',
     uploadToServer: false,
     compress: true

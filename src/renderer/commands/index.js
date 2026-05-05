@@ -527,31 +527,46 @@ const commands = [
 
   {
     id: 'window.change-theme',
-    subcommands: [{
-      id: 'window.change-theme-light',
-      description: 'Cadmium Light',
-      value: 'light'
-    }, {
-      id: 'window.change-theme-dark',
-      description: 'Dark',
-      value: 'dark'
-    }, {
-      id: 'window.change-theme-graphite',
-      description: 'Graphite',
-      value: 'graphite'
-    }, {
-      id: 'window.change-theme-material-dark',
-      description: 'Material Dark',
-      value: 'material-dark'
-    }, {
-      id: 'window.change-theme-one-dark',
-      description: 'One Dark',
-      value: 'one-dark'
-    }, {
-      id: 'window.change-theme-ulysses',
-      description: 'Ulysses',
-      value: 'ulysses'
-    }],
+    subcommands: [
+      { id: 'window.change-theme-graphite-red', description: 'Graphite Red', value: 'graphite-red' },
+      { id: 'window.change-theme-graphite-black', description: 'Graphite Black', value: 'graphite-black' },
+      { id: 'window.change-theme-graphite-blue', description: 'Graphite Blue', value: 'graphite-blue' },
+      { id: 'window.change-theme-charcoal-grey', description: 'Charcoal Grey', value: 'charcoal-grey' },
+      { id: 'window.change-theme-broad-daylight', description: 'Broad Daylight', value: 'broad-daylight' },
+      { id: 'window.change-theme-dark-night', description: 'Dark Night', value: 'dark-night' },
+      { id: 'window.change-theme-anxiety-mode', description: 'Anxiety Mode', value: 'anxiety-mode' },
+      { id: 'window.change-theme-gotham-city', description: 'Gotham City', value: 'gotham-city' },
+      { id: 'window.change-theme-dracula', description: 'Dracula', value: 'dracula' },
+      { id: 'window.change-theme-toothpaste', description: 'Toothpaste', value: 'toothpaste' },
+      { id: 'window.change-theme-cobalt-blue', description: 'Cobalt Blue', value: 'cobalt-blue' },
+      { id: 'window.change-theme-dead-leaf', description: 'Dead Leaf', value: 'dead-leaf' },
+      { id: 'window.change-theme-icefield', description: 'Icefield', value: 'icefield' },
+      { id: 'window.change-theme-moonlight', description: 'Moonlight', value: 'moonlight' },
+      { id: 'window.change-theme-ten-gold', description: 'Ten Gold', value: 'ten-gold' },
+      { id: 'window.change-theme-ayu-light', description: 'Ayu Light', value: 'ayu-light' },
+      { id: 'window.change-theme-ayu-mirage', description: 'Ayu Mirage', value: 'ayu-mirage' },
+      { id: 'window.change-theme-gandalf', description: 'Gandalf', value: 'gandalf' },
+      { id: 'window.change-theme-deer-park', description: 'Deer Park', value: 'deer-park' },
+      { id: 'window.change-theme-boring', description: 'Boring', value: 'boring' },
+      { id: 'window.change-theme-day', description: 'Day', value: 'day' },
+      { id: 'window.change-theme-nord', description: 'Nord', value: 'nord' },
+      { id: 'window.change-theme-notes-light', description: 'Notes Light', value: 'notes-light' },
+      { id: 'window.change-theme-notes-dark', description: 'Notes Dark', value: 'notes-dark' },
+      { id: 'window.change-theme-lighthouse', description: 'Lighthouse', value: 'lighthouse' },
+      { id: 'window.change-theme-rose-pine', description: 'Rosé Pine', value: 'rose-pine' },
+      { id: 'window.change-theme-rose-pine-dawn', description: 'Rosé Pine Dawn', value: 'rose-pine-dawn' },
+      { id: 'window.change-theme-tokyo-night', description: 'Tokyo Night', value: 'tokyo-night' },
+      { id: 'window.change-theme-norwegian-light', description: 'Norwegian Light', value: 'norwegian-light' },
+      { id: 'window.change-theme-academic', description: 'Academic', value: 'academic' },
+      { id: 'window.change-theme-atom-one-dark', description: 'Atom One Dark', value: 'atom-one-dark' },
+      { id: 'window.change-theme-vinyl', description: 'Vinyl', value: 'vinyl' },
+      { id: 'window.change-theme-catppuccin-latte', description: 'Catppuccin Latte', value: 'catppuccin-latte' },
+      { id: 'window.change-theme-catppuccin-macchiato', description: 'Catppuccin Macchiato', value: 'catppuccin-macchiato' },
+      { id: 'window.change-theme-shibuya-jazz', description: 'Shibuya Jazz', value: 'shibuya-jazz' },
+      { id: 'window.change-theme-shibuya-lofi', description: 'Shibuya Lo-fi', value: 'shibuya-lofi' },
+      { id: 'window.change-theme-dark-forest', description: 'Dark Forest', value: 'dark-forest' },
+      { id: 'window.change-theme-clear-realm', description: 'Clear Realm', value: 'clear-realm' }
+    ],
     executeSubcommand: async (_, theme) => {
       ipcRenderer.send('mt::set-user-preference', { theme })
     }

@@ -119,6 +119,12 @@ When the user refers to "this document", "the current file", or content they are
 
 Reply in the same language as the user's question. Format answers using GitHub-flavored Markdown (headings, lists, code blocks). Be concise.`
 
+const buildSystemPrompt = (persona) => {
+  const trimmed = (persona || '').trim()
+  if (!trimmed) return SYSTEM_PROMPT
+  return `${SYSTEM_PROMPT}\n\n## Writing style preferences\nThe user has set the following style preferences. Follow them whenever you produce text or edit the document:\n${trimmed}`
+}
+
 export const normalizeProvider = (provider) => {
   const value = String(provider || '').trim().toLowerCase()
   if (value === PROVIDERS.OPENAI || value === 'openai-compatible' || value === 'openai_compatible') {
@@ -173,12 +179,22 @@ export const resolveModel = (override, provider = DEFAULT_PROVIDER) => {
 
 const sanitizeContentBlocks = blocks => {
   return blocks
-    .filter(block => block && ['text', 'tool_use', 'tool_result'].includes(block.type))
+    .filter(block => block && ['text', 'tool_use', 'tool_result', 'image'].includes(block.type))
     .map(block => {
       if (block.type === 'text') {
         return {
           type: 'text',
           text: String(block.text || '')
+        }
+      }
+      if (block.type === 'image') {
+        return {
+          type: 'image',
+          source: {
+            type: (block.source && block.source.type) || 'base64',
+            media_type: (block.source && block.source.media_type) || 'image/png',
+            data: (block.source && block.source.data) || ''
+          }
         }
       }
       if (block.type === 'tool_use') {
@@ -198,6 +214,7 @@ const sanitizeContentBlocks = blocks => {
     })
     .filter(block => {
       if (block.type === 'text') return block.text.length > 0
+      if (block.type === 'image') return Boolean(block.source && block.source.data)
       if (block.type === 'tool_use') return Boolean(block.id && block.name)
       return Boolean(block.tool_use_id)
     })
@@ -275,7 +292,7 @@ const buildApiUrl = (baseUrl, apiPath) => {
   return `${cleanBaseUrl}${apiPath}`
 }
 
-const callAnthropicApi = async ({ apiKey, baseUrl, model, messages, signal }) => {
+const callAnthropicApi = async ({ apiKey, baseUrl, model, messages, signal, persona }) => {
   const response = await fetch(buildApiUrl(baseUrl, '/v1/messages'), {
     method: 'POST',
     signal,
@@ -288,7 +305,7 @@ const callAnthropicApi = async ({ apiKey, baseUrl, model, messages, signal }) =>
     body: JSON.stringify({
       model,
       max_tokens: MAX_TOKENS,
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(persona),
       tools: TOOLS,
       messages,
       stream: true
@@ -329,22 +346,13 @@ const parseToolInput = value => {
   }
 }
 
-const toOpenAiMessages = messages => {
+const toOpenAiMessages = (messages, persona) => {
   const openAiMessages = [
     {
       role: 'system',
-      content: SYSTEM_PROMPT
+      content: buildSystemPrompt(persona)
     }
   ]
-
-  const flushUserText = (parts) => {
-    if (!parts.length) return
-    openAiMessages.push({
-      role: 'user',
-      content: parts.join('\n')
-    })
-    parts.length = 0
-  }
 
   for (const message of messages) {
     if (typeof message.content === 'string') {
@@ -387,12 +395,23 @@ const toOpenAiMessages = messages => {
     }
 
     if (message.role === 'user') {
-      const textParts = []
+      const contentParts = []
       for (const block of message.content) {
         if (block.type === 'text') {
-          textParts.push(block.text)
+          contentParts.push({ type: 'text', text: block.text })
+        } else if (block.type === 'image') {
+          contentParts.push({
+            type: 'image_url',
+            image_url: { url: `data:${block.source.media_type};base64,${block.source.data}` }
+          })
         } else if (block.type === 'tool_result') {
-          flushUserText(textParts)
+          if (contentParts.length) {
+            const hasImage = contentParts.some(p => p.type === 'image_url')
+            openAiMessages.push({
+              role: 'user',
+              content: hasImage ? contentParts.splice(0) : contentParts.splice(0).map(p => p.text).join('\n')
+            })
+          }
           openAiMessages.push({
             role: 'tool',
             tool_call_id: block.tool_use_id,
@@ -400,14 +419,20 @@ const toOpenAiMessages = messages => {
           })
         }
       }
-      flushUserText(textParts)
+      if (contentParts.length) {
+        const hasImage = contentParts.some(p => p.type === 'image_url')
+        openAiMessages.push({
+          role: 'user',
+          content: hasImage ? contentParts : contentParts.map(p => p.text).join('\n')
+        })
+      }
     }
   }
 
   return openAiMessages
 }
 
-const callOpenAiApi = async ({ apiKey, baseUrl, model, messages, signal }) => {
+const callOpenAiApi = async ({ apiKey, baseUrl, model, messages, signal, persona }) => {
   const headers = {
     'Content-Type': 'application/json'
   }
@@ -422,7 +447,7 @@ const callOpenAiApi = async ({ apiKey, baseUrl, model, messages, signal }) => {
     body: JSON.stringify({
       model,
       max_tokens: MAX_TOKENS,
-      messages: toOpenAiMessages(messages),
+      messages: toOpenAiMessages(messages, persona),
       tools: toOpenAiTools(),
       tool_choice: 'auto',
       stream: true
@@ -459,13 +484,13 @@ const executeToolUse = async (toolUse, executeTool) => {
   }
 }
 
-async function * streamAnthropicChat ({ apiKey, baseUrl, model, messages, executeTool, signal }) {
+async function * streamAnthropicChat ({ apiKey, baseUrl, model, messages, executeTool, signal, persona }) {
   const workingMessages = sanitizeMessages(messages)
   const resolvedBaseUrl = baseUrl || DEFAULT_BASE_URLS[PROVIDERS.ANTHROPIC]
   const resolvedModel = model || DEFAULT_MODELS[PROVIDERS.ANTHROPIC]
 
   while (true) {
-    const response = await callAnthropicApi({ apiKey, baseUrl: resolvedBaseUrl, model: resolvedModel, messages: workingMessages, signal })
+    const response = await callAnthropicApi({ apiKey, baseUrl: resolvedBaseUrl, model: resolvedModel, messages: workingMessages, signal, persona })
 
     const assistantBlocks = []
     const partialJson = new Map()
@@ -531,13 +556,13 @@ async function * streamAnthropicChat ({ apiKey, baseUrl, model, messages, execut
   }
 }
 
-async function * streamOpenAiChat ({ apiKey, baseUrl, model, messages, executeTool, signal }) {
+async function * streamOpenAiChat ({ apiKey, baseUrl, model, messages, executeTool, signal, persona }) {
   const workingMessages = sanitizeMessages(messages)
   const resolvedBaseUrl = baseUrl || DEFAULT_BASE_URLS[PROVIDERS.OPENAI]
   const resolvedModel = model || DEFAULT_MODELS[PROVIDERS.OPENAI]
 
   while (true) {
-    const response = await callOpenAiApi({ apiKey, baseUrl: resolvedBaseUrl, model: resolvedModel, messages: workingMessages, signal })
+    const response = await callOpenAiApi({ apiKey, baseUrl: resolvedBaseUrl, model: resolvedModel, messages: workingMessages, signal, persona })
     let assistantText = ''
     const toolCalls = new Map()
     const toolCallOrder = []

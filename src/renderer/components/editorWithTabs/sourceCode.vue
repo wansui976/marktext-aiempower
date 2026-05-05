@@ -12,7 +12,7 @@ import { wordCount as getWordCount } from 'muya/lib/utils'
 import { mapState } from 'vuex'
 import { adjustCursor } from '../../util'
 import bus from '../../bus'
-import { oneDarkThemes, railscastsThemes } from '@/config'
+import { darkThemes } from '@/util/themeColor'
 import { readDocumentPosition, writeDocumentPosition } from '@/util/documentPosition'
 
 export default {
@@ -80,9 +80,7 @@ export default {
       }
 
       // Set theme
-      if (railscastsThemes.includes(theme)) {
-        codeMirrorConfig.theme = 'railscasts'
-      } else if (oneDarkThemes.includes(theme)) {
+      if (darkThemes.has(theme)) {
         codeMirrorConfig.theme = 'one-dark'
       }
 

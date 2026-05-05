@@ -1,30 +1,31 @@
 :root {
-  --themeColor: rgb(12, 139, 186);
-  --themeColor90: rgba(12, 139, 186, .9);
-  --themeColor80: rgba(12, 139, 186, .8);
-  --themeColor70: rgba(12, 139, 186, .7);
-  --themeColor60: rgba(12, 139, 186, .6);
-  --themeColor50: rgba(12, 139, 186, .5);
-  --themeColor40: rgba(12, 139, 186, .4);
-  --themeColor30: rgba(12, 139, 186, .3);
-  --themeColor20: rgba(12, 139, 186, .2);
-  --themeColor10: rgba(12, 139, 186, .1);
+  /*editor*/
+  --themeColor: rgb(217, 123, 101);
+  --themeColor90: rgba(217, 123, 101, 0.9);
+  --themeColor80: rgba(217, 123, 101, 0.8);
+  --themeColor70: rgba(217, 123, 101, 0.7);
+  --themeColor60: rgba(217, 123, 101, 0.6);
+  --themeColor50: rgba(217, 123, 101, 0.5);
+  --themeColor40: rgba(217, 123, 101, 0.4);
+  --themeColor30: rgba(217, 123, 101, 0.3);
+  --themeColor20: rgba(217, 123, 101, 0.2);
+  --themeColor10: rgba(217, 123, 101, 0.1);
 
-  --highlightColor: rgba(12, 139, 186, .4);
+  --highlightColor: rgba(217, 123, 101, 0.4);
   --selectionColor: rgba(0, 0, 0, .1);
-  --editorColor: rgba(101, 101, 101, .7);
-  --editorColor80: rgba(101, 101, 101, .8);
-  --editorColor60: rgba(101, 101, 101, .6);
-  --editorColor50: rgba(101, 101, 101, .5);
-  --editorColor40: rgba(101, 101, 101, .4);
-  --editorColor30: rgba(101, 101, 101, .3);
-  --editorColor10: rgba(101, 101, 101, .1);
-  --editorColor04: rgba(101, 101, 101, .04);
-  --editorBgColor: #f3f3f3;
+  --editorColor: rgba(76, 87, 104, 0.9);
+  --editorColor80: rgba(76, 87, 104, 1);
+  --editorColor60: rgba(76, 87, 104, 0.7);
+  --editorColor50: rgba(76, 87, 104, 0.6);
+  --editorColor40: rgba(76, 87, 104, 0.5);
+  --editorColor30: rgba(76, 87, 104, 0.4);
+  --editorColor10: rgba(76, 87, 104, 0.1);
+  --editorColor04: rgba(76, 87, 104, 0.04);
+  --editorBgColor: #ffffff;
   --deleteColor: #ff6969;
-  --iconColor: rgba(101, 101, 101, .8);
+  --iconColor: rgba(76, 87, 104, 0.8);
   --codeBgColor: #d8d8d869;
-  --codeBlockBgColor: rgba(12, 139, 186, .05);
+  --codeBlockBgColor: rgba(217, 123, 101, 0.05);
   --footnoteBgColor: rgba(0, 0, 0, .03);
   --inputBgColor: rgba(0, 0, 0, .06);
   --focusColor: var(--themeColor);
@@ -52,61 +53,75 @@
   --buttonPrimaryBgColorActive: var(--buttonPrimaryBgColor);
   --buttonPrimaryBorderActive: var(--buttonPrimaryBorder);
   --buttonPrimaryFocusBorder: none;
-  --buttonPrimaryFocusShadow: inset 0 0 0 1px rgba(5, 66, 89, 0.5), 0 0 0 1px var(--themeColor);
+  --buttonPrimaryFocusShadow: inset 0 0 0 1px rgba(109, 62, 51, 0.5), 0 0 0 1px var(--themeColor);
   --tableBorderColor: #e5e5e5;
 
-  --sideBarColor: rgba(101, 101, 101, .6);
+  /*marktext*/
+  --sideBarColor: rgba(76, 87, 104, 0.6);
   --sideBarIconColor: var(--iconColor);
-  --sideBarTitleColor: rgba(101, 101, 101, 1);
-  --sideBarTextColor: rgba(101, 101, 101, .4);
-  --sideBarBgColor: rgba(248, 248, 248, 0.9);
-  --sideBarItemHoverBgColor: rgba(101, 101, 101, .03);
+  --sideBarTitleColor: rgba(186, 114, 118, 1);
+  --sideBarTextColor: rgba(76, 87, 104, 0.4);
+  --sideBarBgColor: rgba(255, 255, 255, 0.9);
+  --sideBarItemHoverBgColor: rgba(76, 87, 104, 0.03);
   --itemBgColor: rgba(245, 245, 245, 0.6);
 
-  --floatFontColor: rgba(101, 101, 101, .7);
+  --floatFontColor: rgba(76, 87, 104, 0.7);
   --floatBgColor: #ffffff;
-  --floatHoverColor: rgba(101, 101, 101, .04);
+  --floatHoverColor: rgba(76, 87, 104, 0.04);
   --floatBorderColor: rgba(0, 0, 0, .03);
   --maskColor: rgba(232, 232, 232, .8);
   --editorAreaWidth: 750px;
 }
 
 .editor-tabs {
+  background: #f7f7f7 !important;
   box-shadow: none !important;
+}
+.editor-tabs:after {
+  position: absolute;
+  content: '';
+  border-bottom: 1px solid #e0e0e0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+.editor-tabs ul.tabs-container:after {
+  position: absolute;
+  content: '';
+  border-bottom: 1px solid #e0e0e0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
+.title-bar-editor-bg.tabs-visible {
+  background: #f7f7f7 !important;
 }
 
 .tabs-container > li {
-  border-right: 1px solid #e5e5e5 !important;
-  background: var(--editorBgColor) !important;
+  background: none !important;
+}
+.tabs-container > li.active {
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  border-bottom: none;
+  background: var(--floatBgColor) !important;
+}
+.tabs-container > li.active:after {
+  top: 0 !important;
+  bottom: auto !important;
+  background: var(--themeColor) !important;
 }
 
 /* ------------------------------------ */
 
-h1, h2, h3, h4, h5, h6 {
-  color: var(--themeColor);
-  text-align: center;
-}
-
-li.ag-bullet-list-item {
-  position: relative;
-  list-style: none;
-}
-li.ag-bullet-list-item::before {
-  content: '';
-  display: block;
-  position: absolute;
-  width: 5px;
-  height: 2px;
-  left: -18px;
-  top: 15px;
-  background: var(--editorColor);
-}
-
-blockquote.ag-paragraph {
-  background: rgb(233, 233, 233);
-}
-blockquote.ag-paragraph::before {
-  content: none;
+:not(pre) > code[class*="language-"],
+pre:not(.CodeMirror-line),
+pre[class*="language-"],
+pre.ag-paragraph {
+  background: var(--codeBlockBgColor) !important;
+  border: none !important;
 }
 
 li.ag-paragraph {
@@ -174,7 +189,7 @@ li.ag-task-list-item > input.ag-checkbox-checked::after {
 p:not(.ag-active)[data-role="hr"]::before {
   content: '';
   position: absolute;
-  width: 50%;
+  width: 100%;
   display: block;
   left: 50%;
   top: 50%;

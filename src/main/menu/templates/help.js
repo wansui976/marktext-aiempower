@@ -110,7 +110,7 @@ export default function () {
     helpMenu.submenu.push({
       type: 'separator'
     }, {
-      label: 'About MarkText...',
+      label: 'About MarkText-AIEmpower...',
       click (menuItem, browserWindow) {
         actions.showAboutDialog(browserWindow)
       }

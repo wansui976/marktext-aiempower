@@ -1,14 +1,23 @@
 <template>
-  <div class="side-bar-claude-chat" @keydown.stop @mousedown.stop>
+  <div class="side-bar-claude-chat" @keydown.stop="handleSidebarKeydown" @paste.stop @mousedown.capture="handleSidebarMouseDown">
     <div class="chat-header">
       <div class="chat-title">
-        <div class="title">Claude</div>
-        <div class="subtitle" :title="contextLabel">{{ contextLabel || 'No document open' }}</div>
+        <span class="title">{{ panelTitle }}</span>
+        <span v-if="contextLabel" class="title-doc-tag" :title="contextLabel">· {{ contextLabel }}</span>
       </div>
       <div class="chat-actions">
-        <button type="button" title="History" :disabled="streaming" @click="showSessions = !showSessions">History</button>
-        <button type="button" title="Settings" @click="showSettings = !showSettings">⚙</button>
-        <button type="button" title="New chat" :disabled="streaming" @click="newChat">New</button>
+        <button type="button" class="toolbar-btn icon primary" title="New chat" :disabled="streaming" @click="newChat">+</button>
+        <button type="button" class="toolbar-btn icon" title="More" @click.stop="showHeaderMenu = !showHeaderMenu">⋯</button>
+        <div v-if="showHeaderMenu" class="header-menu" @click.stop>
+          <button type="button" class="header-menu-item" :disabled="streaming" @click="openSessionsFromMenu">
+            <span class="header-menu-icon">◷</span>
+            <span>Sessions</span>
+          </button>
+          <button type="button" class="header-menu-item" @click="openSettingsFromMenu">
+            <span class="header-menu-icon">⚙</span>
+            <span>Settings</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -16,10 +25,10 @@
       <label>Provider</label>
       <select v-model="providerInput">
         <option value="anthropic">Anthropic</option>
-        <option value="openai">OpenAI Compatible</option>
+        <option value="openai">OpenAI compatible</option>
       </select>
       <div class="settings-hint">
-        Choose Anthropic Messages API or OpenAI Chat Completions compatible API.
+        Choose a provider compatible with Anthropic Messages API or OpenAI Chat Completions.
       </div>
 
       <label>{{ providerLabel }} API Key</label>
@@ -58,6 +67,18 @@
         Optional. Falls back to <code>{{ modelEnvName }}</code> env var. Currently using <code>{{ settingsResolvedModel }}</code>.
       </div>
 
+      <label>Writing style</label>
+      <textarea
+        class="settings-persona"
+        v-model="personaInput"
+        spellcheck="false"
+        rows="4"
+        :placeholder="personaPlaceholder"
+      ></textarea>
+      <div class="settings-hint">
+        Optional. Injected into every AI prompt. Describe your tone, format preferences, language, jargon to avoid, etc.
+      </div>
+
       <div class="settings-actions">
         <button type="button" @click="saveApiKey">Save</button>
         <button v-if="storedProvider || storedApiKey || storedBaseUrl || storedModel" type="button" class="ghost" @click="clearApiKey">Clear</button>
@@ -66,7 +87,10 @@
 
     <div v-if="showSessions" class="sessions-panel">
       <div class="sessions-header">
-        <span>Sessions</span>
+        <div class="sessions-heading">
+          <span>Sessions</span>
+          <span class="sessions-subtitle">{{ sessionScopeLabel }}</span>
+        </div>
         <button type="button" :disabled="streaming" @click="newChat">New</button>
       </div>
       <div v-if="!sortedSessions.length" class="empty-sessions">
@@ -85,6 +109,7 @@
           @click="selectSession(session.id)"
         >
           <span class="session-title">{{ session.title || 'New chat' }}</span>
+          <span v-if="session.documentLabel" class="session-doc">{{ session.documentLabel }}</span>
           <span class="session-meta">{{ formatSessionTime(session.updatedAt) }}</span>
         </button>
         <button
@@ -94,23 +119,15 @@
           :disabled="streaming"
           @click.stop="deleteSession(session.id)"
         >
-          Del
+          ×
         </button>
       </div>
     </div>
 
-    <div v-if="referenceText" class="reference-panel">
-      <div class="reference-header">
-        <span>Reference</span>
-        <button type="button" title="Clear reference" @click="clearReference">Clear</button>
-      </div>
-      <div v-if="referenceLabel" class="reference-label">{{ referenceLabel }}</div>
-      <pre>{{ referenceText }}</pre>
-    </div>
-
     <div ref="messageList" class="chat-messages" @click="handleMessageListClick">
       <div v-if="!displayMessages.length && apiKeyResolved" class="empty-hint">
-        Ask anything about the current document.
+        <div class="empty-hint-title">Ask about this document</div>
+        <div class="empty-hint-copy">Use a writing template below, or ask a direct question about the Markdown you are editing.</div>
       </div>
       <div
         v-for="message in displayMessages"
@@ -118,29 +135,52 @@
         class="message"
         :class="message.role"
       >
-        <div class="message-role">{{ message.role === 'user' ? 'You' : 'Claude' }}</div>
-        <div class="message-blocks">
-          <template v-for="(block, index) in message.blocks">
-            <div
-              v-if="block.type === 'text'"
-              :key="index"
-              class="block-text"
-              v-html="renderMarkdown(block.text)"
-            ></div>
-            <div
-              v-else-if="block.type === 'tool'"
-              :key="index"
-              class="block-tool"
-              :class="block.status"
-            >
-              <span class="tool-icon">
-                <span v-if="block.status === 'running'" class="spinner"></span>
-                <span v-else-if="block.status === 'error'">⚠</span>
-                <span v-else>✓</span>
-              </span>
-              <span class="tool-name">{{ toolLabel(block.name) }}</span>
+        <div v-if="message.role === 'system'" class="message-shell">
+          <div class="message-avatar"></div>
+          <div class="message-main">
+            <div class="system-card">
+              <div class="system-card-label">已压缩对话</div>
+              <div class="message-blocks">
+                <template v-for="(block, index) in message.blocks">
+                  <div
+                    v-if="block.type === 'text'"
+                    :key="index"
+                    class="block-text"
+                    v-html="renderMarkdown(block.text)"
+                  ></div>
+                </template>
+              </div>
             </div>
-          </template>
+          </div>
+        </div>
+        <div v-else class="message-shell">
+          <div class="message-avatar">{{ message.role === 'user' ? '' : '' }}</div>
+          <div class="message-main">
+            <div class="message-role">{{ message.role === 'user' ? 'You' : 'AI' }}</div>
+            <div class="message-blocks">
+              <template v-for="(block, index) in message.blocks">
+                <div
+                  v-if="block.type === 'text'"
+                  :key="index"
+                  class="block-text"
+                  v-html="block === streamingBlockRef ? streamingHtml : renderMarkdown(block.text)"
+                ></div>
+                <div
+                  v-else-if="block.type === 'tool'"
+                  :key="index"
+                  class="block-tool"
+                  :class="block.status"
+                >
+                  <span class="tool-icon">
+                    <span v-if="block.status === 'running'" class="tool-spinner"></span>
+                    <span v-else-if="block.status === 'error'">⚠</span>
+                    <span v-else>✓</span>
+                  </span>
+                  <span class="tool-name">{{ toolLabel(block.name) }}</span>
+                </div>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
       <div v-if="error" class="error">
@@ -156,12 +196,25 @@
         <span>Stopped. Your message is preserved.</span>
         <button type="button" class="retry-btn" @click="retryLastSend">Retry</button>
       </div>
+      <div v-if="editUndoStack.length && !streaming" class="undo-bar">
+        <button type="button" class="undo-btn" @click="undoLastEdit">
+          <span class="undo-icon">↩</span> Undo last edit
+        </button>
+        <span class="undo-hint">{{ editUndoStack.length }} edit{{ editUndoStack.length > 1 ? 's' : '' }} in stack</span>
+      </div>
     </div>
 
     <div v-if="pendingEdit" class="edit-preview">
-      <div class="edit-preview-header">
-        <span>Proposed edit · {{ toolLabel(pendingEdit.name) }}</span>
-        <span class="edit-summary">{{ pendingEdit.summary }}</span>
+      <div class="edit-preview-topbar">
+        <div class="edit-preview-header">
+          <span class="edit-preview-kicker">Review Changes</span>
+          <span>Proposed edit · {{ toolLabel(pendingEdit.name) }}</span>
+          <span class="edit-summary">{{ pendingEdit.summary }}</span>
+        </div>
+        <div class="edit-preview-actions">
+          <button type="button" class="reject" @click="rejectPendingEdit">Reject</button>
+          <button type="button" class="accept" @click="acceptPendingEdit">Accept</button>
+        </div>
       </div>
       <div class="edit-diff-meta">
         <span class="diff-badge add">+{{ pendingEdit.stats.added }}</span>
@@ -175,38 +228,134 @@
           </div>
         </template>
       </div>
-      <div class="edit-preview-actions">
-        <button type="button" class="accept" @click="acceptPendingEdit">Accept</button>
-        <button type="button" class="reject" @click="rejectPendingEdit">Reject</button>
+      <div class="edit-preview-footnote">
+        Apply this change to the current Markdown document only after you review the highlighted lines.
       </div>
     </div>
 
     <form class="chat-input" @submit.prevent="send">
-      <textarea
-        ref="input"
-        v-model="input"
-        :disabled="streaming || compacting || !!pendingEdit || !apiKeyResolved"
-        spellcheck="false"
-        rows="3"
-        :placeholder="inputPlaceholder"
-        @keydown.enter.exact.prevent="send"
-      ></textarea>
-      <div class="input-row">
-        <span class="hint">
-          <span>Enter to send · Shift+Enter for newline</span>
-          <span class="token-count" :class="{ warn: tokenWarning }">{{ tokenDisplay }}</span>
-        </span>
-        <span class="input-actions">
+      <div class="composer-meta">
+        <span
+          class="token-count"
+          :class="{ warn: tokenWarning }"
+          :title="tokenWarning ? '对话较长，建议压缩' : ''"
+        >
+          <span class="token-dot"></span>
+          {{ tokenDisplay }}
           <button
             v-if="showCompactButton"
             type="button"
-            class="compact-btn"
+            class="token-compact-link"
             :disabled="compacting"
             @click="compactConversation"
-          >{{ compacting ? 'Compacting...' : 'Compact' }}</button>
-          <button v-if="streaming || compacting" type="button" class="stop" @click="stop">Stop</button>
-          <button v-else type="submit" :disabled="!apiKeyResolved || !input.trim() || !!pendingEdit">Send</button>
+          >{{ compacting ? '压缩中…' : '压缩 ↗' }}</button>
         </span>
+        <span class="composer-meta-spacer"></span>
+        <span v-if="referenceText" class="selection-status">
+          {{ referenceLineCount }} {{ referenceLineCount === 1 ? 'line' : 'lines' }} selected
+        </span>
+        <button
+          type="button"
+          class="mode-trigger"
+          :disabled="streaming || compacting"
+          :title="currentEditMode.description"
+          @click.stop="showModeMenu = !showModeMenu"
+        >
+          <span class="mode-trigger-icon">{{ currentEditMode.icon }}</span>
+          <span class="mode-trigger-label">{{ currentEditMode.shortLabel }}</span>
+        </button>
+      </div>
+      <div v-if="attachedImages.length" class="attached-images">
+        <div v-for="(img, idx) in attachedImages" :key="img.id" class="attached-image-thumb">
+          <img :src="img.previewUrl" :alt="img.name" />
+          <button type="button" class="remove-attachment" @click="removeImage(idx)">×</button>
+        </div>
+      </div>
+      <div v-if="attachedContexts.length" class="attached-contexts">
+        <span v-for="(ctx, idx) in attachedContexts" :key="idx" class="context-chip" :title="ctx.fullPath || ctx.text">
+          <span class="context-chip-icon">{{ ctx.type === 'file' ? '#' : '@' }}</span>
+          <span class="context-chip-label">{{ ctx.label }}</span>
+          <button type="button" class="context-chip-remove" @click="removeContext(idx)">×</button>
+        </span>
+      </div>
+      <div class="composer-input-wrap" @dragover.prevent @drop="handleDrop">
+        <textarea
+          ref="input"
+          v-model="input"
+          :disabled="streaming || compacting || !!pendingEdit || !apiKeyResolved"
+          spellcheck="false"
+          rows="3"
+          :placeholder="inputPlaceholder"
+          @keydown.enter.exact.prevent="send"
+          @keydown.up="handleHistoryUp"
+          @keydown.down="handleHistoryDown"
+          @input="handleInputEvent"
+          @paste="handlePaste"
+        ></textarea>
+        <div v-if="mentionSuggestions.length" class="mention-menu">
+          <button
+            v-for="(suggestion, idx) in mentionSuggestions"
+            :key="idx"
+            type="button"
+            class="mention-item"
+            @mousedown.prevent="selectMention(suggestion)"
+          >
+            <span class="mention-icon">{{ suggestion.type === 'file' ? '#' : '§' }}</span>
+            <span class="mention-label">{{ suggestion.label }}</span>
+          </button>
+        </div>
+        <div v-if="slashSuggestions.length" class="mention-menu slash-menu">
+          <button
+            v-for="template in slashSuggestions"
+            :key="template.id"
+            type="button"
+            class="mention-item"
+            @mousedown.prevent="selectSlashCommand(template)"
+          >
+            <span class="mention-icon">/</span>
+            <span class="mention-label">{{ template.label }}</span>
+          </button>
+        </div>
+        <div class="composer-toolbar">
+          <span class="composer-slash" title="Quick prompts">/</span>
+          <button
+            v-for="template in promptTemplates"
+            :key="template.id"
+            type="button"
+            class="template-btn"
+            :disabled="streaming || compacting || !!pendingEdit || !apiKeyResolved"
+            @click="runTemplatePrompt(template)"
+          >{{ template.label }}</button>
+          <span class="composer-toolbar-spacer"></span>
+          <button v-if="streaming || compacting" type="button" class="send-btn stop" @click="stop">Stop</button>
+          <button
+            v-else
+            type="submit"
+            class="send-btn primary"
+            :disabled="!apiKeyResolved || (!input.trim() && !attachedImages.length) || !!pendingEdit"
+          >Send <span class="send-key">↵</span></button>
+        </div>
+      </div>
+      <div v-if="showModeMenu" class="mode-menu">
+        <div class="mode-menu-header">
+          <span>Modes</span>
+          <span class="mode-menu-hint">Select how AI should edit</span>
+        </div>
+        <button
+          v-for="mode in editModes"
+          :key="mode.id"
+          type="button"
+          class="mode-option"
+          :class="{ active: mode.id === currentEditMode.id }"
+          @click="selectEditMode(mode.id)"
+        >
+          <span class="mode-option-icon">{{ mode.icon }}</span>
+          <span class="mode-option-copy">
+            <span class="mode-option-title">{{ mode.label }}</span>
+            <span class="mode-option-description">{{ mode.description }}</span>
+          </span>
+          <span v-if="mode.id === currentEditMode.id" class="mode-option-check">✓</span>
+        </button>
       </div>
       <div v-if="compactNotice" class="compact-notice">{{ compactNotice }}</div>
     </form>
@@ -223,11 +372,15 @@ import Prism, { loadLanguage } from 'muya/lib/prism'
 import bus from '../../bus'
 import { PROVIDERS, normalizeProvider, resolveApiKey, resolveBaseUrl, resolveModel, sanitizeMessages, streamChat } from '../../node/claudeApi'
 import { wordCount as getWordCount } from 'muya/lib/utils'
+import loadRenderer from 'muya/lib/renderers'
+import { darkThemes as darkThemeSet } from '../../util/themeColor'
 
 const PROVIDER_STORAGE_KEY = 'marktext.claudeProvider'
 const STORAGE_KEY = 'marktext.claudeApiKey'
 const BASE_URL_STORAGE_KEY = 'marktext.claudeBaseUrl'
 const MODEL_STORAGE_KEY = 'marktext.claudeModel'
+const PERSONA_STORAGE_KEY = 'marktext.claudePersona'
+const EDIT_MODE_STORAGE_KEY = 'marktext.claudeEditMode'
 const SESSIONS_STORAGE_KEY = 'marktext.claudeSessions'
 const ACTIVE_SESSION_STORAGE_KEY = 'marktext.claudeActiveSessionId'
 const ACTIVE_SESSION_MAP_STORAGE_KEY = 'marktext.claudeActiveSessionIds'
@@ -253,7 +406,65 @@ const TOOL_LABELS = {
   list_directory: 'Listing directory'
 }
 
+const EDIT_MODES = [
+  {
+    id: 'ask',
+    icon: '✋',
+    label: 'Ask before edits',
+    shortLabel: 'Ask before edits',
+    description: 'AI will ask for approval before making each edit'
+  },
+  {
+    id: 'auto',
+    icon: '</>',
+    label: 'Edit automatically',
+    shortLabel: 'Edit automatically',
+    description: 'AI will edit your selected text or the whole file'
+  },
+  {
+    id: 'plan',
+    icon: '☰',
+    label: 'Plan mode',
+    shortLabel: 'Plan mode',
+    description: 'AI will explore the document and present a plan before editing'
+  }
+]
+
+const PROMPT_TEMPLATES = [
+  {
+    id: 'polish',
+    label: 'Polish',
+    prompt: 'Review this Markdown document and improve clarity, wording, and flow while preserving the original meaning and structure. Suggest concrete edits or apply them if I ask.'
+  },
+  {
+    id: 'continue',
+    label: 'Continue',
+    prompt: 'Continue writing this Markdown document in the same tone and structure. Focus on the next most natural section and keep the formatting consistent.'
+  },
+  {
+    id: 'condense',
+    label: 'Condense',
+    prompt: 'Condense this Markdown document while preserving the key points, structure, and important details. Remove repetition and tighten wording.'
+  },
+  {
+    id: 'summary',
+    label: 'Summarize',
+    prompt: 'Summarize this Markdown document into a concise structured overview with headings and bullet points.'
+  },
+  {
+    id: 'structure',
+    label: 'Structure',
+    prompt: 'Review the structure of this Markdown document. Suggest a clearer outline, section order, and headings, with concrete recommendations.'
+  },
+  {
+    id: 'mermaid',
+    label: 'Diagram',
+    prompt: 'Read the current document and generate a Mermaid diagram that visualizes its structure, relationships, or key concepts. Output the diagram inside a ```mermaid code fence. If the user previously selected text, focus the diagram on that selection.'
+  }
+]
+
 const EDIT_TOOL_NAMES = new Set(['apply_edit', 'replace_text', 'insert_text'])
+const MAX_UNDO_STACK = 20
 
 const computeLineDiff = (oldText, newText) => {
   const a = String(oldText || '').split('\n')
@@ -288,6 +499,31 @@ const computeLineDiff = (oldText, newText) => {
   while (i < m) result.push({ type: 'remove', text: a[i++] })
   while (j < n) result.push({ type: 'add', text: b[j++] })
   return result
+}
+
+const buildContextualPreview = (markdown, start, end, replacement, contextLines = 2) => {
+  const source = String(markdown || '')
+  const safeStart = Math.max(0, Math.min(start, source.length))
+  const safeEnd = Math.max(safeStart, Math.min(end, source.length))
+  const before = source.slice(0, safeStart)
+  const changed = source.slice(safeStart, safeEnd)
+  const after = source.slice(safeEnd)
+
+  const beforeLines = before.split('\n')
+  const afterLines = after.split('\n')
+  const hasHiddenPrefix = beforeLines.length > contextLines
+  const hasHiddenSuffix = afterLines.length > contextLines
+  const prefix = beforeLines.slice(-contextLines).join('\n')
+  const suffix = afterLines.slice(0, contextLines).join('\n')
+  const prefixText = prefix ? `${hasHiddenPrefix ? '...\n' : ''}${prefix}` : (hasHiddenPrefix ? '...\n' : '')
+  const suffixText = suffix ? `${suffix}${hasHiddenSuffix ? '\n...' : ''}` : (hasHiddenSuffix ? '\n...' : '')
+  const middleSeparator = prefixText && !prefixText.endsWith('\n') ? '\n' : ''
+  const suffixSeparator = suffixText && !suffixText.startsWith('\n') ? '\n' : ''
+
+  return {
+    oldText: `${prefixText}${middleSeparator}${changed}${suffixSeparator}${suffixText}`,
+    newText: `${prefixText}${middleSeparator}${replacement}${suffixSeparator}${suffixText}`
+  }
 }
 
 const documentSnapshotKey = markdown => {
@@ -394,6 +630,8 @@ export default {
       storedBaseUrl: '',
       modelInput: '',
       storedModel: '',
+      personaInput: '',
+      storedPersona: '',
       showSettings: false,
       streaming: false,
       error: '',
@@ -410,14 +648,34 @@ export default {
       pendingRetry: null,
       compacting: false,
       compactNotice: '',
-      loadedDocumentSessionKey: 'global'
+      loadedDocumentSessionKey: 'global',
+      skipNextAutoFocus: false,
+      storedEditMode: 'ask',
+      showModeMenu: false,
+      showHeaderMenu: false,
+      attachedImages: [],
+      attachedContexts: [],
+      mentionTrigger: null,
+      mentionSuggestions: [],
+      editUndoStack: [],
+      slashSuggestions: [],
+      slashTrigger: null,
+      streamingHtml: '',
+      streamingBlockRef: null,
+      inputHistory: [],
+      inputHistoryIndex: -1,
+      inputHistoryDraft: ''
     }
   },
   computed: {
     ...mapState({
       currentFile: state => state.editor.currentFile,
-      projectTree: state => state.project.projectTree
+      projectTree: state => state.project.projectTree,
+      theme: state => state.preferences.theme
     }),
+    isDarkTheme () {
+      return darkThemeSet.has(this.theme || '')
+    },
     providerResolved () {
       return normalizeProvider(this.storedProvider)
     },
@@ -425,7 +683,22 @@ export default {
       return normalizeProvider(this.providerInput || this.storedProvider)
     },
     activeProviderLabel () {
-      return this.providerResolved === PROVIDERS.OPENAI ? 'OpenAI' : 'Claude'
+      return 'AI'
+    },
+    panelTitle () {
+      if (this.activeSession && this.activeSession.title && this.activeSession.title !== 'New chat') {
+        return this.activeSession.title
+      }
+      if (this.referenceText) {
+        const singleLine = this.referenceText.replace(/\s+/g, ' ').trim()
+        if (singleLine) {
+          return singleLine.length > 18 ? `${singleLine.slice(0, 18)}...` : singleLine
+        }
+      }
+      return 'AI'
+    },
+    providerBadgeLabel () {
+      return this.providerResolved === PROVIDERS.OPENAI ? 'OpenAI compatible' : 'Anthropic'
     },
     providerLabel () {
       return this.settingsProvider === PROVIDERS.OPENAI ? 'OpenAI' : 'Anthropic'
@@ -461,6 +734,9 @@ export default {
     modelPlaceholder () {
       return resolveModel('', this.settingsProvider)
     },
+    personaPlaceholder () {
+      return 'e.g. Reply in Chinese. Prefer concise bullet points over long paragraphs. Avoid emoji. Use technical Chinese terms (use English words for code/API names).'
+    },
     settingsResolvedModel () {
       return resolveModel(this.modelInput, this.settingsProvider)
     },
@@ -477,6 +753,13 @@ export default {
       if (!this.reference) return ''
       return this.reference.filename || this.contextLabel || ''
     },
+    referenceLineCount () {
+      if (!this.referenceText) return 0
+      return this.referenceText
+        .split(/\r?\n/)
+        .filter(line => line.trim().length > 0)
+        .length || 1
+    },
     contextLabel () {
       if (this.currentFile && this.currentFile.filename) {
         return this.currentFile.filename
@@ -486,11 +769,23 @@ export default {
       }
       return ''
     },
+    sessionScopeLabel () {
+      return this.contextLabel || 'Workspace'
+    },
     currentDocumentSessionKey () {
       return getSessionDocumentKey(this.currentFile, this.projectTree)
     },
+    promptTemplates () {
+      return PROMPT_TEMPLATES
+    },
+    editModes () {
+      return EDIT_MODES
+    },
+    currentEditMode () {
+      return EDIT_MODES.find(mode => mode.id === this.storedEditMode) || EDIT_MODES[0]
+    },
     inputPlaceholder () {
-      if (!this.apiKeyResolved) return 'Set your Anthropic API key to start.'
+      if (!this.apiKeyResolved) return 'Set an API key to start.'
       if (this.streaming) return `${this.activeProviderLabel} is replying...`
       return 'Ask AI about this document'
     },
@@ -511,7 +806,9 @@ export default {
   },
   watch: {
     active (value) {
-      if (value) this.$nextTick(this.focusInput)
+      if (value) {
+        this.skipNextAutoFocus = false
+      }
     },
     currentFile (file, oldFile) {
       const nextKey = getSessionDocumentKey(file, this.projectTree)
@@ -530,6 +827,9 @@ export default {
       if (nextKey !== prevKey) {
         this.handleDocumentContextChange(nextKey)
       }
+    },
+    isDarkTheme () {
+      this.rerenderMermaidBlocks()
     }
   },
   mounted () {
@@ -542,9 +842,12 @@ export default {
     this.baseUrlInput = this.storedBaseUrl
     this.storedModel = localStorage.getItem(MODEL_STORAGE_KEY) || ''
     this.modelInput = this.storedModel
+    this.storedPersona = localStorage.getItem(PERSONA_STORAGE_KEY) || ''
+    this.personaInput = this.storedPersona
+    const storedEditMode = localStorage.getItem(EDIT_MODE_STORAGE_KEY) || 'ask'
+    this.storedEditMode = EDIT_MODES.some(mode => mode.id === storedEditMode) ? storedEditMode : 'ask'
     this.loadSessions(this.currentDocumentSessionKey)
     bus.$on('claude-selection-reference', this.handleSelectionReference)
-    if (this.active) this.$nextTick(this.focusInput)
   },
   beforeDestroy () {
     bus.$off('claude-selection-reference', this.handleSelectionReference)
@@ -560,18 +863,21 @@ export default {
       const apiKeyValue = this.apiKeyInput.trim()
       const baseUrlValue = this.baseUrlInput.trim()
       const modelValue = this.modelInput.trim()
+      const personaValue = this.personaInput.trim()
       const providerValue = normalizeProvider(this.providerInput)
 
       persist(PROVIDER_STORAGE_KEY, providerValue === PROVIDERS.ANTHROPIC ? '' : providerValue)
       persist(STORAGE_KEY, apiKeyValue)
       persist(BASE_URL_STORAGE_KEY, baseUrlValue)
       persist(MODEL_STORAGE_KEY, modelValue)
+      persist(PERSONA_STORAGE_KEY, personaValue)
 
       this.storedProvider = providerValue === PROVIDERS.ANTHROPIC ? '' : providerValue
       this.providerInput = providerValue
       this.storedApiKey = apiKeyValue
       this.storedBaseUrl = baseUrlValue
       this.storedModel = modelValue
+      this.storedPersona = personaValue
 
       if (this.apiKeyResolved) {
         this.showSettings = false
@@ -583,6 +889,7 @@ export default {
       localStorage.removeItem(STORAGE_KEY)
       localStorage.removeItem(BASE_URL_STORAGE_KEY)
       localStorage.removeItem(MODEL_STORAGE_KEY)
+      localStorage.removeItem(PERSONA_STORAGE_KEY)
       this.storedProvider = ''
       this.providerInput = PROVIDERS.ANTHROPIC
       this.storedApiKey = ''
@@ -591,12 +898,34 @@ export default {
       this.baseUrlInput = ''
       this.storedModel = ''
       this.modelInput = ''
+      this.storedPersona = ''
+      this.personaInput = ''
+    },
+    selectEditMode (modeId) {
+      const mode = EDIT_MODES.find(item => item.id === modeId)
+      if (!mode) return
+      this.storedEditMode = mode.id
+      localStorage.setItem(EDIT_MODE_STORAGE_KEY, mode.id)
+      this.showModeMenu = false
+    },
+    getCurrentDocumentLabel () {
+      if (this.currentFile && this.currentFile.filename) {
+        return this.currentFile.filename
+      }
+      if (this.currentFile && this.currentFile.pathname) {
+        return path.basename(this.currentFile.pathname)
+      }
+      if (this.projectTree && this.projectTree.pathname) {
+        return path.basename(this.projectTree.pathname)
+      }
+      return 'Workspace'
     },
     createSession (documentKey = this.loadedDocumentSessionKey) {
       const now = Date.now()
       return {
         id: nextSessionId(),
         documentKey,
+        documentLabel: this.getCurrentDocumentLabel(),
         title: 'New chat',
         createdAt: now,
         updatedAt: now,
@@ -614,6 +943,7 @@ export default {
           .map(session => ({
             id: String(session.id),
             documentKey: session.documentKey || legacyDocumentKey || 'global',
+            documentLabel: session.documentLabel || '',
             title: session.title || 'New chat',
             createdAt: Number(session.createdAt || Date.now()),
             updatedAt: Number(session.updatedAt || session.createdAt || Date.now()),
@@ -670,6 +1000,7 @@ export default {
         .map(session => ({
           id: session.id,
           documentKey: session.documentKey || this.loadedDocumentSessionKey,
+          documentLabel: session.documentLabel || this.getCurrentDocumentLabel(),
           title: session.title || 'New chat',
           createdAt: session.createdAt || Date.now(),
           updatedAt: session.updatedAt || session.createdAt || Date.now(),
@@ -704,6 +1035,7 @@ export default {
       if (!session) return
 
       session.documentKey = session.documentKey || this.loadedDocumentSessionKey
+      session.documentLabel = this.getCurrentDocumentLabel()
       session.displayMessages = cloneMessages(this.displayMessages)
       session.apiMessages = sanitizeMessages(cloneMessages(this.apiMessages))
       if (session.title === 'New chat' && this.displayMessages.length) {
@@ -734,12 +1066,12 @@ export default {
       this.writeActiveSessionId(this.loadedDocumentSessionKey, session.id)
       this.$nextTick(() => {
         this.scrollToBottom(true)
-        this.focusInput()
+        this.renderMermaidBlocks()
       })
     },
     deleteSession (sessionId) {
       if (this.streaming) return
-      if (!window.confirm('Delete this Claude session?')) return
+      if (!window.confirm('Delete this AI session?')) return
 
       const wasActive = sessionId === this.activeSessionId
       if (!wasActive) {
@@ -764,7 +1096,6 @@ export default {
       }
 
       this.persistSessions()
-      this.$nextTick(this.focusInput)
     },
     formatSessionTime (timestamp) {
       if (!timestamp) return ''
@@ -786,7 +1117,6 @@ export default {
       if (!this.displayMessages.length && !this.apiMessages.length) {
         this.error = ''
         this.showSessions = false
-        this.$nextTick(this.focusInput)
         return
       }
 
@@ -804,7 +1134,6 @@ export default {
       this.showSessions = false
       this.clearMarkdownCache()
       this.persistSessions()
-      this.$nextTick(this.focusInput)
     },
     handleDocumentContextChange (nextDocumentKey) {
       if (nextDocumentKey === this.loadedDocumentSessionKey) return
@@ -815,7 +1144,7 @@ export default {
       this.loadSessions(nextDocumentKey)
       this.$nextTick(() => {
         this.scrollToBottom(true)
-        this.focusInput()
+        this.renderMermaidBlocks()
       })
     },
     stop () {
@@ -891,6 +1220,64 @@ export default {
     clearMarkdownCache () {
       this.markdownCache.clear()
     },
+    rerenderMermaidBlocks () {
+      const container = this.$refs.messageList
+      if (!container) return
+      container.querySelectorAll('.mermaid-preview').forEach(el => el.remove())
+      container.querySelectorAll('.mermaid-error').forEach(el => el.remove())
+      container.querySelectorAll('pre[data-mermaid-rendered]').forEach(pre => {
+        pre.classList.remove('mermaid-source-collapsed')
+        delete pre.dataset.mermaidRendered
+      })
+      this._mermaidInitialized = false
+      this.$nextTick(() => this.renderMermaidBlocks())
+    },
+    async renderMermaidBlocks () {
+      const container = this.$refs.messageList
+      if (!container) return
+      const codeBlocks = container.querySelectorAll('pre > code.language-mermaid')
+      if (!codeBlocks.length) return
+      const mermaidTheme = this.isDarkTheme ? 'dark' : 'default'
+      let mermaid
+      try {
+        mermaid = await loadRenderer('mermaid')
+        if (!this._mermaidInitialized || this._mermaidTheme !== mermaidTheme) {
+          mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: mermaidTheme })
+          this._mermaidInitialized = true
+          this._mermaidTheme = mermaidTheme
+        }
+      } catch (err) { return }
+      for (const code of codeBlocks) {
+        const pre = code.parentElement
+        if (!pre || pre.dataset.mermaidRendered) continue
+        const source = code.textContent || ''
+        if (!source.trim()) continue
+        pre.dataset.mermaidRendered = '1'
+        try {
+          const id = `mmd-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+          const { svg } = await mermaid.render(id, source.trim())
+          const wrapper = document.createElement('div')
+          wrapper.className = 'mermaid-preview'
+          wrapper.innerHTML = svg
+          const toggle = document.createElement('button')
+          toggle.type = 'button'
+          toggle.className = 'mermaid-toggle'
+          toggle.textContent = 'Source'
+          toggle.addEventListener('click', () => {
+            pre.classList.toggle('mermaid-source-collapsed')
+            toggle.textContent = pre.classList.contains('mermaid-source-collapsed') ? 'Source' : 'Hide source'
+          })
+          wrapper.appendChild(toggle)
+          pre.parentElement.insertBefore(wrapper, pre.nextSibling)
+          pre.classList.add('mermaid-source-collapsed')
+        } catch (err) {
+          const errEl = document.createElement('div')
+          errEl.className = 'mermaid-error'
+          errEl.textContent = `Diagram error: ${err.message || err}`
+          pre.parentElement.insertBefore(errEl, pre.nextSibling)
+        }
+      }
+    },
     handleSelectionReference (reference) {
       if (!reference) {
         this.clearReference()
@@ -908,25 +1295,160 @@ export default {
         filename: reference.filename || this.contextLabel,
         text
       }
+      this.skipNextAutoFocus = true
     },
     clearReference () {
       this.reference = null
     },
-    buildPromptWithReference (text) {
-      if (!this.referenceText) return text
+    openSessionsFromMenu () {
+      this.showHeaderMenu = false
+      this.showSettings = false
+      this.showSessions = !this.showSessions
+    },
+    openSettingsFromMenu () {
+      this.showHeaderMenu = false
+      this.showSessions = false
+      this.showSettings = !this.showSettings
+    },
+    handleSidebarKeydown (event) {
+      const isMeta = event.metaKey || event.ctrlKey
+      if (isMeta && event.key === 'z' && !event.shiftKey && this.editUndoStack.length && !this.streaming) {
+        event.preventDefault()
+        this.undoLastEdit()
+      }
+    },
+    handleSidebarMouseDown (event) {
+      const target = event.target
+      if (this.showModeMenu) {
+        const insideMenu = target && target.closest && (target.closest('.mode-menu') || target.closest('.mode-trigger'))
+        if (!insideMenu) {
+          this.showModeMenu = false
+        }
+      }
+      if (this.showHeaderMenu) {
+        const insideHeaderMenu = target && target.closest && (target.closest('.header-menu') || target.closest('.chat-actions'))
+        if (!insideHeaderMenu) {
+          this.showHeaderMenu = false
+        }
+      }
+      if (this.mentionSuggestions.length || this.slashSuggestions.length) {
+        const insideMention = target && target.closest && target.closest('.mention-menu')
+        if (!insideMention) {
+          this.mentionTrigger = null
+          this.mentionSuggestions = []
+          this.slashTrigger = null
+          this.slashSuggestions = []
+        }
+      }
+      const insideSelectableContent = target && target.closest && (
+        target.closest('.block-text') ||
+        target.closest('.error') ||
+        target.closest('.aborted')
+      )
+      if (insideSelectableContent) {
+        return
+      }
+      const tagName = target && target.tagName ? target.tagName.toUpperCase() : ''
+      const allowFocus = tagName === 'TEXTAREA' || tagName === 'INPUT' || tagName === 'SELECT' || target.isContentEditable
+      if (!allowFocus) {
+        bus.$emit('claude-preserve-selection')
+        event.preventDefault()
+      }
+    },
+    buildPromptWithReference (text, options = {}) {
+      const includeReference = options.includeReference !== false
+      const questionLabel = options.questionLabel || 'Question'
+      const lines = []
 
-      const lines = [
-        'Use this selected Markdown reference from the current document when answering.',
-        this.referenceLabel ? `File: ${this.referenceLabel}` : '',
-        '<selected_reference>',
-        this.referenceText,
-        '</selected_reference>',
-        '',
-        `Question: ${text}`
-      ]
+      if (this.currentEditMode.id === 'plan') {
+        lines.push('Mode: Plan mode.')
+        lines.push('Do not modify the document yet. First inspect the current document and reply with a concise plan or recommendation.')
+        lines.push('Do not call apply_edit, replace_text, or insert_text unless the user explicitly asks for edits after the plan.')
+        lines.push('')
+      }
+
+      if (includeReference && this.referenceText) {
+        lines.push('Use this selected Markdown reference from the current document when answering.')
+        if (this.referenceLabel) {
+          lines.push(`File: ${this.referenceLabel}`)
+        }
+        lines.push('<selected_reference>')
+        lines.push(this.referenceText)
+        lines.push('</selected_reference>')
+        lines.push('')
+      }
+
+      lines.push(`${questionLabel}: ${text}`)
       return lines.filter(line => line !== '').join('\n')
     },
+    async sendPreparedPrompt (text, options = {}) {
+      if (this.streaming || this.compacting || this.pendingEdit) return
+      const provider = this.providerResolved
+      const apiKey = resolveApiKey(this.storedApiKey, provider)
+      if (provider === PROVIDERS.ANTHROPIC && !apiKey) {
+        this.showSettings = true
+        return
+      }
+      this.input = ''
+
+      let apiText = this.buildPromptWithReference(text, options)
+
+      if (this.attachedContexts.length) {
+        const contextText = this.buildContextText()
+        if (contextText) {
+          apiText = `${contextText}\n\n${apiText}`
+        }
+        this.attachedContexts = []
+      }
+
+      let apiContent = apiText
+      if (this.attachedImages.length) {
+        const blocks = this.attachedImages.map(img => ({
+          type: 'image',
+          source: { type: 'base64', media_type: img.mediaType, data: img.data }
+        }))
+        blocks.push({ type: 'text', text: apiText })
+        apiContent = blocks
+        this.attachedImages = []
+      }
+
+      await this.runSend(text, apiContent)
+    },
+    runTemplatePrompt (template) {
+      const prompt = `${template.prompt}\n\nCall get_document to read the current Markdown document before answering.`
+      this.sendPreparedPrompt(prompt, {
+        includeReference: false,
+        questionLabel: 'Task'
+      })
+    },
+    pushUndoSnapshot (label) {
+      if (!this.currentFile || typeof this.currentFile.markdown !== 'string') return
+      this.editUndoStack.push({
+        fileId: this.currentFile.id,
+        markdown: this.currentFile.markdown,
+        label: label || 'Claude edit',
+        timestamp: Date.now()
+      })
+      if (this.editUndoStack.length > MAX_UNDO_STACK) {
+        this.editUndoStack.splice(0, this.editUndoStack.length - MAX_UNDO_STACK)
+      }
+    },
+    undoLastEdit () {
+      if (!this.editUndoStack.length) return
+      const snapshot = this.editUndoStack.pop()
+      if (!this.currentFile || this.currentFile.id !== snapshot.fileId) return
+      this.$store.dispatch('LISTEN_FOR_CONTENT_CHANGE', {
+        id: snapshot.fileId,
+        markdown: snapshot.markdown,
+        wordCount: getWordCount(snapshot.markdown)
+      })
+      bus.$emit('claude-apply-edit', {
+        id: snapshot.fileId,
+        markdown: snapshot.markdown
+      })
+    },
     applyMarkdownUpdate (newMarkdown) {
+      this.pushUndoSnapshot()
       this.$store.dispatch('LISTEN_FOR_CONTENT_CHANGE', {
         id: this.currentFile.id,
         markdown: newMarkdown,
@@ -952,6 +1474,12 @@ export default {
         return `# ${filename}\n\n${markdown}`
       }
       if (EDIT_TOOL_NAMES.has(name)) {
+        if (this.currentEditMode.id === 'plan') {
+          return 'Plan mode is enabled. Do not edit the document yet. Present a plan first.'
+        }
+        if (this.currentEditMode.id === 'auto') {
+          return this.applyEditImmediately(name, input)
+        }
         return this.requestEditApproval(name, input)
       }
       if (name === 'read_file') {
@@ -999,6 +1527,8 @@ export default {
         }
         return {
           newMarkdown: String(input.content),
+          diffOldText: markdown,
+          diffNewText: String(input.content),
           summary: 'Replace the entire document.',
           successResult: 'Document updated.'
         }
@@ -1012,6 +1542,7 @@ export default {
         if (!markdown.includes(oldText)) {
           throw new Error('replace_text old_text was not found in the current document.')
         }
+        const firstMatchIndex = markdown.indexOf(oldText)
         let count = 0
         const newMarkdown = input.replace_all
           ? markdown.split(oldText).map((part, index) => {
@@ -1022,9 +1553,14 @@ export default {
             count = 1
             return input.new_text
           })
+        const preview = buildContextualPreview(markdown, firstMatchIndex, firstMatchIndex + oldText.length, input.new_text)
         return {
           newMarkdown,
-          summary: `Replace ${count} occurrence${count === 1 ? '' : 's'}.`,
+          diffOldText: count > 1 ? oldText : preview.oldText,
+          diffNewText: count > 1 ? input.new_text : preview.newText,
+          summary: count > 1
+            ? `Replace ${count} occurrences. Preview shows one representative match.`
+            : `Replace ${count} occurrence.`,
           successResult: `Document updated. Replaced ${count} occurrence${count === 1 ? '' : 's'}.`
         }
       }
@@ -1049,8 +1585,11 @@ export default {
           throw new Error('insert_text position must be start, end, before, or after.')
         }
         const newMarkdown = `${markdown.slice(0, insertAt)}${input.content}${markdown.slice(insertAt)}`
+        const preview = buildContextualPreview(markdown, insertAt, insertAt, input.content)
         return {
           newMarkdown,
+          diffOldText: preview.oldText,
+          diffNewText: preview.newText,
           summary: `Insert ${input.content.length} chars at position ${position}.`,
           successResult: 'Document updated. Inserted text.'
         }
@@ -1060,7 +1599,10 @@ export default {
     requestEditApproval (name, input) {
       const proposal = this.buildEditProposal(name, input)
       const oldMarkdown = this.currentFile.markdown
-      const diff = compactDiffLines(computeLineDiff(oldMarkdown, proposal.newMarkdown))
+      const diff = compactDiffLines(computeLineDiff(
+        proposal.diffOldText !== undefined ? proposal.diffOldText : oldMarkdown,
+        proposal.diffNewText !== undefined ? proposal.diffNewText : proposal.newMarkdown
+      ))
       return new Promise((resolve) => {
         this.pendingEdit = {
           name,
@@ -1087,6 +1629,12 @@ export default {
           }
         }
       })
+    },
+    applyEditImmediately (name, input) {
+      const proposal = this.buildEditProposal(name, input)
+      this.applyMarkdownUpdate(proposal.newMarkdown)
+      this._documentTurnCacheKey = documentSnapshotKey(proposal.newMarkdown)
+      return proposal.successResult
     },
     acceptPendingEdit () {
       if (this.pendingEdit) this.pendingEdit.accept()
@@ -1142,6 +1690,8 @@ export default {
       }
       this.displayMessages.push(message)
       this.currentAssistantMessage = message
+      this.streamingBlockRef = null
+      this.streamingHtml = ''
       return message
     },
     appendAssistantText (delta) {
@@ -1151,12 +1701,45 @@ export default {
       if (last && last.type === 'text') {
         last.text += delta
       } else {
-        msg.blocks.push({ type: 'text', text: delta })
+        const block = { type: 'text', text: delta }
+        msg.blocks.push(block)
       }
+      const activeBlock = msg.blocks[msg.blocks.length - 1]
+      if (this.streamingBlockRef !== activeBlock) {
+        this.streamingBlockRef = activeBlock
+      }
+      this.scheduleStreamRender(activeBlock)
+    },
+    scheduleStreamRender (block) {
+      if (this._streamRenderPending) return
+      this._streamRenderPending = true
+      const tick = () => {
+        this._streamRenderPending = false
+        if (block && block.text) {
+          this.streamingHtml = this.renderMarkdown(block.text)
+        }
+      }
+      if (!this._lastStreamRender || Date.now() - this._lastStreamRender > 120) {
+        this._lastStreamRender = Date.now()
+        this.$nextTick(tick)
+      } else {
+        setTimeout(() => {
+          this._lastStreamRender = Date.now()
+          tick()
+        }, 120)
+      }
+    },
+    finalizeStreamRender () {
+      if (this.streamingBlockRef && this.streamingBlockRef.text) {
+        this.streamingHtml = this.renderMarkdown(this.streamingBlockRef.text)
+      }
+      this.streamingBlockRef = null
+      this.$nextTick(() => this.renderMermaidBlocks())
     },
     appendAssistantTool (name, status) {
       const msg = this.currentAssistantMessage
       if (!msg) return null
+      this.finalizeStreamRender()
       const block = { type: 'tool', name, status }
       msg.blocks.push(block)
       return block
@@ -1196,17 +1779,46 @@ export default {
       return normalized
     },
     async send () {
-      const text = this.input.trim()
-      if (!text || this.streaming) return
-      const provider = this.providerResolved
-      const apiKey = resolveApiKey(this.storedApiKey, provider)
-      if (provider === PROVIDERS.ANTHROPIC && !apiKey) {
-        this.showSettings = true
+      if (this.slashSuggestions.length) {
+        this.selectSlashCommand(this.slashSuggestions[0])
         return
       }
-      this.input = ''
-      const apiText = this.buildPromptWithReference(text)
-      await this.runSend(text, apiText)
+      const text = this.input.trim()
+      if ((!text && !this.attachedImages.length) || this.streaming) return
+      if (text) {
+        this.inputHistory.push(text)
+        if (this.inputHistory.length > 50) this.inputHistory.splice(0, this.inputHistory.length - 50)
+      }
+      this.inputHistoryIndex = -1
+      this.inputHistoryDraft = ''
+      this.slashTrigger = null
+      this.slashSuggestions = []
+      await this.sendPreparedPrompt(text || 'Describe this image.')
+    },
+    handleHistoryUp (event) {
+      const textarea = this.$refs.input
+      if (!textarea) return
+      if (textarea.selectionStart !== 0 || textarea.selectionEnd !== 0) return
+      if (!this.inputHistory.length) return
+      event.preventDefault()
+      if (this.inputHistoryIndex === -1) {
+        this.inputHistoryDraft = this.input
+        this.inputHistoryIndex = this.inputHistory.length - 1
+      } else if (this.inputHistoryIndex > 0) {
+        this.inputHistoryIndex--
+      }
+      this.input = this.inputHistory[this.inputHistoryIndex]
+    },
+    handleHistoryDown (event) {
+      if (this.inputHistoryIndex === -1) return
+      event.preventDefault()
+      if (this.inputHistoryIndex < this.inputHistory.length - 1) {
+        this.inputHistoryIndex++
+        this.input = this.inputHistory[this.inputHistoryIndex]
+      } else {
+        this.inputHistoryIndex = -1
+        this.input = this.inputHistoryDraft
+      }
     },
     async runSend (text, apiText) {
       this.error = ''
@@ -1234,7 +1846,8 @@ export default {
           model: this.resolvedModel,
           messages: this.apiMessages.slice(),
           executeTool: (name, input) => this.executeTool(name, input),
-          signal: this.abortController.signal
+          signal: this.abortController.signal,
+          persona: this.storedPersona
         })
 
         for await (const event of stream) {
@@ -1281,8 +1894,11 @@ export default {
         this.saveCurrentSession({ touch: true })
         this.streaming = false
         this.abortController = null
+        this.finalizeStreamRender()
         this.currentAssistantMessage = null
-        this.$nextTick(this.focusInput)
+        if (completedSuccessfully && this.activeSession && this.activeSession.title === 'New chat') {
+          this.autoNameSession()
+        }
       }
     },
     async compactConversation () {
@@ -1316,7 +1932,8 @@ export default {
           model: this.resolvedModel,
           messages: summaryRequest,
           executeTool: async () => 'Tools are disabled during conversation compaction.',
-          signal: this.abortController.signal
+          signal: this.abortController.signal,
+          persona: this.storedPersona
         })
         for await (const event of stream) {
           if (event.type === 'text') summaryText += event.text
@@ -1331,20 +1948,22 @@ export default {
 
       const trimmed = summaryText.trim()
       if (trimmed) {
-        const marker = {
-          id: nextId(),
-          role: 'assistant',
-          blocks: [{ type: 'text', text: `**Compacted earlier turns** — summary:\n\n${trimmed}` }]
-        }
-        this.displayMessages = [marker]
         this.apiMessages = [
           { role: 'user', content: 'Summary of earlier conversation (continue from here):' },
           { role: 'assistant', content: trimmed }
         ]
+        this.displayMessages.push({
+          id: nextId(),
+          role: 'system',
+          blocks: [{
+            type: 'text',
+            text: 'Compacted earlier turns for context length. Full chat history remains visible above.'
+          }]
+        })
         this.clearMarkdownCache()
         this.saveCurrentSession({ touch: true })
         const afterTokens = estimateTokens(this.apiMessages)
-        this.compactNotice = `Compacted earlier turns from about ${beforeTokens} tok to ${afterTokens} tok. You can keep asking follow-up questions; older verbatim turns were replaced by a summary.`
+        this.compactNotice = `Compacted earlier turns from about ${beforeTokens} tok to ${afterTokens} tok. Full history stays visible in the sidebar.`
       }
       this.compacting = false
       this.$nextTick(() => this.scrollToBottom(true))
@@ -1375,6 +1994,227 @@ export default {
       document.body.removeChild(textarea)
       return copied
     },
+    handleInputEvent () {
+      const textarea = this.$refs.input
+      if (!textarea) return
+      const pos = textarea.selectionStart
+      const text = this.input.slice(0, pos)
+
+      const slashMatch = text.match(/^\/(\S*)$/)
+      if (slashMatch) {
+        const q = slashMatch[1].toLowerCase()
+        this.slashSuggestions = PROMPT_TEMPLATES
+          .filter(t => !q || t.id.startsWith(q) || t.label.toLowerCase().startsWith(q))
+          .slice(0, 6)
+        this.slashTrigger = { startPos: 0, query: slashMatch[1] }
+        this.mentionTrigger = null
+        this.mentionSuggestions = []
+        return
+      }
+      this.slashTrigger = null
+      this.slashSuggestions = []
+
+      const hashMatch = text.match(/#([^\s#]*)$/)
+      if (hashMatch) {
+        this.mentionTrigger = { type: 'file', startPos: pos - hashMatch[0].length, query: hashMatch[1] }
+        this.updateFileSuggestions(hashMatch[1])
+        return
+      }
+      const atMatch = text.match(/@([^\s@]*)$/)
+      if (atMatch) {
+        this.mentionTrigger = { type: 'heading', startPos: pos - atMatch[0].length, query: atMatch[1] }
+        this.updateHeadingSuggestions(atMatch[1])
+        return
+      }
+      this.mentionTrigger = null
+      this.mentionSuggestions = []
+    },
+    updateFileSuggestions (query) {
+      const roots = this.getAllowedRoots()
+      if (!roots.length) { this.mentionSuggestions = []; return }
+      try {
+        const files = this.walkMdFiles(roots[0], 2)
+        const q = query.toLowerCase()
+        this.mentionSuggestions = files
+          .filter(f => f.name.toLowerCase().includes(q))
+          .slice(0, 8)
+          .map(f => ({ label: f.name, fullPath: f.path, type: 'file' }))
+      } catch (err) { this.mentionSuggestions = [] }
+    },
+    updateHeadingSuggestions (query) {
+      if (!this.currentFile || typeof this.currentFile.markdown !== 'string') {
+        this.mentionSuggestions = []
+        return
+      }
+      const headings = this.currentFile.markdown.split('\n')
+        .map(line => {
+          const match = line.match(/^(#{1,6})\s+(.+)$/)
+          return match ? { level: match[1].length, text: match[2].trim() } : null
+        })
+        .filter(Boolean)
+      const q = query.toLowerCase()
+      this.mentionSuggestions = headings
+        .filter(h => h.text.toLowerCase().includes(q))
+        .slice(0, 8)
+        .map(h => ({ label: `${'#'.repeat(h.level)} ${h.text}`, text: h.text, level: h.level, type: 'heading' }))
+    },
+    selectMention (suggestion) {
+      if (!this.mentionTrigger) return
+      const textarea = this.$refs.input
+      const cursorPos = textarea ? textarea.selectionStart : this.input.length
+      const before = this.input.slice(0, this.mentionTrigger.startPos)
+      const after = this.input.slice(cursorPos)
+      this.input = `${before}${after}`
+      this.attachedContexts.push(suggestion)
+      this.mentionTrigger = null
+      this.mentionSuggestions = []
+      this.$nextTick(() => { if (this.$refs.input) this.$refs.input.focus() })
+    },
+    selectSlashCommand (template) {
+      this.input = ''
+      this.slashTrigger = null
+      this.slashSuggestions = []
+      this.$nextTick(() => this.runTemplatePrompt(template))
+    },
+    removeContext (index) {
+      this.attachedContexts.splice(index, 1)
+    },
+    walkMdFiles (dir, maxDepth, depth = 0) {
+      if (depth > maxDepth) return []
+      const results = []
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true })
+        for (const entry of entries) {
+          if (entry.name.startsWith('.') || entry.name === 'node_modules') continue
+          const fullPath = path.join(dir, entry.name)
+          if (entry.isFile() && /\.(md|markdown|txt)$/i.test(entry.name)) {
+            results.push({ name: entry.name, path: fullPath })
+          } else if (entry.isDirectory() && depth < maxDepth) {
+            results.push(...this.walkMdFiles(fullPath, maxDepth, depth + 1))
+          }
+        }
+      } catch (err) { /* ignore */ }
+      return results
+    },
+    getHeadingSection (headingText) {
+      if (!this.currentFile || typeof this.currentFile.markdown !== 'string') return ''
+      const lines = this.currentFile.markdown.split('\n')
+      let startIdx = -1
+      let headingLevel = 0
+      for (let i = 0; i < lines.length; i++) {
+        const match = lines[i].match(/^(#{1,6})\s+(.+)$/)
+        if (match && match[2].trim() === headingText) {
+          startIdx = i
+          headingLevel = match[1].length
+          break
+        }
+      }
+      if (startIdx === -1) return ''
+      let endIdx = lines.length
+      for (let i = startIdx + 1; i < lines.length; i++) {
+        const match = lines[i].match(/^(#{1,6})\s/)
+        if (match && match[1].length <= headingLevel) { endIdx = i; break }
+      }
+      return lines.slice(startIdx, endIdx).join('\n')
+    },
+    buildContextText () {
+      const parts = []
+      for (const ctx of this.attachedContexts) {
+        if (ctx.type === 'file') {
+          try {
+            this.assertPathAllowed(ctx.fullPath)
+            const content = fs.readFileSync(ctx.fullPath, 'utf8')
+            parts.push(`<attached_file name="${ctx.label}">\n${content.slice(0, MAX_READ_FILE_BYTES)}\n</attached_file>`)
+          } catch (err) {
+            parts.push(`<attached_file name="${ctx.label}">\nError reading file: ${err.message}\n</attached_file>`)
+          }
+        } else if (ctx.type === 'heading') {
+          const section = this.getHeadingSection(ctx.text)
+          if (section) {
+            parts.push(`<attached_section heading="${ctx.text}">\n${section}\n</attached_section>`)
+          }
+        }
+      }
+      return parts.join('\n\n')
+    },
+    handlePaste (event) {
+      const items = event.clipboardData && event.clipboardData.items
+      if (!items) return
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          event.preventDefault()
+          event.stopPropagation()
+          this.addImageFile(items[i].getAsFile())
+          return
+        }
+      }
+    },
+    handleDrop (event) {
+      event.preventDefault()
+      const files = event.dataTransfer && event.dataTransfer.files
+      if (!files) return
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].type.startsWith('image/')) {
+          this.addImageFile(files[i])
+        }
+      }
+    },
+    addImageFile (file) {
+      if (!file || this.attachedImages.length >= 4) return
+      const reader = new FileReader()
+      reader.onload = () => {
+        const base64 = reader.result.split(',')[1]
+        if (!base64) return
+        this.attachedImages.push({
+          id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          name: file.name || 'image',
+          mediaType: file.type || 'image/png',
+          data: base64,
+          previewUrl: reader.result
+        })
+      }
+      reader.readAsDataURL(file)
+    },
+    removeImage (index) {
+      this.attachedImages.splice(index, 1)
+    },
+    async autoNameSession () {
+      const sessionId = this.activeSessionId
+      try {
+        const firstUser = this.displayMessages.find(m => m.role === 'user')
+        const firstAssistant = this.displayMessages.find(m => m.role === 'assistant')
+        if (!firstUser || !firstAssistant) return
+        const userText = (firstUser.blocks || []).filter(b => b.type === 'text').map(b => b.text).join(' ').slice(0, 200)
+        const assistantText = (firstAssistant.blocks || []).filter(b => b.type === 'text').map(b => b.text).join(' ').slice(0, 200)
+        if (!userText.trim()) return
+        const provider = this.providerResolved
+        const apiKey = resolveApiKey(this.storedApiKey, provider)
+        const messages = [
+          { role: 'user', content: `Generate a short title (5-8 words max, no quotes, no trailing punctuation) for this conversation:\n\nUser: ${userText}\nAssistant: ${assistantText}` }
+        ]
+        let title = ''
+        const stream = streamChat({
+          provider,
+          apiKey,
+          baseUrl: this.resolvedBaseUrl,
+          model: this.resolvedModel,
+          messages,
+          executeTool: async () => 'disabled',
+          signal: null,
+          persona: ''
+        })
+        for await (const event of stream) {
+          if (event.type === 'text') title += event.text
+        }
+        title = title.trim().replace(/^["']+|["']+$/g, '').replace(/[.!?]+$/, '').trim()
+        if (!title || title.length > MAX_SESSION_TITLE_LENGTH) return
+        const session = this.sessions.find(s => s.id === sessionId)
+        if (session && session.title === 'New chat') {
+          session.title = title
+          this.persistSessions()
+        }
+      } catch (err) { /* naming is cosmetic - swallow errors */ }
+    },
     async handleMessageListClick (event) {
       const target = event.target
       if (target && target.classList && target.classList.contains('claude-code-copy')) {
@@ -1395,9 +2235,7 @@ export default {
             target.classList.remove('error')
           }
         }, copied ? 1200 : 1600)
-        return
       }
-      this.focusInput()
     }
   }
 }
@@ -1405,48 +2243,143 @@ export default {
 
 <style scoped>
   .side-bar-claude-chat {
+    --claude-bg: var(--sideBarBgColor);
+    --claude-surface: var(--floatBgColor);
+    --claude-surface-soft: var(--editorBgColor);
+    --claude-border: var(--editorColor10);
+    --claude-border-strong: var(--editorColor30);
+    --claude-text: var(--editorColor);
+    --claude-text-strong: var(--sideBarTitleColor);
+    --claude-text-muted: var(--sideBarTextColor);
+    --claude-tint: var(--editorColor04);
+    --claude-tint-strong: var(--editorColor10);
+    --claude-selection-line: var(--themeColor);
+    --claude-success: #2c7a2c;
+    --claude-success-bg: rgba(0, 180, 0, 0.12);
+    --claude-success-border: rgba(0, 180, 0, 0.2);
+    --claude-danger: #d9534f;
+    --claude-danger-soft: rgba(217, 83, 79, 0.12);
+    --claude-danger-strong: #b53b35;
+    --claude-danger-border: rgba(217, 83, 79, 0.2);
     height: 100%;
     display: flex;
     flex-direction: column;
     color: var(--sideBarColor);
     box-sizing: border-box;
     overflow: hidden;
+    position: relative;
+    isolation: isolate;
+    background:
+      linear-gradient(180deg, var(--claude-tint), transparent 120px),
+      linear-gradient(180deg, var(--claude-bg), var(--claude-bg));
   }
 
   .chat-header {
-    padding: 30px 12px 10px 18px;
+    padding: 10px 12px;
+    padding-top: calc(var(--titleBarHeight) + 8px);
     display: flex;
     gap: 8px;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--editorColor10);
+    border-bottom: 1px solid var(--themeColor10);
     flex-shrink: 0;
+    background: var(--claude-tint);
+    backdrop-filter: blur(6px);
+    position: relative;
+    z-index: 100;
+    -webkit-app-region: no-drag;
+  }
+
+  .chat-actions,
+  .chat-actions button,
+  .header-menu,
+  .header-menu button {
+    -webkit-app-region: no-drag;
   }
 
   .chat-title {
     min-width: 0;
     flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    overflow: hidden;
   }
 
   .title {
-    color: var(--sideBarTitleColor);
+    color: var(--claude-text-strong);
     font-weight: 600;
-    font-size: 15px;
-  }
-
-  .subtitle {
-    margin-top: 3px;
-    font-size: 11px;
-    color: var(--sideBarTextColor);
-    white-space: nowrap;
+    font-size: 13px;
+    line-height: 1.3;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .title-doc-tag {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--claude-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 50%;
   }
 
   .chat-actions {
     flex-shrink: 0;
     display: flex;
     gap: 4px;
+    align-items: center;
+    position: relative;
+    z-index: 101;
+  }
+
+  .header-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 140px;
+    background: var(--claude-surface);
+    border: 1px solid var(--claude-border);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px var(--claude-tint-strong);
+    z-index: 200;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header-menu-item {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 28px !important;
+    padding: 0 8px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: var(--claude-text) !important;
+    font-size: 12px !important;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .header-menu-item:hover {
+    background: var(--claude-tint-strong) !important;
+    color: var(--claude-text-strong) !important;
+  }
+
+  .header-menu-item:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .header-menu-icon {
+    width: 14px;
+    text-align: center;
+    color: var(--claude-text-muted);
   }
 
   .chat-actions button,
@@ -1463,6 +2396,35 @@ export default {
     padding: 0 9px;
   }
 
+  .toolbar-btn {
+    height: 26px !important;
+    padding: 0 8px !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+  }
+
+  .toolbar-btn.icon {
+    width: 26px;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--claude-text-muted) !important;
+    line-height: 1;
+  }
+
+  .toolbar-btn.icon:hover {
+    background: var(--claude-tint-strong) !important;
+    color: var(--claude-text-strong) !important;
+  }
+
+  .toolbar-btn.primary.icon {
+    color: var(--claude-text) !important;
+  }
+
+  .toolbar-btn.subtle.icon {
+    opacity: .82;
+  }
+
   .chat-actions button:hover,
   .settings-actions button:hover,
   .chat-input button:hover {
@@ -1477,12 +2439,12 @@ export default {
   }
 
   .settings-panel {
-    padding: 12px 14px 14px 18px;
-    border-bottom: 1px solid var(--editorColor10);
-    background: var(--floatBgColor);
+    padding: 14px 14px 16px 18px;
+    border-bottom: 1px solid var(--themeColor10);
+    background: linear-gradient(180deg, var(--claude-tint), transparent 120px), var(--claude-surface);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 7px;
   }
 
   .settings-panel label {
@@ -1491,7 +2453,8 @@ export default {
   }
 
   .settings-panel input,
-  .settings-panel select {
+  .settings-panel select,
+  .settings-panel textarea {
     border: 1px solid var(--editorColor10);
     border-radius: 4px;
     padding: 6px 8px;
@@ -1501,8 +2464,16 @@ export default {
     outline: none;
   }
 
+  .settings-panel textarea {
+    resize: vertical;
+    min-height: 70px;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
   .settings-panel input:focus,
-  .settings-panel select:focus {
+  .settings-panel select:focus,
+  .settings-panel textarea:focus {
     border-color: var(--themeColor);
   }
 
@@ -1531,8 +2502,8 @@ export default {
     flex-shrink: 0;
     max-height: 220px;
     overflow-y: auto;
-    padding: 10px 12px 12px 18px;
-    border-bottom: 1px solid var(--editorColor10);
+    padding: 12px 12px 12px 18px;
+    border-bottom: 1px solid var(--themeColor10);
     background: var(--floatBgColor);
   }
 
@@ -1545,6 +2516,22 @@ export default {
     color: var(--sideBarTextColor);
     font-size: 11px;
     font-weight: 600;
+  }
+
+  .sessions-heading {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sessions-subtitle {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--sideBarTextColor);
+    opacity: .85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .sessions-header button,
@@ -1581,7 +2568,7 @@ export default {
   .empty-sessions {
     color: var(--sideBarTextColor);
     font-size: 12px;
-    padding: 8px 0;
+    padding: 10px 2px;
   }
 
   .session-row {
@@ -1594,12 +2581,13 @@ export default {
   .session-row.active .session-main {
     border-color: var(--themeColor);
     color: var(--themeColor);
+    background: var(--claude-tint);
   }
 
   .session-main {
     min-width: 0;
     flex: 1;
-    padding: 6px 8px;
+    padding: 8px 10px;
     text-align: left;
   }
 
@@ -1616,6 +2604,20 @@ export default {
     font-size: 12px;
   }
 
+  .session-doc {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--editorColor10);
+    color: var(--sideBarTextColor);
+    font-size: 10px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .session-meta {
     margin-top: 2px;
     color: var(--sideBarTextColor);
@@ -1626,101 +2628,132 @@ export default {
     flex-shrink: 0;
     width: 38px;
     padding: 0;
+    font-size: 16px !important;
+    line-height: 1;
   }
 
-  .reference-panel {
-    flex-shrink: 0;
-    padding: 10px 14px 12px 18px;
-    border-bottom: 1px solid var(--editorColor10);
-    background: var(--sideBarBgColor);
-  }
-
-  .reference-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--sideBarTextColor);
-    margin-bottom: 4px;
-  }
-
-  .reference-header button {
-    border: none;
-    background: transparent;
-    color: var(--sideBarTextColor);
+  .template-btn {
+    border: none !important;
+    border-radius: 4px !important;
+    background: transparent !important;
+    color: var(--claude-text) !important;
+    font-size: 11px !important;
     cursor: pointer;
-    font-size: 11px;
-    padding: 0;
+    height: 22px !important;
+    padding: 0 7px !important;
+    line-height: 1;
   }
 
-  .reference-header button:hover {
-    color: var(--themeColor);
+  .template-btn:hover:not(:disabled) {
+    background: var(--claude-tint-strong) !important;
+    color: var(--themeColor) !important;
   }
 
-  .reference-label {
-    font-size: 11px;
-    color: var(--sideBarTextColor);
-    margin-bottom: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .reference-panel pre {
-    max-height: 120px;
-    overflow: auto;
-    margin: 0;
-    padding: 8px 10px;
-    border: 1px solid var(--editorColor10);
-    border-radius: 4px;
-    background: var(--floatBgColor);
-    color: var(--editorColor);
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 11px;
-    line-height: 1.45;
-    white-space: pre-wrap;
-    word-break: break-word;
-    user-select: text;
+  .template-btn:disabled {
+    opacity: .4;
+    cursor: default;
   }
 
   .chat-messages {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 12px 14px;
+    padding: 14px 16px 22px;
     overflow-anchor: none;
+    overscroll-behavior: contain;
+    position: relative;
+    z-index: 1;
   }
 
   .empty-hint {
     color: var(--sideBarTextColor);
+    text-align: left;
+    margin-top: 10px;
+    padding: 14px 14px 16px;
+    border: 1px dashed var(--editorColor10);
+    border-radius: 10px;
+    background: var(--claude-tint);
+  }
+
+  .empty-hint-title {
+    color: var(--sideBarTitleColor);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .empty-hint-copy {
+    margin-top: 6px;
     font-size: 12px;
-    text-align: center;
-    margin-top: 24px;
+    line-height: 1.5;
   }
 
   .message {
-    margin-bottom: 14px;
-    contain: content;
-    content-visibility: auto;
-    contain-intrinsic-size: auto 80px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+
+  .message-shell {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .message-avatar {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    color: transparent;
+    background: var(--claude-text-muted);
+    border: none;
+    margin-top: 8px;
+  }
+
+  .message.user .message-avatar {
+    display: none;
+  }
+
+  .message-main {
+    min-width: 0;
+    flex: 1;
   }
 
   .message-role {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
-    color: var(--sideBarTextColor);
-    margin-bottom: 4px;
+    color: var(--claude-text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
   }
 
   .message.user .message-role {
-    color: var(--themeColor);
+    display: none;
   }
 
   .message-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.65;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .message.user .message-blocks {
+    background: var(--claude-surface);
+    border: 1px solid var(--claude-border);
+    border-radius: 16px;
+    padding: 16px 14px;
+    box-shadow: 0 1px 2px var(--claude-tint);
   }
 
   .block-text {
@@ -1729,95 +2762,282 @@ export default {
     user-select: text;
   }
 
-  .block-text >>> p { margin: 4px 0; }
+  .block-text >>> *:first-child {
+    margin-top: 0;
+  }
+
+  .block-text >>> *:last-child {
+    margin-bottom: 0;
+  }
+
+  .block-text >>> p {
+    margin: 0 0 10px;
+  }
+
   .block-text >>> ul,
-  .block-text >>> ol { margin: 4px 0; padding-left: 20px; }
+  .block-text >>> ol {
+    margin: 8px 0 12px;
+    padding-left: 22px;
+  }
+
+  .block-text >>> li {
+    margin: 3px 0;
+  }
+
+  .block-text >>> li > ul,
+  .block-text >>> li > ol {
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+
   .block-text >>> code {
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 12px;
-    background: var(--editorColor10);
-    padding: 0 4px;
-    border-radius: 3px;
+    background: var(--claude-tint-strong);
+    padding: 1px 5px;
+    border-radius: 5px;
+    border: 1px solid var(--claude-border);
   }
+
   .block-text >>> pre {
-    background: var(--editorBgColor);
-    border: 1px solid var(--editorColor10);
-    border-radius: 4px;
-    padding: 8px 10px;
+    background: var(--claude-surface-soft);
+    border: 1px solid var(--claude-border);
+    border-radius: 10px;
+    padding: 12px 12px 13px;
     overflow-x: auto;
-    margin: 6px 0;
+    margin: 12px 0;
   }
+
   .block-text >>> pre code {
     background: transparent;
+    border: none;
     padding: 0;
     font-size: 12px;
+    line-height: 1.55;
   }
+
   .block-text >>> h1,
   .block-text >>> h2,
   .block-text >>> h3 {
-    font-size: 14px;
-    margin: 10px 0 4px;
+    color: var(--sideBarTitleColor);
+    line-height: 1.3;
+    margin: 16px 0 8px;
   }
-  .block-text >>> a { color: var(--themeColor); }
 
-  .block-tool {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 8px;
-    margin: 4px 0;
-    border-radius: 12px;
-    font-size: 11px;
-    background: var(--editorColor10);
+  .block-text >>> h1 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .block-text >>> h2 {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .block-text >>> h3 {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .block-text >>> strong {
+    font-weight: 700;
+    color: var(--sideBarTitleColor);
+  }
+
+  .block-text >>> em {
+    font-style: italic;
+  }
+
+  .block-text >>> a {
+    color: var(--themeColor);
+    text-decoration: none;
+    border-bottom: 1px solid var(--claude-border);
+  }
+
+  .block-text >>> a:hover {
+    border-bottom-color: var(--themeColor);
+  }
+
+  .block-text >>> blockquote {
+    margin: 12px 0;
+    padding: 2px 0 2px 12px;
+    border-left: 3px solid var(--themeColor) !important;
     color: var(--sideBarTextColor);
   }
 
+  .block-text >>> blockquote p {
+    margin: 0;
+  }
+
+  .block-text >>> hr {
+    height: 0;
+    border: none !important;
+    border-top: 1px dashed var(--themeColor) !important;
+    background: transparent !important;
+    opacity: .42;
+    margin: 14px 0;
+  }
+
+  .block-text >>> table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+
+  .block-text >>> th,
+  .block-text >>> td {
+    border: 1px solid var(--claude-border);
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .block-text >>> th {
+    background: var(--claude-tint);
+    color: var(--sideBarTitleColor);
+    font-weight: 600;
+  }
+
+  .block-tool {
+    display: flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 5px 10px;
+    margin: 0;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: .02em;
+    background: var(--claude-tint);
+    border: 1px solid var(--claude-border);
+    color: var(--sideBarTextColor);
+    box-sizing: border-box;
+  }
+
   .block-tool.error {
-    color: #d9534f;
+    color: var(--claude-danger);
   }
 
   .tool-icon {
     display: inline-flex;
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
   }
 
-  .spinner {
+  .tool-name {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.2;
+  }
+
+  .tool-spinner {
+    display: block;
     width: 10px;
     height: 10px;
+    box-sizing: border-box;
     border: 1.5px solid var(--editorColor10);
     border-top-color: var(--themeColor);
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    animation: claude-tool-spin 0.8s linear infinite;
+    will-change: transform;
   }
 
-  @keyframes spin {
+  @keyframes claude-tool-spin {
     to { transform: rotate(360deg); }
   }
 
   .error,
   .aborted {
     margin-top: 8px;
-    padding: 8px 10px;
-    border-radius: 4px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border-left: 3px solid;
     font-size: 12px;
     word-wrap: break-word;
     display: flex;
     align-items: flex-start;
     gap: 8px;
     justify-content: space-between;
+    line-height: 1.5;
   }
 
   .error {
-    background: rgba(217, 83, 79, 0.12);
-    color: #d9534f;
+    background: var(--claude-danger-soft);
+    border-left-color: var(--claude-danger);
+    color: var(--claude-danger);
   }
 
   .aborted {
-    background: var(--editorColor10);
+    background: var(--editorColor04);
+    border-left-color: var(--claude-text-muted);
     color: var(--sideBarTextColor);
+  }
+
+  .system-card {
+    background: var(--editorColor04);
+    border-left: 3px solid var(--claude-text-muted);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--claude-text-muted);
+    line-height: 1.55;
+  }
+
+  .message.system .message-avatar {
+    background: var(--claude-text-muted);
+    opacity: .55;
+  }
+
+  .system-card-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--claude-text-muted);
+    opacity: .85;
+    margin-bottom: 3px;
+    font-weight: 600;
+  }
+
+  .system-card .block-text {
+    color: var(--claude-text-muted);
+  }
+
+  .undo-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    padding: 6px 0;
+  }
+
+  .undo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--claude-border);
+    border-radius: 6px;
+    background: var(--claude-surface);
+    color: var(--themeColor);
+    cursor: pointer;
+    font-size: 11px;
+    padding: 4px 10px;
+    transition: background .15s;
+    &:hover { background: var(--claude-tint); }
+  }
+
+  .undo-icon {
+    font-size: 13px;
+  }
+
+  .undo-hint {
+    font-size: 10px;
+    color: var(--claude-text-muted);
   }
 
   .retry-btn {
@@ -1839,13 +3059,23 @@ export default {
 
   .edit-preview {
     flex-shrink: 0;
-    border-top: 1px solid var(--editorColor10);
-    background: var(--floatBgColor);
-    padding: 8px 12px;
+    margin: 0 16px 10px;
+    border: 1px solid var(--claude-border);
+    border-radius: 16px;
+    background: var(--claude-surface);
+    padding: 12px 12px 12px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     max-height: 50vh;
+    box-shadow: 0 6px 24px var(--claude-tint);
+  }
+
+  .edit-preview-topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
   }
 
   .edit-preview-header {
@@ -1854,6 +3084,14 @@ export default {
     gap: 2px;
     font-size: 11px;
     color: var(--sideBarTextColor);
+  }
+
+  .edit-preview-kicker {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--sideBarTextColor);
+    opacity: .7;
   }
 
   .edit-summary {
@@ -1879,20 +3117,20 @@ export default {
   }
 
   .diff-badge.add {
-    color: #2c7a2c;
-    border-color: rgba(0, 180, 0, 0.2);
+    color: var(--claude-success);
+    border-color: var(--claude-success-border);
   }
 
   .diff-badge.remove {
-    color: #b53b35;
-    border-color: rgba(217, 83, 79, 0.2);
+    color: var(--claude-danger-strong);
+    border-color: var(--claude-danger-border);
   }
 
   .edit-diff {
     overflow: auto;
-    border: 1px solid var(--editorColor10);
-    border-radius: 4px;
-    background: var(--editorBgColor);
+    border: 1px solid var(--claude-border);
+    border-radius: 12px;
+    background: var(--claude-surface-soft);
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 11px;
     line-height: 1.4;
@@ -1907,10 +3145,10 @@ export default {
     white-space: pre;
   }
 
-  .diff-line.add { background: rgba(0, 180, 0, 0.12); color: #2c7a2c; }
-  .diff-line.remove { background: rgba(217, 83, 79, 0.12); color: #b53b35; }
+  .diff-line.add { background: var(--claude-success-bg); color: var(--claude-success); }
+  .diff-line.remove { background: var(--claude-danger-soft); color: var(--claude-danger-strong); }
   .diff-line.skip {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--claude-tint);
     color: var(--sideBarTextColor);
     font-style: italic;
   }
@@ -1933,22 +3171,28 @@ export default {
     display: flex;
     gap: 6px;
     justify-content: flex-end;
+    flex-shrink: 0;
   }
 
   .edit-preview-actions button {
     border: 1px solid var(--editorColor10);
-    border-radius: 4px;
+    border-radius: 8px;
     background: var(--sideBarBgColor);
     color: var(--sideBarColor);
     cursor: pointer;
     font-size: 11px;
-    height: 24px;
-    padding: 0 12px;
+    height: 30px;
+    padding: 0 14px;
   }
 
   .edit-preview-actions button.accept {
     border-color: var(--themeColor);
     color: var(--themeColor);
+    background: var(--claude-tint);
+  }
+
+  .edit-preview-actions button.reject {
+    color: var(--sideBarTextColor);
   }
 
   .edit-preview-actions button:hover {
@@ -1956,9 +3200,18 @@ export default {
     color: var(--themeColor);
   }
 
+  .edit-preview-footnote {
+    font-size: 11px;
+    color: var(--sideBarTextColor);
+    line-height: 1.45;
+    background: var(--claude-tint);
+    border-radius: 8px;
+    padding: 7px 9px;
+  }
+
   .block-text >>> .claude-code-block-wrap {
     position: relative;
-    margin: 6px 0;
+    margin: 12px 0;
   }
 
   .block-text >>> .claude-code-block-wrap > pre {
@@ -1967,15 +3220,15 @@ export default {
 
   .block-text >>> .claude-code-copy {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    border: 1px solid var(--editorColor10);
-    border-radius: 3px;
-    background: var(--floatBgColor);
+    top: 8px;
+    right: 8px;
+    border: 1px solid var(--claude-border);
+    border-radius: 999px;
+    background: var(--claude-surface);
     color: var(--sideBarTextColor);
     cursor: pointer;
     font-size: 10px;
-    padding: 1px 6px;
+    padding: 3px 8px;
     opacity: 0;
     transition: opacity .15s;
   }
@@ -1991,8 +3244,8 @@ export default {
 
   .block-text >>> .claude-code-copy.error {
     opacity: 1;
-    color: #d9534f;
-    border-color: #d9534f;
+    color: var(--claude-danger);
+    border-color: var(--claude-danger);
   }
 
   .block-text >>> .claude-code-copy[disabled] {
@@ -2034,31 +3287,113 @@ export default {
 
   .chat-input {
     flex-shrink: 0;
-    padding: 10px 14px 14px;
+    margin: 0 12px 12px;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
-    border-top: 1px solid var(--editorColor10);
-    background: var(--sideBarBgColor);
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    position: relative;
+    z-index: 10;
+  }
+
+  .composer-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px;
+    font-size: 11px;
+    color: var(--claude-text-muted);
+    min-height: 22px;
+  }
+
+  .composer-meta-spacer {
+    flex: 1;
+  }
+
+  .selection-status {
+    font-size: 11px;
+    color: var(--claude-text-muted);
+  }
+
+  .token-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--claude-text-muted);
+  }
+
+  .token-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--claude-text-muted);
+    opacity: .5;
+  }
+
+  .token-count.warn {
+    color: #b07b1c;
+  }
+
+  .token-count.warn .token-dot {
+    background: #e0a93a;
+    opacity: 1;
+  }
+
+  .token-compact-link {
+    background: transparent !important;
+    border: none !important;
+    color: var(--themeColor) !important;
+    font-size: 11px !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin-left: 2px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .token-compact-link:hover {
+    text-decoration: underline;
+  }
+
+  .token-compact-link:disabled {
+    opacity: .55;
+    cursor: default;
+  }
+
+  .composer-input-wrap {
+    position: relative;
+    border: 1px solid var(--claude-border);
+    border-radius: 12px;
+    background: var(--claude-surface);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    overflow: visible;
+  }
+
+  .composer-input-wrap:focus-within {
+    border-color: var(--themeColor);
+    box-shadow: 0 0 0 3px var(--claude-tint-strong);
   }
 
   .chat-input textarea {
     width: 100%;
     box-sizing: border-box;
-    resize: vertical;
-    padding: 8px 10px;
-    border: 1px solid var(--editorColor10);
-    border-radius: 4px;
-    background: var(--floatBgColor);
-    color: var(--editorColor);
+    resize: none;
+    min-height: 60px;
+    max-height: 140px;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: var(--claude-text);
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.45;
     font-family: inherit;
     outline: none;
-  }
-
-  .chat-input textarea:focus {
-    border-color: var(--themeColor);
+    display: block;
   }
 
   .chat-input textarea:disabled {
@@ -2066,36 +3401,185 @@ export default {
     cursor: default;
   }
 
-  .input-row {
+  .composer-toolbar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .hint {
-    font-size: 10px;
-    color: var(--sideBarTextColor);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-  }
-
-  .token-count {
-    color: var(--sideBarTextColor);
-    opacity: .8;
-  }
-
-  .token-count.warn {
-    color: #d9534f;
-    opacity: 1;
-  }
-
-  .input-actions {
-    display: flex;
     gap: 4px;
+    padding: 6px 8px 8px;
+    border-top: 1px solid var(--claude-border);
+    background: var(--claude-tint);
+    flex-wrap: wrap;
+  }
+
+  .composer-slash {
+    font-size: 11px;
+    color: var(--claude-text-muted);
+    background: var(--claude-tint-strong);
+    padding: 2px 7px;
+    border-radius: 4px;
+    user-select: none;
+    margin-right: 2px;
+    line-height: 1.4;
+  }
+
+  .composer-toolbar-spacer {
+    flex: 1;
+  }
+
+  .send-btn {
+    border: none !important;
+    border-radius: 6px !important;
+    height: 26px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    cursor: pointer;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .send-btn.primary {
+    background: var(--themeColor) !important;
+    color: #fff !important;
+  }
+
+  .send-btn.primary:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
+
+  .send-btn.primary:disabled {
+    background: var(--claude-tint-strong) !important;
+    color: var(--claude-text-muted) !important;
+    cursor: default;
+  }
+
+  .send-btn.stop {
+    background: var(--claude-danger-soft) !important;
+    color: var(--claude-danger) !important;
+  }
+
+  .send-key {
+    opacity: .85;
+    font-size: 11px;
+  }
+
+  .mode-trigger {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    height: 22px !important;
+    padding: 0 8px !important;
+    border-radius: 6px !important;
+    border: 1px solid var(--claude-border) !important;
+    background: var(--claude-surface) !important;
+    color: var(--claude-text) !important;
+    font-size: 11px !important;
+  }
+
+  .mode-trigger:hover:not(:disabled) {
+    border-color: var(--themeColor) !important;
+    color: var(--themeColor) !important;
+  }
+
+  .mode-trigger-icon {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12px;
+  }
+
+  .mode-trigger-label {
+    white-space: nowrap;
+  }
+
+  .mode-menu {
+    position: absolute;
+    right: 12px;
+    bottom: calc(100% + 12px);
+    width: min(100%, 340px);
+    border: 1px solid var(--claude-border);
+    border-radius: 16px;
+    background: var(--claude-surface);
+    box-shadow: 0 18px 44px var(--claude-tint-strong);
+    overflow: hidden;
+    z-index: 20;
+    backdrop-filter: blur(8px);
+  }
+
+  .mode-menu-header {
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid var(--claude-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mode-menu-header span:first-child {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--claude-text-strong);
+  }
+
+  .mode-menu-hint {
+    font-size: 10px;
+    color: var(--claude-text-muted);
+  }
+
+  .mode-option {
+    width: 100%;
+    border: none !important;
+    border-radius: 0 !important;
+    border-bottom: 1px solid var(--claude-border) !important;
+    background: transparent !important;
+    color: inherit !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    padding: 12px 14px !important;
+    height: auto !important;
+  }
+
+  .mode-option:last-child {
+    border-bottom: none !important;
+  }
+
+  .mode-option.active {
+    background: var(--themeColor10) !important;
+  }
+
+  .mode-option-icon {
+    width: 22px;
     flex-shrink: 0;
+    text-align: center;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 14px;
+    color: var(--claude-text);
+  }
+
+  .mode-option-copy {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mode-option-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--claude-text-strong);
+  }
+
+  .mode-option-description {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--claude-text-muted);
+  }
+
+  .mode-option-check {
+    flex-shrink: 0;
+    font-size: 18px;
+    color: var(--claude-text-strong);
   }
 
   .compact-btn {
@@ -2105,13 +3589,180 @@ export default {
   .compact-notice {
     font-size: 11px;
     color: var(--sideBarTextColor);
-    background: var(--editorColor10);
-    border-radius: 4px;
-    padding: 6px 8px;
+    background: var(--claude-tint);
+    border-radius: 8px;
+    padding: 8px 10px;
     line-height: 1.45;
   }
 
   .stop {
-    color: #d9534f;
+    color: var(--claude-danger);
+  }
+
+  /* Attached images */
+  .attached-images {
+    display: flex;
+    gap: 6px;
+    padding: 6px 10px 0;
+    flex-wrap: wrap;
+  }
+  .attached-image-thumb {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--claude-border);
+  }
+  .attached-image-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .remove-attachment {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  /* Attached contexts */
+  .attached-contexts {
+    display: flex;
+    gap: 4px;
+    padding: 6px 10px 0;
+    flex-wrap: wrap;
+  }
+  .context-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--claude-tint-strong);
+    font-size: 11px;
+    color: var(--claude-text-muted);
+    max-width: 180px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .context-chip-icon {
+    font-weight: 700;
+    color: var(--themeColor);
+    flex-shrink: 0;
+  }
+  .context-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .context-chip-remove {
+    flex-shrink: 0;
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 12px;
+    color: var(--claude-text-muted);
+    cursor: pointer;
+    line-height: 1;
+  }
+  .context-chip-remove:hover {
+    color: var(--claude-danger);
+  }
+
+  /* Mention dropdown */
+  .mention-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: var(--claude-surface);
+    border: 1px solid var(--claude-border);
+    border-radius: 8px;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    margin-bottom: 4px;
+  }
+  .mention-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 7px 10px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--claude-text);
+    text-align: left;
+  }
+  .mention-item:hover {
+    background: var(--claude-tint-strong);
+  }
+  .mention-icon {
+    flex-shrink: 0;
+    font-weight: 700;
+    color: var(--themeColor);
+    width: 16px;
+    text-align: center;
+  }
+  .mention-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mermaid-preview {
+    margin: 8px 0;
+    padding: 12px;
+    background: var(--claude-surface);
+    border: 1px solid var(--claude-border);
+    border-radius: 8px;
+    overflow-x: auto;
+    text-align: center;
+  }
+
+  .mermaid-preview >>> svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .mermaid-toggle {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    font-size: 10px;
+    color: var(--claude-text-muted);
+    background: transparent;
+    border: 1px solid var(--claude-border);
+    border-radius: 4px;
+    cursor: pointer;
+    &:hover { color: var(--themeColor); border-color: var(--themeColor); }
+  }
+
+  .mermaid-source-collapsed {
+    display: none;
+  }
+
+  .mermaid-error {
+    margin: 6px 0;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: var(--claude-danger);
+    background: var(--claude-danger-soft);
+    border-radius: 6px;
   }
 </style>

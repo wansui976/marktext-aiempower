@@ -70,9 +70,6 @@
       </div>
       <div class="empty" v-else>
         <div class="no-data">
-          <svg :viewBox="EmptyIcon.viewBox" aria-hidden="true">
-            <use :xlink:href="EmptyIcon.url" />
-          </svg>
           <button
             class="button-primary"
             v-if="showNoFolderOpenedMessage"
@@ -91,7 +88,6 @@ import bus from '../../bus'
 import log from 'electron-log'
 import SearchResultItem from './searchResultItem.vue'
 import RipgrepDirectorySearcher from '../../node/ripgrepSearcher'
-import EmptyIcon from '@/assets/icons/undraw_empty.svg'
 import FindCaseIcon from '@/assets/icons/searchIcons/iconCase.svg'
 import FindWordIcon from '@/assets/icons/searchIcons/iconWord.svg'
 import FindRegexIcon from '@/assets/icons/searchIcons/iconRegex.svg'
@@ -104,7 +100,6 @@ export default {
     this.keyUpTimer = null
     this.searcherCancelCallback = null
     this.ripgrepDirectorySearcher = new RipgrepDirectorySearcher()
-    this.EmptyIcon = EmptyIcon
     this.FindCaseIcon = FindCaseIcon
     this.FindWordIcon = FindWordIcon
     this.FindRegexIcon = FindRegexIcon
