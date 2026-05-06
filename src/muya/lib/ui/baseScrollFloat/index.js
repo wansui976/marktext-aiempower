@@ -33,6 +33,9 @@ class BaseScrollFloat extends BaseFloat {
     const handler = event => {
       if (!this.status) return
       switch (event.key) {
+        case EVENT_KEYS.Escape:
+          this.hide()
+          break
         case EVENT_KEYS.ArrowUp:
           this.step('previous')
           break

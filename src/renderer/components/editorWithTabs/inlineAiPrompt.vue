@@ -111,7 +111,7 @@
 <script>
 import marked from 'marked'
 import DOMPurify from 'dompurify'
-import Prism from 'muya/lib/prism'
+import Prism, { loadLanguage } from 'muya/lib/prism'
 import { PROVIDERS, normalizeProvider, resolveApiKey, resolveBaseUrl, resolveModel, streamChat } from '../../node/claudeApi'
 
 const PROVIDER_STORAGE_KEY = 'marktext.claudeProvider'
@@ -161,7 +161,12 @@ export default {
       return true
     },
     renderedResponse () {
-      return this.renderMarkdown(this.response)
+      try {
+        return this.renderMarkdown(this.response)
+      } catch (err) {
+        console.warn('[inline-ai] Failed to render markdown response:', err)
+        return this.escapeHtml(this.response)
+      }
     },
     popoverStyle () {
       if (!this.anchorRect) {
@@ -199,6 +204,9 @@ export default {
       wrapper.querySelectorAll('pre > code').forEach(code => {
         const langMatch = code.className.match(/language-([\w-]+)/)
         const lang = langMatch ? langMatch[1] : ''
+        if (lang && !Prism.languages[lang] && loadLanguage) {
+          loadLanguage(lang)
+        }
         if (lang && Prism.languages[lang]) {
           try {
             code.innerHTML = Prism.highlight(code.textContent, Prism.languages[lang], lang)
@@ -206,6 +214,15 @@ export default {
         }
       })
       return wrapper.innerHTML
+    },
+    escapeHtml (text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\n/g, '<br>')
     },
     open ({ selectionText, anchorRect, mode }) {
       const text = String(selectionText || '').trim()

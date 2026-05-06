@@ -24,8 +24,8 @@
   --editorBgColor: #fcf9f2;
   --deleteColor: #ff6969;
   --iconColor: rgba(75, 85, 99, 0.8);
-  --codeBgColor: #d8d8d869;
-  --codeBlockBgColor: rgba(37, 99, 235, 0.05);
+  --codeBgColor: rgba(71, 88, 113, 0.10);
+  --codeBlockBgColor: rgba(72, 87, 110, 0.07);
   --footnoteBgColor: rgba(0, 0, 0, .03);
   --inputBgColor: rgba(0, 0, 0, .06);
   --focusColor: var(--themeColor);
