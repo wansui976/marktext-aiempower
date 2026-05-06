@@ -476,6 +476,24 @@ ipcMain.on('mt::cmd-import-file', e => {
   importFile(win)
 })
 
+ipcMain.handle('mt::save-ai-chat-markdown', async (e, { content, defaultFilename }) => {
+  const win = BrowserWindow.fromWebContents(e.sender)
+  const { filePath, canceled } = await dialog.showSaveDialog(win, {
+    defaultPath: path.join(getPath('documents'), defaultFilename || 'ai-chat.md'),
+    filters: [{
+      name: 'Markdown',
+      extensions: ['md']
+    }]
+  })
+
+  if (filePath && !canceled) {
+    await fs.writeFile(filePath, content, 'utf8')
+    return { filePath }
+  }
+
+  return { canceled: true }
+})
+
 // --- menu -------------------------------------
 
 export const exportFile = (win, type) => {

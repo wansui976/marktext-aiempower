@@ -10,8 +10,19 @@ import Accessor from './app/accessor'
 import setupEnvironment from './app/env'
 import { getLogLevel } from './utils'
 
+const ignoreConsolePipeError = stream => {
+  if (!stream || !stream.on) return
+  stream.on('error', err => {
+    if (err && err.code === 'EPIPE') {
+      log.transports.console.level = false
+    }
+  })
+}
+
 const initializeLogger = appEnvironment => {
-  log.transports.console.level = process.env.NODE_ENV === 'development' ? 'info' : 'error'
+  ignoreConsolePipeError(process.stdout)
+  ignoreConsolePipeError(process.stderr)
+  log.transports.console.level = process.env.NODE_ENV === 'development' ? 'info' : false
   log.transports.rendererConsole = null
   log.transports.file.resolvePath = () => path.join(appEnvironment.paths.logPath, 'main.log')
   log.transports.file.level = getLogLevel()

@@ -79,6 +79,7 @@ const commandDescriptions = Object.freeze({
   'view.typewriter-mode': 'View: Toggle Typewriter Mode',
   'view.focus-mode': 'View: Focus Mode',
   'view.toggle-sidebar': 'View: Toggle Sidebar',
+  'view.toggle-ai-sidebar': 'View: Show AI Sidebar',
   'view.toggle-toc': 'View: Toggle Table of Content',
   'view.toggle-tabbar': 'View: Toggle Tabs',
   'view.toggle-dev-tools': 'View: Show Developer Tools (Debug)',

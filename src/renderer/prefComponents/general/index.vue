@@ -107,11 +107,10 @@
       </template>
       <template #children>
         <cur-select
-          description="User interface language"
+          :description="$t('preferences.general.language')"
           :value="language"
           :options="languageOptions"
           :onChange="value => onSelectChange('language', value)"
-          :disable="true"
         ></cur-select>
       </template>
     </compound>

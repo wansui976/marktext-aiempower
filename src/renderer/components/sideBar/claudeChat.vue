@@ -6,32 +6,46 @@
         <span v-if="contextLabel" class="title-doc-tag" :title="contextLabel">· {{ contextLabel }}</span>
       </div>
       <div class="chat-actions">
-        <button type="button" class="toolbar-btn icon primary" title="New chat" :disabled="streaming" @click="newChat">+</button>
-        <button type="button" class="toolbar-btn icon" title="More" @click.stop="showHeaderMenu = !showHeaderMenu">⋯</button>
+        <select
+          v-model="selectedModel"
+          class="model-switcher"
+          :title="modelSwitchTitle"
+          @change="handleModelChange"
+        >
+          <option v-for="option in modelOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <button type="button" class="toolbar-btn icon primary" :title="$t('ai.header.newChat')" :disabled="streaming" @click="newChat">+</button>
+        <button type="button" class="toolbar-btn icon" :title="$t('ai.header.more')" @click.stop="showHeaderMenu = !showHeaderMenu">⋯</button>
         <div v-if="showHeaderMenu" class="header-menu" @click.stop>
           <button type="button" class="header-menu-item" :disabled="streaming" @click="openSessionsFromMenu">
             <span class="header-menu-icon">◷</span>
-            <span>Sessions</span>
+            <span>{{ $t('common.sessions') }}</span>
           </button>
           <button type="button" class="header-menu-item" @click="openSettingsFromMenu">
             <span class="header-menu-icon">⚙</span>
-            <span>Settings</span>
+            <span>{{ $t('common.settings') }}</span>
+          </button>
+          <button type="button" class="header-menu-item" :disabled="!displayMessages.length" @click="exportChatMarkdown">
+            <span class="header-menu-icon">⇪</span>
+            <span>{{ $t('ai.header.exportMarkdown') }}</span>
           </button>
         </div>
       </div>
     </div>
 
     <div v-if="showSettings || !apiKeyResolved" class="settings-panel">
-      <label>Provider</label>
+      <label>{{ $t('ai.settings.provider') }}</label>
       <select v-model="providerInput">
         <option value="anthropic">Anthropic</option>
-        <option value="openai">OpenAI compatible</option>
+        <option value="openai">{{ $t('ai.settings.openAICompatible') }}</option>
       </select>
       <div class="settings-hint">
-        Choose a provider compatible with Anthropic Messages API or OpenAI Chat Completions.
+        {{ $t('ai.settings.providerHint') }}
       </div>
 
-      <label>{{ providerLabel }} API Key</label>
+      <label>{{ $t('ai.settings.apiKey', { provider: providerLabel }) }}</label>
       <input
         type="password"
         v-model="apiKeyInput"
@@ -40,10 +54,11 @@
         :placeholder="apiKeyPlaceholder"
       />
       <div class="settings-hint">
-        Falls back to <code>{{ apiKeyEnvName }}</code> env var<span v-if="settingsProvider === 'anthropic'"> or <code>ANTHROPIC_AUTH_TOKEN</code></span><span v-else>. Local OpenAI-compatible endpoints may leave this empty</span>.
+        <span v-if="settingsProvider === 'anthropic'">{{ $t('ai.settings.apiKeyHintAnthropic', { env: apiKeyEnvName }) }}</span>
+        <span v-else>{{ $t('ai.settings.apiKeyHintOpenAI', { env: apiKeyEnvName }) }}</span>
       </div>
 
-      <label>Base URL</label>
+      <label>{{ $t('ai.settings.baseUrl') }}</label>
       <input
         type="text"
         v-model="baseUrlInput"
@@ -52,10 +67,10 @@
         :placeholder="baseUrlPlaceholder"
       />
       <div class="settings-hint">
-        Optional. Falls back to <code>{{ baseUrlEnvName }}</code> env var. Currently using <code>{{ settingsResolvedBaseUrl }}</code>.
+        {{ $t('ai.settings.baseUrlHint', { env: baseUrlEnvName, value: settingsResolvedBaseUrl }) }}
       </div>
 
-      <label>Model</label>
+      <label>{{ $t('ai.settings.model') }}</label>
       <input
         type="text"
         v-model="modelInput"
@@ -64,10 +79,10 @@
         :placeholder="modelPlaceholder"
       />
       <div class="settings-hint">
-        Optional. Falls back to <code>{{ modelEnvName }}</code> env var. Currently using <code>{{ settingsResolvedModel }}</code>.
+        {{ $t('ai.settings.modelHint', { env: modelEnvName, value: settingsResolvedModel }) }}
       </div>
 
-      <label>Writing style</label>
+      <label>{{ $t('ai.settings.writingStyle') }}</label>
       <textarea
         class="settings-persona"
         v-model="personaInput"
@@ -76,25 +91,25 @@
         :placeholder="personaPlaceholder"
       ></textarea>
       <div class="settings-hint">
-        Optional. Injected into every AI prompt. Describe your tone, format preferences, language, jargon to avoid, etc.
+        {{ $t('ai.settings.personaHint') }}
       </div>
 
       <div class="settings-actions">
-        <button type="button" @click="saveApiKey">Save</button>
-        <button v-if="storedProvider || storedApiKey || storedBaseUrl || storedModel" type="button" class="ghost" @click="clearApiKey">Clear</button>
+        <button type="button" @click="saveApiKey">{{ $t('common.save') }}</button>
+        <button v-if="storedProvider || storedApiKey || storedBaseUrl || storedModel" type="button" class="ghost" @click="clearApiKey">{{ $t('common.clear') }}</button>
       </div>
     </div>
 
     <div v-if="showSessions" class="sessions-panel">
       <div class="sessions-header">
         <div class="sessions-heading">
-          <span>Sessions</span>
+          <span>{{ $t('common.sessions') }}</span>
           <span class="sessions-subtitle">{{ sessionScopeLabel }}</span>
         </div>
-        <button type="button" :disabled="streaming" @click="newChat">New</button>
+        <button type="button" :disabled="streaming" @click="newChat">{{ $t('common.new') }}</button>
       </div>
       <div v-if="!sortedSessions.length" class="empty-sessions">
-        No sessions for this document yet.
+        {{ $t('ai.sessions.empty') }}
       </div>
       <div
         v-for="session in sortedSessions"
@@ -108,14 +123,14 @@
           :disabled="streaming"
           @click="selectSession(session.id)"
         >
-          <span class="session-title">{{ session.title || 'New chat' }}</span>
+          <span class="session-title">{{ session.title || $t('ai.sessions.newChat') }}</span>
           <span v-if="session.documentLabel" class="session-doc">{{ session.documentLabel }}</span>
           <span class="session-meta">{{ formatSessionTime(session.updatedAt) }}</span>
         </button>
         <button
           type="button"
           class="session-delete"
-          title="Delete session"
+          :title="$t('ai.sessions.delete')"
           :disabled="streaming"
           @click.stop="deleteSession(session.id)"
         >
@@ -126,8 +141,8 @@
 
     <div ref="messageList" class="chat-messages" @click="handleMessageListClick">
       <div v-if="!displayMessages.length && apiKeyResolved" class="empty-hint">
-        <div class="empty-hint-title">Ask about this document</div>
-        <div class="empty-hint-copy">Use a writing template below, or ask a direct question about the Markdown you are editing.</div>
+        <div class="empty-hint-title">{{ $t('ai.empty.title') }}</div>
+        <div class="empty-hint-copy">{{ $t('ai.empty.copy') }}</div>
       </div>
       <div
         v-for="message in displayMessages"
@@ -139,7 +154,7 @@
           <div class="message-avatar"></div>
           <div class="message-main">
             <div class="system-card">
-              <div class="system-card-label">已压缩对话</div>
+              <div class="system-card-label">{{ $t('ai.messages.compacted') }}</div>
               <div class="message-blocks">
                 <template v-for="(block, index) in message.blocks">
                   <div
@@ -156,7 +171,7 @@
         <div v-else class="message-shell">
           <div class="message-avatar">{{ message.role === 'user' ? '' : '' }}</div>
           <div class="message-main">
-            <div class="message-role">{{ message.role === 'user' ? 'You' : 'AI' }}</div>
+            <div class="message-role">{{ message.role === 'user' ? $t('ai.messages.you') : $t('ai.messages.assistant') }}</div>
             <div class="message-blocks">
               <template v-for="(block, index) in message.blocks">
                 <div
@@ -193,33 +208,35 @@
         >Retry</button>
       </div>
       <div v-if="!error && pendingRetry && !streaming" class="aborted">
-        <span>Stopped. Your message is preserved.</span>
-        <button type="button" class="retry-btn" @click="retryLastSend">Retry</button>
+        <span>{{ $t('ai.messages.stopped') }}</span>
+        <button type="button" class="retry-btn" @click="retryLastSend">{{ $t('common.retry') }}</button>
       </div>
       <div v-if="editUndoStack.length && !streaming" class="undo-bar">
         <button type="button" class="undo-btn" @click="undoLastEdit">
-          <span class="undo-icon">↩</span> Undo last edit
+          <span class="undo-icon">↩</span> {{ $t('ai.undo.lastEdit') }}
         </button>
-        <span class="undo-hint">{{ editUndoStack.length }} edit{{ editUndoStack.length > 1 ? 's' : '' }} in stack</span>
+        <span class="undo-hint">
+          {{ editUndoStack.length > 1 ? $t('ai.undo.stacks', { count: editUndoStack.length }) : $t('ai.undo.stack', { count: editUndoStack.length }) }}
+        </span>
       </div>
     </div>
 
     <div v-if="pendingEdit" class="edit-preview">
       <div class="edit-preview-topbar">
         <div class="edit-preview-header">
-          <span class="edit-preview-kicker">Review Changes</span>
-          <span>Proposed edit · {{ toolLabel(pendingEdit.name) }}</span>
+          <span class="edit-preview-kicker">{{ $t('ai.editPreview.review') }}</span>
+          <span>{{ $t('ai.editPreview.proposed') }} · {{ toolLabel(pendingEdit.name) }}</span>
           <span class="edit-summary">{{ pendingEdit.summary }}</span>
         </div>
         <div class="edit-preview-actions">
-          <button type="button" class="reject" @click="rejectPendingEdit">Reject</button>
-          <button type="button" class="accept" @click="acceptPendingEdit">Accept</button>
+          <button type="button" class="reject" @click="rejectPendingEdit">{{ $t('ai.editPreview.reject') }}</button>
+          <button type="button" class="accept" @click="acceptPendingEdit">{{ $t('ai.editPreview.accept') }}</button>
         </div>
       </div>
       <div class="edit-diff-meta">
         <span class="diff-badge add">+{{ pendingEdit.stats.added }}</span>
         <span class="diff-badge remove">-{{ pendingEdit.stats.removed }}</span>
-        <span v-if="pendingEdit.stats.skipped" class="diff-badge skip">{{ pendingEdit.stats.skipped }} folds</span>
+        <span v-if="pendingEdit.stats.skipped" class="diff-badge skip">{{ pendingEdit.stats.skipped }} {{ $t('ai.editPreview.folds') }}</span>
       </div>
       <div class="edit-diff">
         <template v-for="(line, idx) in pendingEdit.diff">
@@ -229,7 +246,7 @@
         </template>
       </div>
       <div class="edit-preview-footnote">
-        Apply this change to the current Markdown document only after you review the highlighted lines.
+        {{ $t('ai.editPreview.footnote') }}
       </div>
     </div>
 
@@ -238,21 +255,22 @@
         <span
           class="token-count"
           :class="{ warn: tokenWarning }"
-          :title="tokenWarning ? '对话较长，建议压缩' : ''"
+          :title="tokenWarning ? $t('ai.composer.longConversation') : tokenProgressTitle"
         >
           <span class="token-dot"></span>
-          {{ tokenDisplay }}
+          {{ tokenUsageLabel }}
+          <span class="token-meter" :aria-hidden="true"><span :style="{ width: `${tokenProgressPercent}%` }"></span></span>
           <button
             v-if="showCompactButton"
             type="button"
             class="token-compact-link"
             :disabled="compacting"
             @click="compactConversation"
-          >{{ compacting ? '压缩中…' : '压缩 ↗' }}</button>
+          >{{ compacting ? $t('ai.composer.compacting') : `${$t('ai.composer.compact')} ↗` }}</button>
         </span>
         <span class="composer-meta-spacer"></span>
         <span v-if="referenceText" class="selection-status">
-          {{ referenceLineCount }} {{ referenceLineCount === 1 ? 'line' : 'lines' }} selected
+          {{ referenceLineCount === 1 ? $t('ai.composer.selectedLine', { count: referenceLineCount }) : $t('ai.composer.selectedLines', { count: referenceLineCount }) }}
         </span>
         <button
           type="button"
@@ -317,7 +335,7 @@
           </button>
         </div>
         <div class="composer-toolbar">
-          <span class="composer-slash" title="Quick prompts">/</span>
+          <span class="composer-slash" :title="$t('ai.composer.quickPrompts')">/</span>
           <button
             v-for="template in promptTemplates"
             :key="template.id"
@@ -327,19 +345,19 @@
             @click="runTemplatePrompt(template)"
           >{{ template.label }}</button>
           <span class="composer-toolbar-spacer"></span>
-          <button v-if="streaming || compacting" type="button" class="send-btn stop" @click="stop">Stop</button>
+          <button v-if="streaming || compacting" type="button" class="send-btn stop" @click="stop">{{ $t('common.stop') }}</button>
           <button
             v-else
             type="submit"
             class="send-btn primary"
             :disabled="!apiKeyResolved || (!input.trim() && !attachedImages.length) || !!pendingEdit"
-          >Send <span class="send-key">↵</span></button>
+          >{{ $t('common.send') }} <span class="send-key">↵</span></button>
         </div>
       </div>
       <div v-if="showModeMenu" class="mode-menu">
         <div class="mode-menu-header">
-          <span>Modes</span>
-          <span class="mode-menu-hint">Select how AI should edit</span>
+          <span>{{ $t('ai.modes.title') }}</span>
+          <span class="mode-menu-hint">{{ $t('ai.modes.hint') }}</span>
         </div>
         <button
           v-for="mode in editModes"
@@ -369,6 +387,7 @@ import { mapState } from 'vuex'
 import marked from 'marked'
 import DOMPurify from 'dompurify'
 import Prism, { loadLanguage } from 'muya/lib/prism'
+import { ipcRenderer } from 'electron'
 import bus from '../../bus'
 import { PROVIDERS, normalizeProvider, resolveApiKey, resolveBaseUrl, resolveModel, sanitizeMessages, streamChat } from '../../node/claudeApi'
 import { wordCount as getWordCount } from 'muya/lib/utils'
@@ -397,74 +416,21 @@ COMMON_PRISM_LANGS.forEach(lang => {
   try { loadLanguage(lang) } catch (err) { /* ignore */ }
 })
 
-const TOOL_LABELS = {
-  get_document: 'Reading current document',
-  apply_edit: 'Editing document',
-  replace_text: 'Replacing text',
-  insert_text: 'Inserting text',
-  read_file: 'Reading file',
-  list_directory: 'Listing directory'
-}
-
-const EDIT_MODES = [
-  {
-    id: 'ask',
-    icon: '✋',
-    label: 'Ask before edits',
-    shortLabel: 'Ask before edits',
-    description: 'AI will ask for approval before making each edit'
-  },
-  {
-    id: 'auto',
-    icon: '</>',
-    label: 'Edit automatically',
-    shortLabel: 'Edit automatically',
-    description: 'AI will edit your selected text or the whole file'
-  },
-  {
-    id: 'plan',
-    icon: '☰',
-    label: 'Plan mode',
-    shortLabel: 'Plan mode',
-    description: 'AI will explore the document and present a plan before editing'
-  }
-]
-
-const PROMPT_TEMPLATES = [
-  {
-    id: 'polish',
-    label: 'Polish',
-    prompt: 'Review this Markdown document and improve clarity, wording, and flow while preserving the original meaning and structure. Suggest concrete edits or apply them if I ask.'
-  },
-  {
-    id: 'continue',
-    label: 'Continue',
-    prompt: 'Continue writing this Markdown document in the same tone and structure. Focus on the next most natural section and keep the formatting consistent.'
-  },
-  {
-    id: 'condense',
-    label: 'Condense',
-    prompt: 'Condense this Markdown document while preserving the key points, structure, and important details. Remove repetition and tighten wording.'
-  },
-  {
-    id: 'summary',
-    label: 'Summarize',
-    prompt: 'Summarize this Markdown document into a concise structured overview with headings and bullet points.'
-  },
-  {
-    id: 'structure',
-    label: 'Structure',
-    prompt: 'Review the structure of this Markdown document. Suggest a clearer outline, section order, and headings, with concrete recommendations.'
-  },
-  {
-    id: 'mermaid',
-    label: 'Diagram',
-    prompt: 'Read the current document and generate a Mermaid diagram that visualizes its structure, relationships, or key concepts. Output the diagram inside a ```mermaid code fence. If the user previously selected text, focus the diagram on that selection.'
-  }
-]
-
 const EDIT_TOOL_NAMES = new Set(['apply_edit', 'replace_text', 'insert_text'])
 const MAX_UNDO_STACK = 20
+const MODEL_PRESETS = {
+  anthropic: ['claude-sonnet-4-5-20250929', 'claude-opus-4-20250514', 'claude-3-7-sonnet-20250219'],
+  openai: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini']
+}
+const MODEL_CONTEXT_LIMITS = {
+  'claude-sonnet-4-5-20250929': 200000,
+  'claude-opus-4-20250514': 200000,
+  'claude-3-7-sonnet-20250219': 200000,
+  'gpt-4.1': 128000,
+  'gpt-4.1-mini': 128000,
+  'gpt-4o': 128000,
+  'gpt-4o-mini': 128000
+}
 
 const computeLineDiff = (oldText, newText) => {
   const a = String(oldText || '').split('\n')
@@ -630,6 +596,7 @@ export default {
       storedBaseUrl: '',
       modelInput: '',
       storedModel: '',
+      selectedModel: '',
       personaInput: '',
       storedPersona: '',
       showSettings: false,
@@ -703,6 +670,19 @@ export default {
     providerLabel () {
       return this.settingsProvider === PROVIDERS.OPENAI ? 'OpenAI' : 'Anthropic'
     },
+    modelSwitchTitle () {
+      return this.$t('ai.settings.model')
+    },
+    modelOptions () {
+      const provider = this.settingsProvider
+      const current = this.selectedModel || this.settingsResolvedModel || this.resolvedModel
+      const baseModels = MODEL_PRESETS[provider] || []
+      const values = [current, ...baseModels].filter(Boolean)
+      return [...new Set(values)].map(value => ({
+        value,
+        label: value
+      }))
+    },
     apiKeyResolved () {
       if (this.providerResolved === PROVIDERS.OPENAI) return true
       return Boolean(resolveApiKey(this.storedApiKey, this.providerResolved))
@@ -735,7 +715,7 @@ export default {
       return resolveModel('', this.settingsProvider)
     },
     personaPlaceholder () {
-      return 'e.g. Reply in Chinese. Prefer concise bullet points over long paragraphs. Avoid emoji. Use technical Chinese terms (use English words for code/API names).'
+      return this.$t('ai.settings.personaPlaceholder')
     },
     settingsResolvedModel () {
       return resolveModel(this.modelInput, this.settingsProvider)
@@ -770,32 +750,50 @@ export default {
       return ''
     },
     sessionScopeLabel () {
-      return this.contextLabel || 'Workspace'
+      return this.contextLabel || this.$t('common.workspace')
     },
     currentDocumentSessionKey () {
       return getSessionDocumentKey(this.currentFile, this.projectTree)
     },
     promptTemplates () {
-      return PROMPT_TEMPLATES
+      return ['polish', 'continue', 'condense', 'summary', 'structure', 'mermaid'].map(id => ({
+        id,
+        label: this.$t(`ai.templates.${id}.label`),
+        prompt: this.$t(`ai.templates.${id}.prompt`)
+      }))
     },
     editModes () {
-      return EDIT_MODES
+      return ['ask', 'auto', 'plan'].map(id => ({
+        id,
+        icon: id === 'ask' ? '✋' : id === 'auto' ? '</>' : '☰',
+        label: this.$t(`ai.modes.${id}.label`),
+        shortLabel: this.$t(`ai.modes.${id}.shortLabel`),
+        description: this.$t(`ai.modes.${id}.description`)
+      }))
     },
     currentEditMode () {
-      return EDIT_MODES.find(mode => mode.id === this.storedEditMode) || EDIT_MODES[0]
+      return this.editModes.find(mode => mode.id === this.storedEditMode) || this.editModes[0]
     },
     inputPlaceholder () {
-      if (!this.apiKeyResolved) return 'Set an API key to start.'
-      if (this.streaming) return `${this.activeProviderLabel} is replying...`
-      return 'Ask AI about this document'
+      if (!this.apiKeyResolved) return this.$t('ai.composer.setApiKey')
+      if (this.streaming) return this.$t('ai.composer.replying', { provider: this.activeProviderLabel })
+      return this.$t('ai.composer.placeholder')
     },
     estimatedTokens () {
       return estimateTokens(this.apiMessages)
     },
-    tokenDisplay () {
-      const t = this.estimatedTokens
-      if (t < 1000) return `${t} tok`
-      return `${(t / 1000).toFixed(1)}k tok`
+    tokenLimit () {
+      return MODEL_CONTEXT_LIMITS[this.resolvedModel] || MODEL_CONTEXT_LIMITS[this.settingsResolvedModel] || 128000
+    },
+    tokenProgressPercent () {
+      const limit = this.tokenLimit || 1
+      return Math.max(0, Math.min(100, Math.round((this.estimatedTokens / limit) * 100)))
+    },
+    tokenUsageLabel () {
+      return this.$t('ai.composer.tokenUsage', { used: this.estimatedTokens, limit: this.tokenLimit })
+    },
+    tokenProgressTitle () {
+      return this.$t('ai.composer.tokenTitle', { used: this.estimatedTokens, limit: this.tokenLimit })
     },
     showCompactButton () {
       return !this.streaming && !this.compacting && this.apiMessages.length >= 4 && this.estimatedTokens >= TOKEN_COMPACT_THRESHOLD
@@ -842,10 +840,11 @@ export default {
     this.baseUrlInput = this.storedBaseUrl
     this.storedModel = localStorage.getItem(MODEL_STORAGE_KEY) || ''
     this.modelInput = this.storedModel
+    this.selectedModel = this.storedModel || this.resolvedModel
     this.storedPersona = localStorage.getItem(PERSONA_STORAGE_KEY) || ''
     this.personaInput = this.storedPersona
     const storedEditMode = localStorage.getItem(EDIT_MODE_STORAGE_KEY) || 'ask'
-    this.storedEditMode = EDIT_MODES.some(mode => mode.id === storedEditMode) ? storedEditMode : 'ask'
+    this.storedEditMode = ['ask', 'auto', 'plan'].includes(storedEditMode) ? storedEditMode : 'ask'
     this.loadSessions(this.currentDocumentSessionKey)
     bus.$on('claude-selection-reference', this.handleSelectionReference)
   },
@@ -877,6 +876,7 @@ export default {
       this.storedApiKey = apiKeyValue
       this.storedBaseUrl = baseUrlValue
       this.storedModel = modelValue
+      this.selectedModel = modelValue || this.resolvedModel
       this.storedPersona = personaValue
 
       if (this.apiKeyResolved) {
@@ -900,13 +900,18 @@ export default {
       this.modelInput = ''
       this.storedPersona = ''
       this.personaInput = ''
+      this.selectedModel = this.resolvedModel
     },
     selectEditMode (modeId) {
-      const mode = EDIT_MODES.find(item => item.id === modeId)
+      const mode = this.editModes.find(item => item.id === modeId)
       if (!mode) return
       this.storedEditMode = mode.id
       localStorage.setItem(EDIT_MODE_STORAGE_KEY, mode.id)
       this.showModeMenu = false
+    },
+    handleModelChange () {
+      this.modelInput = this.selectedModel
+      this.saveApiKey()
     },
     getCurrentDocumentLabel () {
       if (this.currentFile && this.currentFile.filename) {
@@ -1180,7 +1185,9 @@ export default {
       list.scrollTop = list.scrollHeight
     },
     toolLabel (name) {
-      return TOOL_LABELS[name] || name
+      const key = `ai.tools.${name}`
+      const translated = this.$t(key)
+      return translated === key ? name : translated
     },
     renderMarkdown (text) {
       if (!text) return ''
@@ -1209,7 +1216,7 @@ export default {
         const button = document.createElement('button')
         button.type = 'button'
         button.className = 'claude-code-copy'
-        button.textContent = 'Copy'
+        button.textContent = this.$i18n.locale === 'zh-CN' ? '复制' : 'Copy'
         wrap.appendChild(button)
       })
       const html = wrapper.innerHTML
@@ -1262,10 +1269,12 @@ export default {
           const toggle = document.createElement('button')
           toggle.type = 'button'
           toggle.className = 'mermaid-toggle'
-          toggle.textContent = 'Source'
+          toggle.textContent = this.$i18n.locale === 'zh-CN' ? '源码' : 'Source'
           toggle.addEventListener('click', () => {
             pre.classList.toggle('mermaid-source-collapsed')
-            toggle.textContent = pre.classList.contains('mermaid-source-collapsed') ? 'Source' : 'Hide source'
+            toggle.textContent = pre.classList.contains('mermaid-source-collapsed')
+              ? (this.$i18n.locale === 'zh-CN' ? '源码' : 'Source')
+              : (this.$i18n.locale === 'zh-CN' ? '隐藏源码' : 'Hide source')
           })
           wrapper.appendChild(toggle)
           pre.parentElement.insertBefore(wrapper, pre.nextSibling)
@@ -1273,7 +1282,7 @@ export default {
         } catch (err) {
           const errEl = document.createElement('div')
           errEl.className = 'mermaid-error'
-          errEl.textContent = `Diagram error: ${err.message || err}`
+          errEl.textContent = `${this.$t('ai.header.exportMarkdown')}: ${err.message || err}`
           pre.parentElement.insertBefore(errEl, pre.nextSibling)
         }
       }
@@ -1309,6 +1318,46 @@ export default {
       this.showHeaderMenu = false
       this.showSessions = false
       this.showSettings = !this.showSettings
+    },
+    async exportChatMarkdown () {
+      if (!this.displayMessages.length) return
+      const lines = []
+      lines.push(`# ${this.panelTitle || this.$t('ai.header.newChat')}`)
+      if (this.contextLabel) {
+        lines.push(`\n- ${this.$t('ai.export.document')}: ${this.contextLabel}`)
+      }
+      lines.push(`- ${this.$t('ai.export.exportedAt')}: ${new Date().toLocaleString()}`)
+      lines.push('')
+
+      for (const message of this.displayMessages) {
+        const heading = message.role === 'user'
+          ? this.$t('ai.messages.you')
+          : message.role === 'assistant'
+            ? this.$t('ai.messages.assistant')
+            : this.$t('ai.messages.compacted')
+        lines.push(`## ${heading}`)
+        for (const block of message.blocks || []) {
+          if (block.type === 'text') {
+            lines.push(block.text || '')
+          } else if (block.type === 'tool') {
+            lines.push(`> ${this.$t('ai.export.tool')}: ${this.toolLabel(block.name)} (${block.status})`)
+          }
+        }
+        lines.push('')
+      }
+
+      const fileName = `${(this.panelTitle || this.$t('ai.header.newChat')).replace(/[\\/:*?"<>|]+/g, '_')}.md`
+      try {
+        const result = await ipcRenderer.invoke('mt::save-ai-chat-markdown', {
+          content: lines.join('\n').trim() + '\n',
+          defaultFilename: fileName
+        })
+        if (result && result.filePath) {
+          this.compactNotice = this.$t('ai.export.saved', { path: result.filePath })
+        }
+      } catch (err) {
+        this.error = this.$t('ai.export.failed', { message: err.message || err })
+      }
     },
     handleSidebarKeydown (event) {
       const isMeta = event.metaKey || event.ctrlKey
@@ -2003,7 +2052,7 @@ export default {
       const slashMatch = text.match(/^\/(\S*)$/)
       if (slashMatch) {
         const q = slashMatch[1].toLowerCase()
-        this.slashSuggestions = PROMPT_TEMPLATES
+        this.slashSuggestions = this.promptTemplates
           .filter(t => !q || t.id.startsWith(q) || t.label.toLowerCase().startsWith(q))
           .slice(0, 6)
         this.slashTrigger = { startPos: 0, query: slashMatch[1] }
@@ -2225,7 +2274,7 @@ export default {
         const text = code.textContent || ''
         const copied = await this.copyTextToClipboard(text)
         const original = target.textContent
-        target.textContent = copied ? 'Copied' : 'Copy failed'
+        target.textContent = copied ? (this.$t('common.save') === '保存' ? '已复制' : 'Copied') : (this.$t('common.save') === '保存' ? '复制失败' : 'Copy failed')
         target.disabled = copied
         target.classList.toggle('error', !copied)
         setTimeout(() => {
@@ -2333,6 +2382,17 @@ export default {
     align-items: center;
     position: relative;
     z-index: 101;
+  }
+
+  .model-switcher {
+    height: 28px;
+    max-width: 160px;
+    border: 1px solid var(--claude-border);
+    border-radius: 6px;
+    background: var(--claude-surface);
+    color: var(--claude-text);
+    font-size: 12px;
+    padding: 0 8px;
   }
 
   .header-menu {
@@ -3324,6 +3384,24 @@ export default {
     align-items: center;
     gap: 6px;
     color: var(--claude-text-muted);
+  }
+
+  .token-meter {
+    display: inline-flex;
+    width: 96px;
+    height: 6px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--claude-tint-strong);
+    margin-left: 4px;
+  }
+
+  .token-meter > span {
+    display: block;
+    height: 100%;
+    background: var(--themeColor);
+    border-radius: inherit;
+    transition: width .2s ease;
   }
 
   .token-dot {

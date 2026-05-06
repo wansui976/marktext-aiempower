@@ -50,6 +50,12 @@ export default function (keybindings) {
         actions.toggleSidebar(focusedWindow)
       }
     }, {
+      label: 'Show AI Sidebar',
+      accelerator: keybindings.getAccelerator('view.toggle-ai-sidebar'),
+      click (item, focusedWindow) {
+        actions.showClaudeSidebar(focusedWindow)
+      }
+    }, {
       label: 'Show Tab Bar',
       id: 'tabBarMenuItem',
       accelerator: keybindings.getAccelerator('view.toggle-tabbar'),

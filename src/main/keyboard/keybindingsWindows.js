@@ -95,6 +95,7 @@ export default new Map([
   ['view.typewriter-mode', 'Ctrl+Shift+G'],
   ['view.focus-mode', 'Ctrl+Shift+J'],
   ['view.toggle-sidebar', 'Ctrl+J'],
+  ['view.toggle-ai-sidebar', 'Ctrl+Alt+J'],
   ['view.toggle-toc', 'Ctrl+K'],
   ['view.toggle-tabbar', 'Ctrl+Shift+B'],
   ['view.toggle-dev-tools', 'Ctrl+Alt+I'],
