@@ -43,7 +43,7 @@ jobs:
         #                         electron-builder                 | keyboard-layout         | keytar                      | fontmanager
         run: |
           sudo apt-get -y update
-          sudo apt-get install -y icnsutils graphicsmagick xz-utils libx11-dev libxkbfile-dev gnome-keyring libsecret-1-dev libfontconfig-dev
+          sudo apt-get install -y icnsutils graphicsmagick xz-utils xvfb libx11-dev libxkbfile-dev gnome-keyring libsecret-1-dev libfontconfig-dev
 
       - name: Cache node_modules
         uses: actions/cache@v5
@@ -76,9 +76,7 @@ jobs:
           yarn run validate-licenses
 
       - name: Run unit and E2E tests
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: yarn run test
+        run: xvfb-run --auto-servernum yarn run test
 
       - name: Build
         run: yarn build:bin
