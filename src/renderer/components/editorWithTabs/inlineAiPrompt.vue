@@ -74,7 +74,7 @@
         <div v-if="phase === 'streaming' && !response" class="streaming-placeholder">
           <span class="dot"></span><span class="dot"></span><span class="dot"></span>
         </div>
-        <div v-else class="answer-text">{{ response }}</div>
+        <div v-else class="answer-text" v-html="renderedResponse"></div>
       </div>
 
       <div v-if="error" class="prompt-hint warn">{{ error }}</div>
@@ -109,6 +109,9 @@
 </template>
 
 <script>
+import marked from 'marked'
+import DOMPurify from 'dompurify'
+import Prism from 'muya/lib/prism'
 import { PROVIDERS, normalizeProvider, resolveApiKey, resolveBaseUrl, resolveModel, streamChat } from '../../node/claudeApi'
 
 const PROVIDER_STORAGE_KEY = 'marktext.claudeProvider'
@@ -157,6 +160,9 @@ export default {
       if (provider === PROVIDERS.ANTHROPIC) return !!resolved
       return true
     },
+    renderedResponse () {
+      return this.renderMarkdown(this.response)
+    },
     popoverStyle () {
       if (!this.anchorRect) {
         return {
@@ -184,6 +190,23 @@ export default {
     }
   },
   methods: {
+    renderMarkdown (text) {
+      if (!text) return ''
+      const raw = marked(text, { gfm: true, breaks: true })
+      const safe = DOMPurify.sanitize(raw)
+      const wrapper = document.createElement('div')
+      wrapper.innerHTML = safe
+      wrapper.querySelectorAll('pre > code').forEach(code => {
+        const langMatch = code.className.match(/language-([\w-]+)/)
+        const lang = langMatch ? langMatch[1] : ''
+        if (lang && Prism.languages[lang]) {
+          try {
+            code.innerHTML = Prism.highlight(code.textContent, Prism.languages[lang], lang)
+          } catch (err) { /* ignore */ }
+        }
+      })
+      return wrapper.innerHTML
+    },
     open ({ selectionText, anchorRect, mode }) {
       const text = String(selectionText || '').trim()
       if (!text) return
@@ -539,12 +562,68 @@ const stripWrappers = (text) => {
   }
 
   .answer-text {
-    white-space: pre-wrap;
     word-wrap: break-word;
     color: var(--editorColor, #333);
     font-size: 12px;
-    line-height: 1.55;
+    line-height: 1.6;
     font-family: inherit;
+  }
+
+  .answer-text >>> *:first-child { margin-top: 0; }
+  .answer-text >>> *:last-child { margin-bottom: 0; }
+  .answer-text >>> p { margin: 0 0 8px; }
+  .answer-text >>> ul,
+  .answer-text >>> ol { margin: 6px 0; padding-left: 20px; }
+  .answer-text >>> li { margin-bottom: 2px; }
+  .answer-text >>> code {
+    font-size: 11px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--editorColor04, rgba(0,0,0,.05));
+    font-family: Menlo, Monaco, Consolas, monospace;
+  }
+  .answer-text >>> pre {
+    margin: 6px 0;
+    padding: 8px 10px;
+    border-radius: 5px;
+    background: var(--editorColor04, rgba(0,0,0,.05));
+    overflow-x: auto;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .answer-text >>> pre code {
+    padding: 0;
+    background: transparent;
+    font-size: inherit;
+  }
+  .answer-text >>> blockquote {
+    margin: 6px 0;
+    padding: 4px 10px;
+    border-left: 3px solid var(--themeColor, #d97757);
+    color: var(--sideBarTextColor, #777);
+  }
+  .answer-text >>> h1,
+  .answer-text >>> h2,
+  .answer-text >>> h3 {
+    margin: 10px 0 4px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .answer-text >>> strong { font-weight: 600; }
+  .answer-text >>> em { font-style: italic; }
+  .answer-text >>> table {
+    border-collapse: collapse;
+    font-size: 11px;
+    margin: 6px 0;
+  }
+  .answer-text >>> th,
+  .answer-text >>> td {
+    border: 1px solid var(--editorColor10, #e0e0e0);
+    padding: 3px 6px;
+  }
+  .answer-text >>> th {
+    background: var(--editorColor04, rgba(0,0,0,.05));
+    font-weight: 600;
   }
 
   .streaming-placeholder {
