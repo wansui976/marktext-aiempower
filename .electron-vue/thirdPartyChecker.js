@@ -10,7 +10,8 @@ const getLicenses = (rootDir, callback) => {
     direct: true,
     excludePackages: 'file-icons@2.1.47', // file-icons is under MIT License, but license-checker shows no license.
     json: true,
-    onlyAllow: 'Unlicense;WTFPL;ISC;MIT;BSD;ISC;Apache-2.0;MIT*;Apache;Apache*;BSD*;CC0-1.0;CC-BY-4.0;CC-BY-3.0',
+    // Mermaid pulls in elkjs for ELK graph layout support, which is licensed under EPL-2.0.
+    onlyAllow: 'Unlicense;WTFPL;ISC;MIT;BSD;ISC;Apache-2.0;MIT*;Apache;Apache*;BSD*;CC0-1.0;CC-BY-4.0;CC-BY-3.0;EPL-2.0',
     customPath: {
       licenses: '',
       licenseText: 'none'
