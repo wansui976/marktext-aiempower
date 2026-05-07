@@ -22,5 +22,20 @@
   "imageBed": {
     "description": "The image bed configration",
     "type": "object"
+  },
+  "aiProvider": {
+    "description": "AI provider identifier (anthropic or openai)",
+    "type": "string",
+    "default": ""
+  },
+  "aiModel": {
+    "description": "AI model name override",
+    "type": "string",
+    "default": ""
+  },
+  "aiPersona": {
+    "description": "AI writing style persona",
+    "type": "string",
+    "default": ""
   }
 }

@@ -19,7 +19,7 @@ class DataCenter extends EventEmitter {
     this.dataCenterPath = dataCenterPath
     this.userDataPath = userDataPath
     this.serviceName = 'marktext-aiempower'
-    this.encryptKeys = ['githubToken']
+    this.encryptKeys = ['githubToken', 'aiApiKey', 'aiBaseUrl']
     this.hasDataCenterFile = fs.existsSync(path.join(this.dataCenterPath, `./${DATA_CENTER_NAME}.json`))
     this.store = new Store({
       schema,
@@ -180,6 +180,63 @@ class DataCenter extends EventEmitter {
 
     ipcMain.on('mt::set-user-data', (e, userData) => {
       this.setItems(userData)
+    })
+
+    ipcMain.handle('mt::ai-get-credentials', async () => {
+      const { serviceName } = this
+      const encryptedKeys = ['aiApiKey', 'aiBaseUrl']
+      const plainKeys = ['aiProvider', 'aiModel', 'aiPersona']
+      const result = {}
+      for (const key of encryptedKeys) {
+        try {
+          result[key] = await keytar.getPassword(serviceName, key) || ''
+        } catch (err) {
+          log.error(`Failed to read ${key} from keytar:`, err)
+          result[key] = ''
+        }
+      }
+      for (const key of plainKeys) {
+        result[key] = this.store.get(key) || ''
+      }
+      return result
+    })
+
+    ipcMain.handle('mt::ai-set-credentials', async (e, credentials) => {
+      const { serviceName } = this
+      const encryptedKeys = ['aiApiKey', 'aiBaseUrl']
+      for (const [key, value] of Object.entries(credentials)) {
+        if (encryptedKeys.includes(key)) {
+          try {
+            if (value) {
+              await keytar.setPassword(serviceName, key, value)
+            } else {
+              await keytar.deletePassword(serviceName, key).catch(() => {})
+            }
+          } catch (err) {
+            log.error(`Failed to write ${key} to keytar:`, err)
+          }
+        } else {
+          if (value) {
+            this.store.set(key, value)
+          } else {
+            this.store.delete(key)
+          }
+        }
+      }
+    })
+
+    ipcMain.handle('mt::ai-clear-credentials', async () => {
+      const { serviceName } = this
+      const encryptedKeys = ['aiApiKey', 'aiBaseUrl']
+      const plainKeys = ['aiProvider', 'aiModel', 'aiPersona']
+      for (const key of encryptedKeys) {
+        try {
+          await keytar.deletePassword(serviceName, key)
+        } catch (err) { /* ignore */ }
+      }
+      for (const key of plainKeys) {
+        this.store.delete(key)
+      }
     })
 
     // TODO: Replace sync. call.

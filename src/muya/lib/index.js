@@ -96,10 +96,24 @@ class Muya {
     }
 
     // Create an observer instance linked to the callback function
-    const observer = new MutationObserver(callback)
+    this._observer = new MutationObserver(callback)
 
     // Start observing the target node for configured mutations
-    observer.observe(container, config)
+    this._observer.observe(container, config)
+  }
+
+  // Suspend the MutationObserver during batched programmatic DOM updates
+  // (e.g. snabbdom patch) to avoid firing the callback hundreds of times.
+  _suspendObserver () {
+    if (this._observer) {
+      this._observer.disconnect()
+    }
+  }
+
+  _resumeObserver () {
+    if (this._observer && this.container) {
+      this._observer.observe(this.container, { childList: true, subtree: true })
+    }
   }
 
   dispatchChange = () => {

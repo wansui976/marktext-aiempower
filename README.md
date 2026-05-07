@@ -25,7 +25,7 @@
 
 MarkText-AIEmpower 是一个面向写作、学习和技术文档整理的桌面 Markdown 编辑器。
 
-本项目基于开源项目 [MarkText](https://github.com/marktext/marktext) 开发，核心目标不是重做一个编辑器，而是在 MarkText 已有的轻量编辑体验上补齐 AI 工作流：
+本项目基于开源项目 [MarkText](https://github.com/marktext/marktext) 开发，核心目标是在 MarkText 已有的轻量编辑体验上补齐 AI 工作流：
 
 - 在编辑器侧边栏中直接和 AI 对话
 - 让 AI 理解当前 Markdown 文档内容

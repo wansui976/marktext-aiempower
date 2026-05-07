@@ -22,7 +22,12 @@
     </section>
     <section class="category">
       <div v-for="c of category" :key="c.name" class="item"
-        @click="handleCategoryItemClick(c)"
+        role="button"
+        tabindex="0"
+        @mousedown.stop
+        @click.stop.prevent="handleCategoryItemClick(c)"
+        @keydown.enter.prevent="handleCategoryItemClick(c)"
+        @keydown.space.prevent="handleCategoryItemClick(c)"
         :class="{active: c.label === currentCategory}"
       >
         <svg :viewBox="c.icon.viewBox">
@@ -107,7 +112,7 @@ export default {
 
 <style>
   .pref-sidebar {
-    -webkit-app-region: drag;
+    -webkit-app-region: no-drag;
     display: flex;
     flex-direction: column;
     background: var(--sideBarBgColor);
@@ -116,6 +121,7 @@ export default {
     padding-top: 30px;
     box-sizing: border-box;
     & h3 {
+      -webkit-app-region: drag;
       margin: 0;
       font-weight: normal;
       text-align: center;
@@ -168,6 +174,7 @@ export default {
     -webkit-app-region: no-drag;
     overflow-y: auto;
     & .item {
+      -webkit-app-region: no-drag;
       width: 100%;
       height: 50px;
       font-size: 18px;
@@ -181,10 +188,14 @@ export default {
       position: relative;
       user-select: none;
       & > svg {
+        -webkit-app-region: no-drag;
         width: 28px;
         height: 28px;
         fill: var(--iconColor);
         margin-right: 15px;
+      }
+      & > span {
+        -webkit-app-region: no-drag;
       }
       &:hover {
         background: var(--sideBarItemHoverBgColor);

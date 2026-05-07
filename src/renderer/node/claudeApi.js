@@ -14,11 +14,49 @@ const DEFAULT_MODELS = {
   [PROVIDERS.OPENAI]: 'gpt-4.1'
 }
 const MAX_TOKENS = 8192
+const MAX_TOOL_ROUNDS = 10
+const STREAM_IDLE_TIMEOUT_MS = 60000
 
 export const TOOLS = [
   {
+    name: 'get_document_outline',
+    description: 'Get the heading outline (TOC) of the current document. Use this FIRST when you need to understand the document structure, locate a specific section, or the document might be large. Returns heading levels, titles, and approximate line numbers.',
+    input_schema: {
+      type: 'object',
+      properties: {}
+    }
+  },
+  {
+    name: 'get_document_section',
+    description: 'Get the Markdown content of a specific section in the current document. Use a heading title (or 0-based section index from the outline) to fetch only the relevant part. Prefer this over get_document for targeted reading, especially in large documents.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        section: {
+          type: 'string',
+          description: 'The section identifier: either a heading title (e.g. "Introduction") or a numeric index from the outline (e.g. "3").'
+        }
+      },
+      required: ['section']
+    }
+  },
+  {
+    name: 'search_document',
+    description: 'Full-text search in the current document. Returns paragraphs containing the query with surrounding context. Use this to find specific keywords, code snippets, or topics without reading the whole document.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'The search query. Case-insensitive. Matches whole or partial words.'
+        }
+      },
+      required: ['query']
+    }
+  },
+  {
     name: 'get_document',
-    description: 'Get the full Markdown content of the document the user is currently reading in the editor. Use this whenever the user asks about "this document", "the current file", or refers to content visible in the editor.',
+    description: 'Get the FULL Markdown content of the current document. IMPORTANT: For large documents, prefer get_document_outline + get_document_section + search_document instead. Only use this for short documents or when you truly need the entire content.',
     input_schema: {
       type: 'object',
       properties: {}
@@ -115,8 +153,17 @@ export const TOOLS = [
 
 const SYSTEM_PROMPT = `You are an AI assistant embedded in MarkText, a Markdown editor. The user is reading or writing a Markdown document in the editor and asks you questions about it.
 
-When the user refers to "this document", "the current file", or content they are looking at, call the get_document tool to read the content. For targeted document edits, prefer replace_text or insert_text. Use apply_edit only when replacing the entire document and you can provide the complete new Markdown content.
+## Reading the document
+- Use get_document_outline FIRST to understand the document structure (headings, sections).
+- Use get_document_section to fetch only the relevant sections by title or index.
+- Use search_document to locate specific keywords, topics, or code snippets.
+- Use get_document only when you truly need the full document content (e.g. for global rewrites or when the document is short). For long documents, prefer the targeted tools above.
 
+## Editing the document
+- Prefer replace_text or insert_text for targeted edits.
+- Use apply_edit only when replacing the entire document and you can provide the complete new Markdown content.
+
+## Style
 Reply in the same language as the user's question. Format answers using GitHub-flavored Markdown (headings, lists, code blocks). Be concise.`
 
 const buildSystemPrompt = (persona) => {
@@ -243,7 +290,17 @@ export const sanitizeMessages = messages => {
   })
 }
 
-const parseSseStream = async function * (response) {
+const readWithTimeout = (reader, timeoutMs) => {
+  let timer
+  const timeout = new Promise(function (resolve, reject) {
+    timer = setTimeout(function () {
+      reject(new Error('Stream idle timeout: no data received for ' + (timeoutMs / 1000) + 's'))
+    }, timeoutMs)
+  })
+  return Promise.race([reader.read(), timeout]).finally(() => clearTimeout(timer))
+}
+
+const parseSseStream = async function * (response, { idleTimeoutMs = STREAM_IDLE_TIMEOUT_MS } = {}) {
   const reader = response.body.getReader()
   const decoder = new TextDecoder('utf-8')
   let buffer = ''
@@ -264,20 +321,24 @@ const parseSseStream = async function * (response) {
     }
   }
 
-  while (true) {
-    const { value, done } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
+  try {
+    while (true) {
+      const { value, done } = await readWithTimeout(reader, idleTimeoutMs)
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
 
-    let separatorMatch
-    while ((separatorMatch = buffer.match(eventSeparator))) {
-      const separatorIndex = separatorMatch.index
-      const rawEvent = buffer.slice(0, separatorIndex)
-      buffer = buffer.slice(separatorIndex + separatorMatch[0].length)
+      let separatorMatch
+      while ((separatorMatch = buffer.match(eventSeparator))) {
+        const separatorIndex = separatorMatch.index
+        const rawEvent = buffer.slice(0, separatorIndex)
+        buffer = buffer.slice(separatorIndex + separatorMatch[0].length)
 
-      const event = parseEvent(rawEvent)
-      if (event) yield event
+        const event = parseEvent(rawEvent)
+        if (event) yield event
+      }
     }
+  } finally {
+    reader.releaseLock()
   }
 
   const trailingEvent = parseEvent(buffer)
@@ -488,6 +549,7 @@ async function * streamAnthropicChat ({ apiKey, baseUrl, model, messages, execut
   const workingMessages = sanitizeMessages(messages)
   const resolvedBaseUrl = baseUrl || DEFAULT_BASE_URLS[PROVIDERS.ANTHROPIC]
   const resolvedModel = model || DEFAULT_MODELS[PROVIDERS.ANTHROPIC]
+  let toolRound = 0
 
   while (true) {
     const response = await callAnthropicApi({ apiKey, baseUrl: resolvedBaseUrl, model: resolvedModel, messages: workingMessages, signal, persona })
@@ -545,6 +607,13 @@ async function * streamAnthropicChat ({ apiKey, baseUrl, model, messages, execut
       return
     }
 
+    toolRound++
+    if (toolRound >= MAX_TOOL_ROUNDS) {
+      yield { type: 'text', text: '\n\n[Tool call limit reached. Stopping automatic tool execution.]' }
+      yield { type: 'done', messages: workingMessages }
+      return
+    }
+
     const toolResults = []
     for (const toolUse of toolUses) {
       const result = await executeToolUse(toolUse, executeTool)
@@ -560,6 +629,7 @@ async function * streamOpenAiChat ({ apiKey, baseUrl, model, messages, executeTo
   const workingMessages = sanitizeMessages(messages)
   const resolvedBaseUrl = baseUrl || DEFAULT_BASE_URLS[PROVIDERS.OPENAI]
   const resolvedModel = model || DEFAULT_MODELS[PROVIDERS.OPENAI]
+  let toolRound = 0
 
   while (true) {
     const response = await callOpenAiApi({ apiKey, baseUrl: resolvedBaseUrl, model: resolvedModel, messages: workingMessages, signal, persona })
@@ -649,6 +719,13 @@ async function * streamOpenAiChat ({ apiKey, baseUrl, model, messages, executeTo
     const toolUses = cleanedBlocks.filter(block => block.type === 'tool_use')
 
     if (!toolUses.length) {
+      yield { type: 'done', messages: workingMessages }
+      return
+    }
+
+    toolRound++
+    if (toolRound >= MAX_TOOL_ROUNDS) {
+      yield { type: 'text', text: '\n\n[Tool call limit reached. Stopping automatic tool execution.]' }
       yield { type: 'done', messages: workingMessages }
       return
     }

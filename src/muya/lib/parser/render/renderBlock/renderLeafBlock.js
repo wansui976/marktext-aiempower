@@ -1,7 +1,7 @@
 import katex from 'katex'
 import prism, { loadedLanguages, transformAliasToOrigin } from '../../../prism/'
 import 'katex/dist/contrib/mhchem.min.js'
-import { CLASS_OR_ID, DEVICE_MEMORY, PREVIEW_DOMPURIFY_CONFIG, HAS_TEXT_BLOCK_REG } from '../../../config'
+import { CLASS_OR_ID, PREVIEW_DOMPURIFY_CONFIG, HAS_TEXT_BLOCK_REG } from '../../../config'
 import { tokenizer } from '../../'
 import { snakeToCamel, sanitize, escapeHTML, getLongUniqueId, getImageInfo } from '../../../utils'
 import { h, htmlToVNode } from '../snabbdom'
@@ -109,9 +109,27 @@ export default function renderLeafBlock (parent, block, activeBlocks, matches, u
         labels: this.labels,
         options: this.muya.options
       })
+      // Cache tokenization results aggressively. Reference tokens
+      // (reference_image / reference_link) depend on mutable labels, so
+      // skip caching those to avoid staleness. When highlights exist we
+      // still populate the cache with the plain-text tokens so subsequent
+      // renders without highlights hit the cache.
       const hasReferenceTokens = hasReferenceToken(tokens)
-      if (highlights.length === 0 && useCache && DEVICE_MEMORY >= 4 && !hasReferenceTokens) {
-        this.tokenCache.set(text, tokens)
+      if (!hasReferenceTokens) {
+        if (highlights.length === 0) {
+          this.tokenCache.set(text, tokens)
+        } else if (!this.tokenCache.has(text)) {
+          // Tokenize without highlights and cache for later use.
+          const cleanTokens = tokenizer(text, {
+            highlights: [],
+            hasBeginRules,
+            labels: this.labels,
+            options: this.muya.options
+          })
+          if (!hasReferenceToken(cleanTokens)) {
+            this.tokenCache.set(text, cleanTokens)
+          }
+        }
       }
     }
     children = tokens.reduce((acc, token) => [...acc, ...this[snakeToCamel(token.type)](h, cursor, block, token)], [])

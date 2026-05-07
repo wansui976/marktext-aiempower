@@ -35,191 +35,45 @@
       </div>
     </div>
 
-    <div v-if="showSettings || !apiKeyResolved" class="settings-panel">
-      <label>{{ $t('ai.settings.provider') }}</label>
-      <select v-model="providerInput">
-        <option value="anthropic">Anthropic</option>
-        <option value="openai">{{ $t('ai.settings.openAICompatible') }}</option>
-      </select>
-      <div class="settings-hint">
-        {{ $t('ai.settings.providerHint') }}
-      </div>
+    <chat-settings
+      v-if="showSettings || !apiKeyResolved"
+      :provider-input="providerInput"
+      :api-key-input="apiKeyInput"
+      :base-url-input="baseUrlInput"
+      :model-input="modelInput"
+      :persona-input="personaInput"
+      :context-limit-input="contextLimitInput"
+      :has-stored-values="!!(storedProvider || storedApiKey || storedBaseUrl || storedModel)"
+      @save="handleSettingsSave"
+      @clear="clearApiKey"
+    />
 
-      <label>{{ $t('ai.settings.apiKey', { provider: providerLabel }) }}</label>
-      <input
-        type="password"
-        v-model="apiKeyInput"
-        spellcheck="false"
-        autocomplete="off"
-        :placeholder="apiKeyPlaceholder"
-      />
-      <div class="settings-hint">
-        <span v-if="settingsProvider === 'anthropic'">{{ $t('ai.settings.apiKeyHintAnthropic', { env: apiKeyEnvName }) }}</span>
-        <span v-else>{{ $t('ai.settings.apiKeyHintOpenAI', { env: apiKeyEnvName }) }}</span>
-      </div>
+    <chat-session-list
+      v-if="showSessions"
+      :sessions="sortedSessions"
+      :active-session-id="activeSessionId"
+      :scope-label="sessionScopeLabel"
+      :disabled="streaming"
+      @select="selectSession"
+      @delete="deleteSession"
+      @new-chat="newChat"
+    />
 
-      <label>{{ $t('ai.settings.baseUrl') }}</label>
-      <input
-        type="text"
-        v-model="baseUrlInput"
-        spellcheck="false"
-        autocomplete="off"
-        :placeholder="baseUrlPlaceholder"
-      />
-      <div class="settings-hint">
-        {{ $t('ai.settings.baseUrlHint', { env: baseUrlEnvName, value: settingsResolvedBaseUrl }) }}
-      </div>
-
-      <label>{{ $t('ai.settings.model') }}</label>
-      <input
-        type="text"
-        v-model="modelInput"
-        spellcheck="false"
-        autocomplete="off"
-        :placeholder="modelPlaceholder"
-      />
-      <div class="settings-hint">
-        {{ $t('ai.settings.modelHint', { env: modelEnvName, value: settingsResolvedModel }) }}
-      </div>
-
-      <label>{{ $t('ai.settings.writingStyle') }}</label>
-      <textarea
-        class="settings-persona"
-        v-model="personaInput"
-        spellcheck="false"
-        rows="4"
-        :placeholder="personaPlaceholder"
-      ></textarea>
-      <div class="settings-hint">
-        {{ $t('ai.settings.personaHint') }}
-      </div>
-
-      <div class="settings-actions">
-        <button type="button" @click="saveApiKey">{{ $t('common.save') }}</button>
-        <button v-if="storedProvider || storedApiKey || storedBaseUrl || storedModel" type="button" class="ghost" @click="clearApiKey">{{ $t('common.clear') }}</button>
-      </div>
-    </div>
-
-    <div v-if="showSessions" class="sessions-panel">
-      <div class="sessions-header">
-        <div class="sessions-heading">
-          <span>{{ $t('common.sessions') }}</span>
-          <span class="sessions-subtitle">{{ sessionScopeLabel }}</span>
-        </div>
-        <button type="button" :disabled="streaming" @click="newChat">{{ $t('common.new') }}</button>
-      </div>
-      <div v-if="!sortedSessions.length" class="empty-sessions">
-        {{ $t('ai.sessions.empty') }}
-      </div>
-      <div
-        v-for="session in sortedSessions"
-        :key="session.id"
-        class="session-row"
-        :class="{ active: session.id === activeSessionId }"
-      >
-        <button
-          type="button"
-          class="session-main"
-          :disabled="streaming"
-          @click="selectSession(session.id)"
-        >
-          <span class="session-title">{{ session.title || $t('ai.sessions.newChat') }}</span>
-          <span v-if="session.documentLabel" class="session-doc">{{ session.documentLabel }}</span>
-          <span class="session-meta">{{ formatSessionTime(session.updatedAt) }}</span>
-        </button>
-        <button
-          type="button"
-          class="session-delete"
-          :title="$t('ai.sessions.delete')"
-          :disabled="streaming"
-          @click.stop="deleteSession(session.id)"
-        >
-          ×
-        </button>
-      </div>
-    </div>
-
-    <div ref="messageList" class="chat-messages" @click="handleMessageListClick">
-      <div v-if="!displayMessages.length && apiKeyResolved" class="empty-hint">
-        <div class="empty-hint-title">{{ $t('ai.empty.title') }}</div>
-        <div class="empty-hint-copy">{{ $t('ai.empty.copy') }}</div>
-      </div>
-      <div
-        v-for="message in displayMessages"
-        :key="message.id"
-        class="message"
-        :class="message.role"
-      >
-        <div v-if="message.role === 'system'" class="message-shell">
-          <div class="message-avatar"></div>
-          <div class="message-main">
-            <div class="system-card">
-              <div class="system-card-label">{{ $t('ai.messages.compacted') }}</div>
-              <div class="message-blocks">
-                <template v-for="(block, index) in message.blocks">
-                  <div
-                    v-if="block.type === 'text'"
-                    :key="index"
-                    class="block-text"
-                    v-html="renderMarkdown(block.text)"
-                  ></div>
-                </template>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-else class="message-shell">
-          <div class="message-avatar">{{ message.role === 'user' ? '' : '' }}</div>
-          <div class="message-main">
-            <div class="message-role">{{ message.role === 'user' ? $t('ai.messages.you') : $t('ai.messages.assistant') }}</div>
-            <div class="message-blocks">
-              <template v-for="(block, index) in message.blocks">
-                <div
-                  v-if="block.type === 'text'"
-                  :key="index"
-                  class="block-text"
-                  v-html="block === streamingBlockRef ? streamingHtml : renderMarkdown(block.text)"
-                ></div>
-                <div
-                  v-else-if="block.type === 'tool'"
-                  :key="index"
-                  class="block-tool"
-                  :class="block.status"
-                >
-                  <span class="tool-icon">
-                    <span v-if="block.status === 'running'" class="tool-spinner"></span>
-                    <span v-else-if="block.status === 'error'">⚠</span>
-                    <span v-else>✓</span>
-                  </span>
-                  <span class="tool-name">{{ toolLabel(block.name) }}</span>
-                </div>
-              </template>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-if="error" class="error">
-        <span>{{ error }}</span>
-        <button
-          v-if="pendingRetry && !streaming"
-          type="button"
-          class="retry-btn"
-          @click="retryLastSend"
-        >Retry</button>
-      </div>
-      <div v-if="!error && pendingRetry && !streaming" class="aborted">
-        <span>{{ $t('ai.messages.stopped') }}</span>
-        <button type="button" class="retry-btn" @click="retryLastSend">{{ $t('common.retry') }}</button>
-      </div>
-      <div v-if="editUndoStack.length && !streaming" class="undo-bar">
-        <button type="button" class="undo-btn" @click="undoLastEdit">
-          <span class="undo-icon">↩</span> {{ $t('ai.undo.lastEdit') }}
-        </button>
-        <span class="undo-hint">
-          {{ editUndoStack.length > 1 ? $t('ai.undo.stacks', { count: editUndoStack.length }) : $t('ai.undo.stack', { count: editUndoStack.length }) }}
-        </span>
-      </div>
-    </div>
+    <chat-message-list
+      ref="messageList"
+      :messages="displayMessages"
+      :streaming="streaming"
+      :streaming-block="streamingBlockRef"
+      :streaming-html="streamingHtml"
+      :error="error"
+      :can-retry="!!(pendingRetry && !streaming)"
+      :show-stopped="!!(!error && pendingRetry && !streaming)"
+      :undo-count="editUndoStack.length"
+      :ready="apiKeyResolved"
+      @retry="retryLastSend"
+      @undo="undoLastEdit"
+      @click="handleMessageListClick"
+    />
 
     <div v-if="pendingEdit" class="edit-preview">
       <div class="edit-preview-topbar">
@@ -390,15 +244,22 @@ import Prism, { loadLanguage } from 'muya/lib/prism'
 import { ipcRenderer } from 'electron'
 import bus from '../../bus'
 import { PROVIDERS, normalizeProvider, resolveApiKey, resolveBaseUrl, resolveModel, sanitizeMessages, streamChat } from '../../node/claudeApi'
+import { parseSections, buildOutline, searchDocument, getSectionContent } from '../../node/smartContext'
+import sessionDb from '../../node/sessionDb'
 import { wordCount as getWordCount } from 'muya/lib/utils'
 import loadRenderer from 'muya/lib/renderers'
 import { darkThemes as darkThemeSet } from '../../util/themeColor'
+import ChatSettings from './chat/ChatSettings.vue'
+import ChatSessionList from './chat/ChatSessionList.vue'
+import ChatMessageList from './chat/ChatMessageList.vue'
+import copyIcon from 'muya/lib/assets/pngicon/copy/2.png'
 
 const PROVIDER_STORAGE_KEY = 'marktext.claudeProvider'
 const STORAGE_KEY = 'marktext.claudeApiKey'
 const BASE_URL_STORAGE_KEY = 'marktext.claudeBaseUrl'
 const MODEL_STORAGE_KEY = 'marktext.claudeModel'
 const PERSONA_STORAGE_KEY = 'marktext.claudePersona'
+const CONTEXT_LIMIT_STORAGE_KEY = 'marktext.claudeContextLimit'
 const EDIT_MODE_STORAGE_KEY = 'marktext.claudeEditMode'
 const SESSIONS_STORAGE_KEY = 'marktext.claudeSessions'
 const ACTIVE_SESSION_STORAGE_KEY = 'marktext.claudeActiveSessionId'
@@ -422,15 +283,7 @@ const MODEL_PRESETS = {
   anthropic: ['claude-sonnet-4-5-20250929', 'claude-opus-4-20250514', 'claude-3-7-sonnet-20250219'],
   openai: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini']
 }
-const MODEL_CONTEXT_LIMITS = {
-  'claude-sonnet-4-5-20250929': 200000,
-  'claude-opus-4-20250514': 200000,
-  'claude-3-7-sonnet-20250219': 200000,
-  'gpt-4.1': 128000,
-  'gpt-4.1-mini': 128000,
-  'gpt-4o': 128000,
-  'gpt-4o-mini': 128000
-}
+const DEFAULT_CONTEXT_LIMIT = 128000
 
 const computeLineDiff = (oldText, newText) => {
   const a = String(oldText || '').split('\n')
@@ -579,6 +432,11 @@ const sortSessionsByUpdate = sessions => sessions.slice().sort((a, b) => {
 })
 
 export default {
+  components: {
+    ChatSettings,
+    ChatSessionList,
+    ChatMessageList
+  },
   props: {
     active: {
       type: Boolean,
@@ -599,6 +457,8 @@ export default {
       selectedModel: '',
       personaInput: '',
       storedPersona: '',
+      contextLimitInput: DEFAULT_CONTEXT_LIMIT,
+      storedContextLimit: '',
       showSettings: false,
       streaming: false,
       error: '',
@@ -783,7 +643,9 @@ export default {
       return estimateTokens(this.apiMessages)
     },
     tokenLimit () {
-      return MODEL_CONTEXT_LIMITS[this.resolvedModel] || MODEL_CONTEXT_LIMITS[this.settingsResolvedModel] || 128000
+      const stored = parseInt(this.storedContextLimit, 10)
+      if (stored && stored >= 4096) return stored
+      return DEFAULT_CONTEXT_LIMIT
     },
     tokenProgressPercent () {
       const limit = this.tokenLimit || 1
@@ -830,19 +692,8 @@ export default {
       this.rerenderMermaidBlocks()
     }
   },
-  mounted () {
-    const storedProvider = normalizeProvider(localStorage.getItem(PROVIDER_STORAGE_KEY) || '')
-    this.storedProvider = storedProvider === PROVIDERS.ANTHROPIC ? '' : storedProvider
-    this.providerInput = storedProvider
-    this.storedApiKey = localStorage.getItem(STORAGE_KEY) || ''
-    this.apiKeyInput = this.storedApiKey
-    this.storedBaseUrl = localStorage.getItem(BASE_URL_STORAGE_KEY) || ''
-    this.baseUrlInput = this.storedBaseUrl
-    this.storedModel = localStorage.getItem(MODEL_STORAGE_KEY) || ''
-    this.modelInput = this.storedModel
-    this.selectedModel = this.storedModel || this.resolvedModel
-    this.storedPersona = localStorage.getItem(PERSONA_STORAGE_KEY) || ''
-    this.personaInput = this.storedPersona
+  async mounted () {
+    await this.loadCredentials()
     const storedEditMode = localStorage.getItem(EDIT_MODE_STORAGE_KEY) || 'ask'
     this.storedEditMode = ['ask', 'auto', 'plan'].includes(storedEditMode) ? storedEditMode : 'ask'
     this.loadSessions(this.currentDocumentSessionKey)
@@ -854,22 +705,92 @@ export default {
     this.saveCurrentSession()
   },
   methods: {
-    saveApiKey () {
-      const persist = (key, value) => {
-        if (value) localStorage.setItem(key, value)
-        else localStorage.removeItem(key)
+    async loadCredentials () {
+      try {
+        const credentials = await ipcRenderer.invoke('mt::ai-get-credentials')
+        const storedProvider = normalizeProvider(credentials.aiProvider || '')
+        this.storedProvider = storedProvider === PROVIDERS.ANTHROPIC ? '' : storedProvider
+        this.providerInput = storedProvider
+        this.storedApiKey = credentials.aiApiKey || ''
+        this.apiKeyInput = this.storedApiKey
+        this.storedBaseUrl = credentials.aiBaseUrl || ''
+        this.baseUrlInput = this.storedBaseUrl
+        this.storedModel = credentials.aiModel || ''
+        this.modelInput = this.storedModel
+        this.selectedModel = this.storedModel || this.resolvedModel
+        this.storedPersona = credentials.aiPersona || ''
+        this.personaInput = this.storedPersona
+        const storedCtx = credentials.aiContextLimit
+        this.storedContextLimit = storedCtx ? String(storedCtx) : ''
+        this.contextLimitInput = parseInt(storedCtx, 10) || DEFAULT_CONTEXT_LIMIT
+      } catch (err) {
+        const storedProvider = normalizeProvider(localStorage.getItem(PROVIDER_STORAGE_KEY) || '')
+        this.storedProvider = storedProvider === PROVIDERS.ANTHROPIC ? '' : storedProvider
+        this.providerInput = storedProvider
+        this.storedApiKey = localStorage.getItem(STORAGE_KEY) || ''
+        this.apiKeyInput = this.storedApiKey
+        this.storedBaseUrl = localStorage.getItem(BASE_URL_STORAGE_KEY) || ''
+        this.baseUrlInput = this.storedBaseUrl
+        this.storedModel = localStorage.getItem(MODEL_STORAGE_KEY) || ''
+        this.modelInput = this.storedModel
+        this.selectedModel = this.storedModel || this.resolvedModel
+        this.storedPersona = localStorage.getItem(PERSONA_STORAGE_KEY) || ''
+        this.personaInput = this.storedPersona
+        const storedCtx = localStorage.getItem(CONTEXT_LIMIT_STORAGE_KEY) || ''
+        this.storedContextLimit = storedCtx
+        this.contextLimitInput = parseInt(storedCtx, 10) || DEFAULT_CONTEXT_LIMIT
       }
+      this.migrateLocalStorageCredentials()
+    },
+    async migrateLocalStorageCredentials () {
+      const legacyKey = localStorage.getItem(STORAGE_KEY)
+      if (!legacyKey) return
+      try {
+        await ipcRenderer.invoke('mt::ai-set-credentials', {
+          aiApiKey: legacyKey,
+          aiBaseUrl: localStorage.getItem(BASE_URL_STORAGE_KEY) || '',
+          aiModel: localStorage.getItem(MODEL_STORAGE_KEY) || '',
+          aiProvider: localStorage.getItem(PROVIDER_STORAGE_KEY) || '',
+          aiPersona: localStorage.getItem(PERSONA_STORAGE_KEY) || '',
+          aiContextLimit: localStorage.getItem(CONTEXT_LIMIT_STORAGE_KEY) || ''
+        })
+        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(BASE_URL_STORAGE_KEY)
+        localStorage.removeItem(MODEL_STORAGE_KEY)
+        localStorage.removeItem(PROVIDER_STORAGE_KEY)
+        localStorage.removeItem(PERSONA_STORAGE_KEY)
+        localStorage.removeItem(CONTEXT_LIMIT_STORAGE_KEY)
+      } catch (err) { /* keep localStorage as fallback */ }
+    },
+    async saveApiKey () {
       const apiKeyValue = this.apiKeyInput.trim()
       const baseUrlValue = this.baseUrlInput.trim()
       const modelValue = this.modelInput.trim()
       const personaValue = this.personaInput.trim()
+      const contextLimitValue = String(this.contextLimitInput || DEFAULT_CONTEXT_LIMIT)
       const providerValue = normalizeProvider(this.providerInput)
 
-      persist(PROVIDER_STORAGE_KEY, providerValue === PROVIDERS.ANTHROPIC ? '' : providerValue)
-      persist(STORAGE_KEY, apiKeyValue)
-      persist(BASE_URL_STORAGE_KEY, baseUrlValue)
-      persist(MODEL_STORAGE_KEY, modelValue)
-      persist(PERSONA_STORAGE_KEY, personaValue)
+      try {
+        await ipcRenderer.invoke('mt::ai-set-credentials', {
+          aiApiKey: apiKeyValue,
+          aiBaseUrl: baseUrlValue,
+          aiModel: modelValue,
+          aiProvider: providerValue === PROVIDERS.ANTHROPIC ? '' : providerValue,
+          aiPersona: personaValue,
+          aiContextLimit: contextLimitValue
+        })
+      } catch (err) {
+        const persist = (key, value) => {
+          if (value) localStorage.setItem(key, value)
+          else localStorage.removeItem(key)
+        }
+        persist(PROVIDER_STORAGE_KEY, providerValue === PROVIDERS.ANTHROPIC ? '' : providerValue)
+        persist(STORAGE_KEY, apiKeyValue)
+        persist(BASE_URL_STORAGE_KEY, baseUrlValue)
+        persist(MODEL_STORAGE_KEY, modelValue)
+        persist(PERSONA_STORAGE_KEY, personaValue)
+        persist(CONTEXT_LIMIT_STORAGE_KEY, contextLimitValue)
+      }
 
       this.storedProvider = providerValue === PROVIDERS.ANTHROPIC ? '' : providerValue
       this.providerInput = providerValue
@@ -878,18 +799,25 @@ export default {
       this.storedModel = modelValue
       this.selectedModel = modelValue || this.resolvedModel
       this.storedPersona = personaValue
+      this.storedContextLimit = contextLimitValue
+      this.contextLimitInput = parseInt(contextLimitValue, 10) || DEFAULT_CONTEXT_LIMIT
 
       if (this.apiKeyResolved) {
         this.showSettings = false
       }
       this.error = ''
     },
-    clearApiKey () {
-      localStorage.removeItem(PROVIDER_STORAGE_KEY)
-      localStorage.removeItem(STORAGE_KEY)
-      localStorage.removeItem(BASE_URL_STORAGE_KEY)
-      localStorage.removeItem(MODEL_STORAGE_KEY)
-      localStorage.removeItem(PERSONA_STORAGE_KEY)
+    async clearApiKey () {
+      try {
+        await ipcRenderer.invoke('mt::ai-clear-credentials')
+      } catch (err) {
+        localStorage.removeItem(PROVIDER_STORAGE_KEY)
+        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(BASE_URL_STORAGE_KEY)
+        localStorage.removeItem(MODEL_STORAGE_KEY)
+        localStorage.removeItem(PERSONA_STORAGE_KEY)
+        localStorage.removeItem(CONTEXT_LIMIT_STORAGE_KEY)
+      }
       this.storedProvider = ''
       this.providerInput = PROVIDERS.ANTHROPIC
       this.storedApiKey = ''
@@ -897,10 +825,23 @@ export default {
       this.storedBaseUrl = ''
       this.baseUrlInput = ''
       this.storedModel = ''
+      this.storedContextLimit = ''
+      this.contextLimitInput = DEFAULT_CONTEXT_LIMIT
       this.modelInput = ''
       this.storedPersona = ''
       this.personaInput = ''
       this.selectedModel = this.resolvedModel
+    },
+    handleSettingsSave (settings) {
+      this.providerInput = settings.provider
+      this.apiKeyInput = settings.apiKey
+      this.baseUrlInput = settings.baseUrl
+      this.modelInput = settings.model
+      this.personaInput = settings.persona
+      if (settings.contextLimit != null) {
+        this.contextLimitInput = parseInt(settings.contextLimit, 10) || DEFAULT_CONTEXT_LIMIT
+      }
+      this.saveApiKey()
     },
     selectEditMode (modeId) {
       const mode = this.editModes.find(item => item.id === modeId)
@@ -938,26 +879,29 @@ export default {
         apiMessages: []
       }
     },
-    readStoredSessions (legacyDocumentKey = this.currentDocumentSessionKey) {
+    async migrateLocalStorageSessions () {
       try {
         const raw = localStorage.getItem(SESSIONS_STORAGE_KEY)
-        const sessions = raw ? JSON.parse(raw) : []
-        if (!Array.isArray(sessions)) return []
-        return sessions
-          .filter(session => session && session.id)
-          .map(session => ({
-            id: String(session.id),
-            documentKey: session.documentKey || legacyDocumentKey || 'global',
-            documentLabel: session.documentLabel || '',
-            title: session.title || 'New chat',
-            createdAt: Number(session.createdAt || Date.now()),
-            updatedAt: Number(session.updatedAt || session.createdAt || Date.now()),
-            displayMessages: Array.isArray(session.displayMessages) ? session.displayMessages : [],
-            apiMessages: Array.isArray(session.apiMessages) ? sanitizeMessages(session.apiMessages) : []
+        if (!raw) return
+        const sessions = JSON.parse(raw)
+        if (!Array.isArray(sessions) || !sessions.length) return
+        const valid = sessions
+          .filter(s => s && s.id)
+          .map(s => ({
+            id: String(s.id),
+            documentKey: s.documentKey || 'global',
+            documentLabel: s.documentLabel || '',
+            title: s.title || 'New chat',
+            createdAt: Number(s.createdAt || Date.now()),
+            updatedAt: Number(s.updatedAt || s.createdAt || Date.now()),
+            displayMessages: Array.isArray(s.displayMessages) ? s.displayMessages : [],
+            apiMessages: Array.isArray(s.apiMessages) ? sanitizeMessages(s.apiMessages) : []
           }))
-      } catch (err) {
-        return []
-      }
+        if (valid.length) {
+          await sessionDb.importSessions(valid)
+        }
+        localStorage.removeItem(SESSIONS_STORAGE_KEY)
+      } catch (err) { /* ignore migration errors */ }
     },
     readActiveSessionMap () {
       try {
@@ -977,50 +921,95 @@ export default {
         localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, sessionId)
       }
     },
-    loadSessions (documentKey = this.currentDocumentSessionKey) {
-      const allSessions = this.readStoredSessions(documentKey)
-      const sessions = allSessions.filter(session => session.documentKey === documentKey)
+    async loadSessions (documentKey = this.currentDocumentSessionKey) {
+      await this.migrateLocalStorageSessions()
+      let metas = []
+      try {
+        metas = await sessionDb.getSessionsByDocumentKey(documentKey)
+      } catch (err) { /* empty */ }
+
       this.loadedDocumentSessionKey = documentKey
-      this.sessions = sessions.length ? sortSessionsByUpdate(sessions) : [this.createSession(documentKey)]
+
+      if (metas.length) {
+        const sorted = metas.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).slice(0, MAX_STORED_SESSIONS)
+        this.sessions = sorted.map(m => ({
+          id: m.id,
+          documentKey: m.documentKey,
+          documentLabel: m.documentLabel || '',
+          title: m.title || 'New chat',
+          createdAt: m.createdAt,
+          updatedAt: m.updatedAt,
+          displayMessages: [],
+          apiMessages: []
+        }))
+      } else {
+        this.sessions = [this.createSession(documentKey)]
+      }
 
       const activeMap = this.readActiveSessionMap()
       const legacyActiveId = localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY)
       const storedActiveId = activeMap[documentKey] || legacyActiveId
-      const active = this.sessions.find(session => session.id === storedActiveId) || this.sortedSessions[0]
+      const active = this.sessions.find(session => session.id === storedActiveId) || this.sessions[0]
       this.activeSessionId = active.id
-      this.displayMessages = cloneMessages(active.displayMessages)
-      this.apiMessages = cloneMessages(active.apiMessages)
+
+      try {
+        const messages = await sessionDb.getSessionMessages(active.id)
+        if (messages) {
+          this.displayMessages = cloneMessages(messages.displayMessages)
+          this.apiMessages = cloneMessages(messages.apiMessages)
+          active.displayMessages = this.displayMessages
+          active.apiMessages = this.apiMessages
+        } else {
+          this.displayMessages = []
+          this.apiMessages = []
+        }
+      } catch (err) {
+        this.displayMessages = []
+        this.apiMessages = []
+      }
+
       this.pendingRetry = null
       this.pendingEdit = null
       this.error = ''
       this.compactNotice = ''
       this.clearMarkdownCache()
-      this.persistSessions()
     },
     persistSessions () {
-      const previousSessions = this.readStoredSessions(this.loadedDocumentSessionKey)
-        .filter(session => session.documentKey !== this.loadedDocumentSessionKey)
-      const sessions = sortSessionsByUpdate(this.sessions)
-        .slice(0, MAX_STORED_SESSIONS)
-        .map(session => ({
+      const sessions = sortSessionsByUpdate(this.sessions).slice(0, MAX_STORED_SESSIONS)
+      this.sessions = sessions
+
+      if (this.activeSessionId) {
+        this.writeActiveSessionId(this.loadedDocumentSessionKey, this.activeSessionId)
+      }
+
+      const activeSession = sessions.find(s => s.id === this.activeSessionId)
+      if (activeSession) {
+        const meta = {
+          id: activeSession.id,
+          documentKey: activeSession.documentKey || this.loadedDocumentSessionKey,
+          documentLabel: activeSession.documentLabel || this.getCurrentDocumentLabel(),
+          title: activeSession.title || 'New chat',
+          createdAt: activeSession.createdAt || Date.now(),
+          updatedAt: activeSession.updatedAt || activeSession.createdAt || Date.now()
+        }
+        const messages = {
+          displayMessages: cloneMessages(activeSession.displayMessages || this.displayMessages),
+          apiMessages: sanitizeMessages(cloneMessages(activeSession.apiMessages || this.apiMessages))
+        }
+        sessionDb.saveSession(meta, messages).catch(() => {})
+      }
+
+      for (const session of sessions) {
+        if (session.id === this.activeSessionId) continue
+        const meta = {
           id: session.id,
           documentKey: session.documentKey || this.loadedDocumentSessionKey,
           documentLabel: session.documentLabel || this.getCurrentDocumentLabel(),
           title: session.title || 'New chat',
           createdAt: session.createdAt || Date.now(),
-          updatedAt: session.updatedAt || session.createdAt || Date.now(),
-          displayMessages: cloneMessages(session.displayMessages),
-          apiMessages: sanitizeMessages(cloneMessages(session.apiMessages))
-        }))
-
-      this.sessions = sessions
-      try {
-        localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify([...previousSessions, ...sessions]))
-        if (this.activeSessionId) {
-          this.writeActiveSessionId(this.loadedDocumentSessionKey, this.activeSessionId)
+          updatedAt: session.updatedAt || session.createdAt || Date.now()
         }
-      } catch (err) {
-        // Keep the in-memory session even if browser storage is full.
+        sessionDb.saveMeta(meta).catch(() => {})
       }
     },
     deriveSessionTitle () {
@@ -1051,7 +1040,7 @@ export default {
       }
       this.persistSessions()
     },
-    selectSession (sessionId) {
+    async selectSession (sessionId) {
       if (this.streaming || sessionId === this.activeSessionId) return
 
       const session = this.sessions.find(item => item.id === sessionId)
@@ -1059,8 +1048,28 @@ export default {
 
       this.saveCurrentSession()
       this.activeSessionId = session.id
-      this.displayMessages = cloneMessages(session.displayMessages)
-      this.apiMessages = cloneMessages(session.apiMessages)
+
+      if (session.displayMessages && session.displayMessages.length) {
+        this.displayMessages = cloneMessages(session.displayMessages)
+        this.apiMessages = cloneMessages(session.apiMessages)
+      } else {
+        try {
+          const messages = await sessionDb.getSessionMessages(session.id)
+          if (messages) {
+            this.displayMessages = cloneMessages(messages.displayMessages)
+            this.apiMessages = cloneMessages(messages.apiMessages)
+            session.displayMessages = this.displayMessages
+            session.apiMessages = this.apiMessages
+          } else {
+            this.displayMessages = []
+            this.apiMessages = []
+          }
+        } catch (err) {
+          this.displayMessages = []
+          this.apiMessages = []
+        }
+      }
+
       this.error = ''
       this.pendingRetry = null
       this.pendingEdit = null
@@ -1074,7 +1083,7 @@ export default {
         this.renderMermaidBlocks()
       })
     },
-    deleteSession (sessionId) {
+    async deleteSession (sessionId) {
       if (this.streaming) return
       if (!window.confirm('Delete this AI session?')) return
 
@@ -1083,6 +1092,7 @@ export default {
         this.saveCurrentSession()
       }
 
+      sessionDb.deleteSession(sessionId).catch(() => {})
       this.sessions = this.sessions.filter(session => session.id !== sessionId)
       if (!this.sessions.length) {
         this.sessions = [this.createSession()]
@@ -1091,8 +1101,26 @@ export default {
       if (wasActive) {
         const nextSession = this.sortedSessions[0]
         this.activeSessionId = nextSession.id
-        this.displayMessages = cloneMessages(nextSession.displayMessages)
-        this.apiMessages = cloneMessages(nextSession.apiMessages)
+        if (nextSession.displayMessages && nextSession.displayMessages.length) {
+          this.displayMessages = cloneMessages(nextSession.displayMessages)
+          this.apiMessages = cloneMessages(nextSession.apiMessages)
+        } else {
+          try {
+            const messages = await sessionDb.getSessionMessages(nextSession.id)
+            if (messages) {
+              this.displayMessages = cloneMessages(messages.displayMessages)
+              this.apiMessages = cloneMessages(messages.apiMessages)
+              nextSession.displayMessages = this.displayMessages
+              nextSession.apiMessages = this.apiMessages
+            } else {
+              this.displayMessages = []
+              this.apiMessages = []
+            }
+          } catch (err) {
+            this.displayMessages = []
+            this.apiMessages = []
+          }
+        }
         this.error = ''
         this.pendingRetry = null
         this.pendingEdit = null
@@ -1176,13 +1204,10 @@ export default {
       if (el) el.focus()
     },
     scrollToBottom (force = false) {
-      const list = this.$refs.messageList
-      if (!list) return
-      if (!force) {
-        const distanceFromBottom = list.scrollHeight - list.scrollTop - list.clientHeight
-        if (distanceFromBottom > 80) return
+      const child = this.$refs.messageList
+      if (child && child.scrollToBottom) {
+        child.scrollToBottom(force)
       }
-      list.scrollTop = list.scrollHeight
     },
     toolLabel (name) {
       const key = `ai.tools.${name}`
@@ -1207,17 +1232,22 @@ export default {
           } catch (err) { /* ignore */ }
         }
         const pre = code.parentElement
-        if (!pre || pre.parentElement && pre.parentElement.classList.contains('claude-code-block-wrap')) return
+        if (!pre || pre.querySelector('.claude-code-copy')) return
         pre.classList.add('claude-code-block')
-        const wrap = document.createElement('div')
-        wrap.className = 'claude-code-block-wrap'
-        pre.parentElement.insertBefore(wrap, pre)
-        wrap.appendChild(pre)
         const button = document.createElement('button')
         button.type = 'button'
         button.className = 'claude-code-copy'
-        button.textContent = this.$i18n.locale === 'zh-CN' ? '复制' : 'Copy'
-        wrap.appendChild(button)
+        button.title = 'Copy content'
+        button.setAttribute('aria-label', 'Copy content')
+        const icon = document.createElement('i')
+        icon.className = 'icon'
+        const iconInner = document.createElement('i')
+        iconInner.className = 'icon-inner'
+        iconInner.style.background = `url(${copyIcon}) no-repeat`
+        iconInner.style.backgroundSize = '100%'
+        icon.appendChild(iconInner)
+        button.appendChild(icon)
+        pre.appendChild(button)
       })
       const html = wrapper.innerHTML
       if (cache.size >= 256) cache.delete(cache.keys().next().value)
@@ -1226,9 +1256,11 @@ export default {
     },
     clearMarkdownCache () {
       this.markdownCache.clear()
+      const child = this.$refs.messageList
+      if (child && child.clearCache) child.clearCache()
     },
     rerenderMermaidBlocks () {
-      const container = this.$refs.messageList
+      const container = this.$refs.messageList && this.$refs.messageList.$el
       if (!container) return
       container.querySelectorAll('.mermaid-preview').forEach(el => el.remove())
       container.querySelectorAll('.mermaid-error').forEach(el => el.remove())
@@ -1240,7 +1272,7 @@ export default {
       this.$nextTick(() => this.renderMermaidBlocks())
     },
     async renderMermaidBlocks () {
-      const container = this.$refs.messageList
+      const container = this.$refs.messageList && this.$refs.messageList.$el
       if (!container) return
       const codeBlocks = container.querySelectorAll('pre > code.language-mermaid')
       if (!codeBlocks.length) return
@@ -1509,6 +1541,33 @@ export default {
       })
     },
     executeTool (name, input) {
+      if (name === 'get_document_outline') {
+        if (!this.currentFile || typeof this.currentFile.markdown !== 'string') {
+          return 'No document is currently open in the editor.'
+        }
+        const sections = parseSections(this.currentFile.markdown)
+        this._documentSections = sections
+        return buildOutline(sections, this.currentFile.filename || 'untitled.md')
+      }
+      if (name === 'search_document') {
+        if (!this.currentFile || typeof this.currentFile.markdown !== 'string') {
+          return 'No document is currently open in the editor.'
+        }
+        return searchDocument(this.currentFile.markdown, input.query || '')
+      }
+      if (name === 'get_document_section') {
+        if (!this.currentFile || typeof this.currentFile.markdown !== 'string') {
+          return 'No document is currently open in the editor.'
+        }
+        let sections = this._documentSections
+        if (!sections || !sections.length) {
+          sections = parseSections(this.currentFile.markdown)
+          this._documentSections = sections
+        }
+        const raw = String(input.section || '').trim()
+        const identifier = /^\d+$/.test(raw) ? parseInt(raw, 10) : raw
+        return getSectionContent(sections, this.currentFile.markdown, identifier)
+      }
       if (name === 'get_document') {
         if (!this.currentFile || typeof this.currentFile.markdown !== 'string') {
           return 'No document is currently open in the editor.'
@@ -1879,6 +1938,7 @@ export default {
       const assistantDisplayMessage = this.startAssistantMessage()
       this.streaming = true
       this._documentTurnCacheKey = null
+      this._documentSections = null
       this.$nextTick(() => this.scrollToBottom(true))
 
       const provider = this.providerResolved
@@ -2266,22 +2326,25 @@ export default {
     },
     async handleMessageListClick (event) {
       const target = event.target
-      if (target && target.classList && target.classList.contains('claude-code-copy')) {
+      const copyButton = target && target.closest ? target.closest('.claude-code-copy') : null
+      if (copyButton) {
         event.stopPropagation()
-        const wrap = target.closest('.claude-code-block-wrap')
-        const code = wrap && wrap.querySelector('pre code')
+        const pre = copyButton.closest('pre.claude-code-block')
+        const code = pre && pre.querySelector('code')
         if (!code) return
         const text = code.textContent || ''
         const copied = await this.copyTextToClipboard(text)
-        const original = target.textContent
-        target.textContent = copied ? (this.$t('common.save') === '保存' ? '已复制' : 'Copied') : (this.$t('common.save') === '保存' ? '复制失败' : 'Copy failed')
-        target.disabled = copied
-        target.classList.toggle('error', !copied)
+        const originalTitle = copyButton.title
+        copyButton.title = copied ? (this.$t('common.save') === '保存' ? '已复制' : 'Copied') : (this.$t('common.save') === '保存' ? '复制失败' : 'Copy failed')
+        copyButton.disabled = copied
+        copyButton.classList.toggle('copied', copied)
+        copyButton.classList.toggle('error', !copied)
         setTimeout(() => {
-          if (target.isConnected) {
-            target.textContent = original
-            target.disabled = false
-            target.classList.remove('error')
+          if (copyButton.isConnected) {
+            copyButton.title = originalTitle
+            copyButton.disabled = false
+            copyButton.classList.remove('copied')
+            copyButton.classList.remove('error')
           }
         }, copied ? 1200 : 1600)
       }
@@ -2290,7 +2353,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
   .side-bar-claude-chat {
     --claude-bg: var(--sideBarBgColor);
     --claude-surface: var(--floatBgColor);
@@ -2718,6 +2781,7 @@ export default {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 14px 16px 22px;
     overflow-anchor: none;
     overscroll-behavior: contain;
@@ -2819,7 +2883,11 @@ export default {
   .block-text {
     color: var(--editorColor);
     word-wrap: break-word;
+    overflow-wrap: break-word;
     user-select: text;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .block-text >>> *:first-child {
@@ -2860,6 +2928,10 @@ export default {
   }
 
   .block-text >>> pre {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     background: var(--claude-surface-soft);
     border: 1px solid var(--claude-border);
     border-radius: 10px;
@@ -2869,6 +2941,9 @@ export default {
   }
 
   .block-text >>> pre code {
+    display: block;
+    width: max-content;
+    min-width: 100%;
     background: transparent;
     border: none;
     padding: 0;
@@ -2932,9 +3007,9 @@ export default {
   .block-text >>> hr {
     height: 0;
     border: none !important;
-    border-top: 1px dashed var(--themeColor) !important;
+    border-top: 1px solid var(--claude-border-strong) !important;
     background: transparent !important;
-    opacity: .42;
+    opacity: .55;
     margin: 14px 0;
   }
 
@@ -3269,49 +3344,58 @@ export default {
     padding: 7px 9px;
   }
 
-  .block-text >>> .claude-code-block-wrap {
+  .block-text >>> pre.claude-code-block {
     position: relative;
-    margin: 12px 0;
-  }
-
-  .block-text >>> .claude-code-block-wrap > pre {
-    margin: 0;
   }
 
   .block-text >>> .claude-code-copy {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    border: 1px solid var(--claude-border);
-    border-radius: 999px;
-    background: var(--claude-surface);
-    color: var(--sideBarTextColor);
+    top: .5em;
+    right: .5em;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: transparent;
     cursor: pointer;
-    font-size: 10px;
-    padding: 3px 8px;
     opacity: 0;
-    transition: opacity .15s;
+    transition: opacity .2s ease-in-out;
+    z-index: 1;
+    outline: none;
   }
 
-  .block-text >>> .claude-code-block-wrap:hover .claude-code-copy {
-    opacity: 1;
+  .block-text >>> pre.claude-code-block:hover .claude-code-copy {
+    opacity: .5;
   }
 
   .block-text >>> .claude-code-copy:hover {
-    border-color: var(--themeColor);
-    color: var(--themeColor);
+    opacity: 1;
   }
 
-  .block-text >>> .claude-code-copy.error {
+  .block-text >>> .claude-code-copy i.icon {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+  }
+
+  .block-text >>> .claude-code-copy i.icon > i.icon-inner {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .block-text >>> .claude-code-copy.error,
+  .block-text >>> .claude-code-copy.copied {
     opacity: 1;
-    color: var(--claude-danger);
-    border-color: var(--claude-danger);
   }
 
   .block-text >>> .claude-code-copy[disabled] {
-    opacity: 1;
-    color: var(--themeColor);
-    border-color: var(--themeColor);
+    cursor: default;
   }
 
   .block-text >>> .token { color: inherit; }

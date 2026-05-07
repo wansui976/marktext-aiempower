@@ -25,6 +25,7 @@ class StateRender {
 
   setContainer (container) {
     this.container = container
+    this._cachedVdom = null
   }
 
   // collect link reference definition
@@ -180,7 +181,11 @@ class StateRender {
     const rootDom = document.querySelector(selector) || this.container
     const oldVdom = toVNode(rootDom)
 
+    // Prevent MutationObserver from firing on every DOM mutation during patch.
+    this.muya._suspendObserver()
     patch(oldVdom, newVdom)
+    this.muya._resumeObserver()
+
     this.renderMermaid()
     this.renderDiagram()
     this.codeCache.clear()
@@ -188,6 +193,8 @@ class StateRender {
 
   // Only render the blocks which you updated
   partialRender (blocks, activeBlocks, matches, startKey, endKey) {
+    // DOM is being partially updated; invalidate the full-render vdom cache.
+    this._cachedVdom = null
     const cursorOutMostBlock = activeBlocks[activeBlocks.length - 1]
     // If cursor is not in render blocks, need to render cursor block independently
     const needRenderCursorBlock = blocks.indexOf(cursorOutMostBlock) === -1
@@ -210,8 +217,8 @@ class StateRender {
     }
     nextSibling && needToRemoved.push(nextSibling)
 
+    this.muya._suspendObserver()
     firstOldDom.insertAdjacentHTML('beforebegin', html)
-
     Array.from(needToRemoved).forEach(dom => dom.remove())
 
     // Render cursor block independently
@@ -224,6 +231,8 @@ class StateRender {
         patch(oldCursorVnode, newCursorVnode)
       }
     }
+
+    this.muya._resumeObserver()
 
     this.renderMermaid()
     this.renderDiagram()
@@ -242,7 +251,11 @@ class StateRender {
     const newVdom = this.renderBlock(null, block, activeBlocks, matches, true)
     const rootDom = document.querySelector(selector)
     const oldVdom = toVNode(rootDom)
+
+    this.muya._suspendObserver()
     patch(oldVdom, newVdom)
+    this.muya._resumeObserver()
+
     this.renderMermaid()
     this.renderDiagram()
     this.codeCache.clear()
@@ -253,6 +266,8 @@ class StateRender {
       imageInfo.touchMsec = Date.now()
       this.loadImageMap.set(key, imageInfo)
     })
+    // Invalidate cached vdom so the next full render reads fresh DOM.
+    this._cachedVdom = null
   }
 }
 

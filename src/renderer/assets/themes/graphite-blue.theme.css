@@ -13,12 +13,12 @@
 
   --highlightColor: rgba(9, 105, 218, 0.4);
   --selectionColor: rgba(0, 0, 0, .1);
-  --editorColor: rgba(87, 96, 106, 0.9);
+  --editorColor: rgba(87, 96, 106, 1.0);
   --editorColor80: rgba(87, 96, 106, 1);
-  --editorColor60: rgba(87, 96, 106, 0.7);
-  --editorColor50: rgba(87, 96, 106, 0.6);
-  --editorColor40: rgba(87, 96, 106, 0.5);
-  --editorColor30: rgba(87, 96, 106, 0.4);
+  --editorColor60: rgba(87, 96, 106, 0.8);
+  --editorColor50: rgba(87, 96, 106, 0.7);
+  --editorColor40: rgba(87, 96, 106, 0.6);
+  --editorColor30: rgba(87, 96, 106, 0.5);
   --editorColor10: rgba(87, 96, 106, 0.1);
   --editorColor04: rgba(87, 96, 106, 0.04);
   --editorBgColor: #ffffff;
