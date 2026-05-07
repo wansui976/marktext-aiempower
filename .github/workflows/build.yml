@@ -95,7 +95,7 @@ jobs:
         run: yarn build:bin
 
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
     continue-on-error: false
     timeout-minutes: 45
 
@@ -124,14 +124,10 @@ jobs:
       - name: Fix node-gyp
         run: |
           npm install --global node-gyp@10
-          npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
-          $vsYear = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property catalog_productLineVersion 2>$null
-          if ($vsYear) {
-            $v = $vsYear.Trim()
-            npm config set msvs_version $v
-            echo "GYP_MSVS_VERSION=$v" >> $env:GITHUB_ENV
-            echo "Detected VS $v"
-          }
+          $nodeGypPath = (npm prefix -g).Trim() + "\node_modules\node-gyp\bin\node-gyp.js"
+          npm config set node_gyp "$nodeGypPath"
+          # Export as env var so electron-rebuild picks it up (yarn doesn't propagate npm config)
+          "npm_config_node_gyp=$nodeGypPath" | Out-File -FilePath $env:GITHUB_ENV -Append
           node-gyp install
         shell: pwsh
 
