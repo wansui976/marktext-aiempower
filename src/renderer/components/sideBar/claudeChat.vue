@@ -6,16 +6,6 @@
         <span v-if="contextLabel" class="title-doc-tag" :title="contextLabel">· {{ contextLabel }}</span>
       </div>
       <div class="chat-actions">
-        <select
-          v-model="selectedModel"
-          class="model-switcher"
-          :title="modelSwitchTitle"
-          @change="handleModelChange"
-        >
-          <option v-for="option in modelOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
         <button type="button" class="toolbar-btn icon primary" :title="$t('ai.header.newChat')" :disabled="streaming" @click="newChat">+</button>
         <button type="button" class="toolbar-btn icon" :title="$t('ai.header.more')" @click.stop="showHeaderMenu = !showHeaderMenu">⋯</button>
         <div v-if="showHeaderMenu" class="header-menu" @click.stop>
@@ -279,10 +269,6 @@ COMMON_PRISM_LANGS.forEach(lang => {
 
 const EDIT_TOOL_NAMES = new Set(['apply_edit', 'replace_text', 'insert_text'])
 const MAX_UNDO_STACK = 20
-const MODEL_PRESETS = {
-  anthropic: ['claude-sonnet-4-5-20250929', 'claude-opus-4-20250514', 'claude-3-7-sonnet-20250219'],
-  openai: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini']
-}
 const DEFAULT_CONTEXT_LIMIT = 128000
 
 const computeLineDiff = (oldText, newText) => {
@@ -454,7 +440,6 @@ export default {
       storedBaseUrl: '',
       modelInput: '',
       storedModel: '',
-      selectedModel: '',
       personaInput: '',
       storedPersona: '',
       contextLimitInput: DEFAULT_CONTEXT_LIMIT,
@@ -529,19 +514,6 @@ export default {
     },
     providerLabel () {
       return this.settingsProvider === PROVIDERS.OPENAI ? 'OpenAI' : 'Anthropic'
-    },
-    modelSwitchTitle () {
-      return this.$t('ai.settings.model')
-    },
-    modelOptions () {
-      const provider = this.settingsProvider
-      const current = this.selectedModel || this.settingsResolvedModel || this.resolvedModel
-      const baseModels = MODEL_PRESETS[provider] || []
-      const values = [current, ...baseModels].filter(Boolean)
-      return [...new Set(values)].map(value => ({
-        value,
-        label: value
-      }))
     },
     apiKeyResolved () {
       if (this.providerResolved === PROVIDERS.OPENAI) return true
@@ -720,7 +692,6 @@ export default {
         this.baseUrlInput = this.storedBaseUrl
         this.storedModel = credentials.aiModel || ''
         this.modelInput = this.storedModel
-        this.selectedModel = this.storedModel || this.resolvedModel
         this.storedPersona = credentials.aiPersona || ''
         this.personaInput = this.storedPersona
         const storedCtx = credentials.aiContextLimit
@@ -736,7 +707,6 @@ export default {
         this.baseUrlInput = this.storedBaseUrl
         this.storedModel = localStorage.getItem(MODEL_STORAGE_KEY) || ''
         this.modelInput = this.storedModel
-        this.selectedModel = this.storedModel || this.resolvedModel
         this.storedPersona = localStorage.getItem(PERSONA_STORAGE_KEY) || ''
         this.personaInput = this.storedPersona
         const storedCtx = localStorage.getItem(CONTEXT_LIMIT_STORAGE_KEY) || ''
@@ -800,7 +770,6 @@ export default {
       this.storedApiKey = apiKeyValue
       this.storedBaseUrl = baseUrlValue
       this.storedModel = modelValue
-      this.selectedModel = modelValue || this.resolvedModel
       this.storedPersona = personaValue
       this.storedContextLimit = contextLimitValue
       this.contextLimitInput = parseInt(contextLimitValue, 10) || DEFAULT_CONTEXT_LIMIT
@@ -833,7 +802,6 @@ export default {
       this.modelInput = ''
       this.storedPersona = ''
       this.personaInput = ''
-      this.selectedModel = this.resolvedModel
     },
     handleSettingsSave (settings) {
       this.providerInput = settings.provider
@@ -852,10 +820,6 @@ export default {
       this.storedEditMode = mode.id
       localStorage.setItem(EDIT_MODE_STORAGE_KEY, mode.id)
       this.showModeMenu = false
-    },
-    handleModelChange () {
-      this.modelInput = this.selectedModel
-      this.saveApiKey()
     },
     getCurrentDocumentLabel () {
       if (this.currentFile && this.currentFile.filename) {
@@ -2484,17 +2448,6 @@ export default {
     align-items: center;
     position: relative;
     z-index: 101;
-  }
-
-  .model-switcher {
-    height: 28px;
-    max-width: 160px;
-    border: 1px solid var(--claude-border);
-    border-radius: 6px;
-    background: var(--claude-surface);
-    color: var(--claude-text);
-    font-size: 12px;
-    padding: 0 8px;
   }
 
   .header-menu {
