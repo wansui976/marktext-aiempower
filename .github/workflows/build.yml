@@ -80,8 +80,13 @@ jobs:
           yarn run lint
           yarn run validate-licenses
 
-      - name: Run unit and E2E tests
+      - name: Run unit and E2E tests (Linux)
+        if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum yarn run test
+
+      - name: Run unit and E2E tests (macOS)
+        if: runner.os == 'macOS'
+        run: yarn run test
 
       - name: Build
         run: yarn build:bin
@@ -115,9 +120,14 @@ jobs:
         run: |
           npm install --global node-gyp@10.3.1
           npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
-          npm config set msvs_version 2022
           node-gyp install
         shell: pwsh
+
+      # Set up MSVC environment so electron-rebuild / node-gyp can find VS 2022.
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       - name: Cache node_modules
         uses: actions/cache@v5
