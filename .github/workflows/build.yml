@@ -116,6 +116,9 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
 
+      - name: Fix Python distutils (Windows)
+        run: pip install setuptools
+
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
         with:
