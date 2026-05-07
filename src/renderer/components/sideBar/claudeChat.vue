@@ -68,7 +68,7 @@
       :error="error"
       :can-retry="!!(pendingRetry && !streaming)"
       :show-stopped="!!(!error && pendingRetry && !streaming)"
-      :undo-count="editUndoStack.length"
+      :undo-count="activeUndoCount"
       :ready="apiKeyResolved"
       @retry="retryLastSend"
       @undo="undoLastEdit"
@@ -586,6 +586,9 @@ export default {
     activeSession () {
       return this.sessions.find(session => session.id === this.activeSessionId) || null
     },
+    activeUndoCount () {
+      return this.editUndoStack.filter(snapshot => this.isActiveUndoSnapshot(snapshot)).length
+    },
     referenceText () {
       return this.reference && this.reference.text ? this.reference.text : ''
     },
@@ -1094,6 +1097,7 @@ export default {
 
       sessionDb.deleteSession(sessionId).catch(() => {})
       this.sessions = this.sessions.filter(session => session.id !== sessionId)
+      this.editUndoStack = this.editUndoStack.filter(snapshot => snapshot.sessionId !== sessionId)
       if (!this.sessions.length) {
         this.sessions = [this.createSession()]
       }
@@ -1391,7 +1395,7 @@ export default {
     },
     handleSidebarKeydown (event) {
       const isMeta = event.metaKey || event.ctrlKey
-      if (isMeta && event.key === 'z' && !event.shiftKey && this.editUndoStack.length && !this.streaming) {
+      if (isMeta && event.key === 'z' && !event.shiftKey && this.activeUndoCount && !this.streaming) {
         event.preventDefault()
         this.undoLastEdit()
       }
@@ -1503,6 +1507,7 @@ export default {
     pushUndoSnapshot (label) {
       if (!this.currentFile || typeof this.currentFile.markdown !== 'string') return
       this.editUndoStack.push({
+        sessionId: this.activeSessionId,
         fileId: this.currentFile.id,
         markdown: this.currentFile.markdown,
         label: label || 'Claude edit',
@@ -1512,10 +1517,25 @@ export default {
         this.editUndoStack.splice(0, this.editUndoStack.length - MAX_UNDO_STACK)
       }
     },
+    isActiveUndoSnapshot (snapshot) {
+      return !!(
+        snapshot &&
+        snapshot.sessionId === this.activeSessionId &&
+        this.currentFile &&
+        snapshot.fileId === this.currentFile.id
+      )
+    },
     undoLastEdit () {
-      if (!this.editUndoStack.length) return
-      const snapshot = this.editUndoStack.pop()
-      if (!this.currentFile || this.currentFile.id !== snapshot.fileId) return
+      let index = -1
+      for (let i = this.editUndoStack.length - 1; i >= 0; i--) {
+        if (this.isActiveUndoSnapshot(this.editUndoStack[i])) {
+          index = i
+          break
+        }
+      }
+      if (index === -1) return
+
+      const [snapshot] = this.editUndoStack.splice(index, 1)
       this.$store.dispatch('LISTEN_FOR_CONTENT_CHANGE', {
         id: snapshot.fileId,
         markdown: snapshot.markdown,
