@@ -1323,6 +1323,18 @@ export default {
 
       const { editor } = this
       if (editor && typeof markdown === 'string') {
+        if (this.selectionFlushFrame) {
+          window.cancelAnimationFrame(this.selectionFlushFrame)
+          this.selectionFlushFrame = null
+        }
+        if (this.persistentSelectionFrame) {
+          window.cancelAnimationFrame(this.persistentSelectionFrame)
+          this.persistentSelectionFrame = null
+        }
+        this.pendingSelectionChange = null
+        this.pendingSelectionFormats = null
+        this.lastClaudeSelectionChange = null
+        editor.contentState.clearPersistentSelection()
         editor.setMarkdown(markdown)
       }
     },

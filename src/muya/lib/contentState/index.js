@@ -179,6 +179,33 @@ class ContentState {
     return this.currentCursor
   }
 
+  hasCursorInDocument (cursor = this.cursor) {
+    if (!cursor || !cursor.start || !cursor.end) {
+      return false
+    }
+    return !!(this.getBlock(cursor.start.key) && this.getBlock(cursor.end.key))
+  }
+
+  ensureCursorInDocument (cursor = this.cursor) {
+    if (this.hasCursorInDocument(cursor)) {
+      return cursor
+    }
+
+    const firstBlock = this.getFirstBlock()
+    if (!firstBlock) {
+      return cursor
+    }
+
+    const key = firstBlock.key
+    const offset = 0
+    this.cursor = {
+      start: { key, offset },
+      end: { key, offset },
+      noHistory: true
+    }
+    return this.cursor
+  }
+
   init () {
     const lastBlock = this.getLastBlock()
     const { key, text } = lastBlock
@@ -277,6 +304,7 @@ class ContentState {
   }
 
   setNextRenderRange () {
+    this.ensureCursorInDocument()
     const { start, end } = this.cursor
     const startBlock = this.getBlock(start.key)
     const endBlock = this.getBlock(end.key)

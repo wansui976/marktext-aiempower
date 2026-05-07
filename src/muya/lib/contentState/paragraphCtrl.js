@@ -15,14 +15,24 @@ const getCurrentLevel = type => {
 
 const paragraphCtrl = ContentState => {
   ContentState.prototype.selectionChange = function (cursor) {
-    const { start, end } = cursor || selection.getCursorRange()
+    let { start, end } = cursor || selection.getCursorRange()
     if (!start || !end) {
       // TODO: Throw an exception and try to fix this later (GH#848).
       throw new Error('selectionChange: expected cursor but cursor is null.')
     }
     const cursorCoords = selection.getCursorCoords()
-    const startBlock = this.getBlock(start.key)
-    const endBlock = this.getBlock(end.key)
+    let startBlock = this.getBlock(start.key)
+    let endBlock = this.getBlock(end.key)
+    if (!startBlock || !endBlock) {
+      const safeCursor = this.ensureCursorInDocument({ start, end })
+      start = safeCursor.start
+      end = safeCursor.end
+      startBlock = this.getBlock(start.key)
+      endBlock = this.getBlock(end.key)
+    }
+    if (!startBlock || !endBlock) {
+      throw new Error('selectionChange: expected cursor blocks but block is null.')
+    }
     const startParents = this.getParents(startBlock)
     const endParents = this.getParents(endBlock)
     const affiliation = startParents
