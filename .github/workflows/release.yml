@@ -35,7 +35,6 @@ jobs:
 
       - name: Install build dependencies
         if: runner.os == 'Linux'
-        #                         electron-builder                 | keyboard-layout         | keytar                      | fontmanager     | RPM on Ubuntu
         run: |
           sudo apt-get -y update
           sudo apt-get install -y icnsutils graphicsmagick xz-utils xvfb libx11-dev libxkbfile-dev gnome-keyring libsecret-1-dev libfontconfig-dev libnss3 libnspr4 libatk-bridge2.0-0 libdrm2 libgbm1 libasound2t64 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 rpm
@@ -85,34 +84,38 @@ jobs:
         if: runner.os == 'macOS'
         run: yarn run test
 
-      - name: Build and release
+      - name: Build
         run: |
-              if [ "$RUNNER_OS" == "Linux" ]; then
-                yarn run release:linux --publish always
-              elif [ "$RUNNER_OS" == "macOS" ]; then
-                yarn run release:mac --publish always
-              else
-                echo "$RUNNER_OS not supported"
-                exit 1
-              fi
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            yarn run release:linux --publish never
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            yarn run release:mac --publish never
+          else
+            echo "$RUNNER_OS not supported"
+            exit 1
+          fi
 
-      - name: Calculate checksums
+      - name: Upload Linux artifacts
         if: runner.os == 'Linux'
-        run: |
-          sha256sum build/marktext-x64.tar.gz
-          sha256sum build/marktext-x86_64.AppImage
-          sha256sum build/marktext-*.deb
-          sha256sum build/marktext-*.rpm
-        shell: bash
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: |
+            build/*.AppImage
+            build/*.deb
+            build/*.rpm
+            build/*.tar.gz
+          if-no-files-found: error
 
-      - name: Calculate checksums
+      - name: Upload macOS artifacts
         if: runner.os == 'macOS'
-        run: |
-          shasum -a 256 build/marktext-arm64-mac.zip
-          shasum -a 256 build/marktext-x64-mac.zip
-          shasum -a 256 build/marktext-arm64.dmg
-          shasum -a 256 build/marktext-x64.dmg
-        shell: bash
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: |
+            build/*.dmg
+            build/*-mac.zip
+          if-no-files-found: error
 
   windows:
     runs-on: windows-2022
@@ -184,11 +187,48 @@ jobs:
       - name: Run unit and E2E tests
         run: yarn run test
 
-      - name: Build and release
-        run: yarn run release:win --publish always
+      - name: Build
+        run: yarn run release:win --publish never
 
-      - name: Calculate checksums
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            build/*.exe
+            build/*-win.zip
+          if-no-files-found: error
+
+  create-release:
+    needs: [unix, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Extract version from branch name
+        id: version
         run: |
-          get-filehash -Algorithm SHA256 "build\marktext-setup.exe"
-          get-filehash -Algorithm SHA256 "build\marktext-*-win.zip"
-        shell: pwsh
+          VERSION="${GITHUB_REF_NAME#release-}"
+          echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Release version: $VERSION"
+
+      - name: List artifacts
+        run: ls -lhR artifacts/
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "MarkText-AIEmpower ${{ steps.version.outputs.tag }}" \
+            --generate-notes \
+            artifacts/*
