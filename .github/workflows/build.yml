@@ -45,6 +45,9 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get install -y icnsutils graphicsmagick xz-utils xvfb libx11-dev libxkbfile-dev gnome-keyring libsecret-1-dev libfontconfig-dev libnss3 libnspr4 libatk-bridge2.0-0 libdrm2 libgbm1 libasound2t64 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2
+          # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor,
+          # which breaks Chromium's sandbox inside Electron.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 2>/dev/null || true
 
       - name: Fix Python distutils (macOS)
         if: runner.os == 'macOS'
@@ -100,7 +103,6 @@ jobs:
       # MARKTEXT_IS_STABLE: 1
       MARKTEXT_EXIT_ON_ERROR: 1
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      npm_config_msvs_version: 2022
 
     steps:
       - name: Check out Git repository
@@ -114,20 +116,22 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
 
-      # Workaround: Fix native build failure due to outdated node-gyp version
-      # and missing VS detection.
-      - name: Fix node-gyp
-        run: |
-          npm install --global node-gyp@10.3.1
-          npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
-          node-gyp install
-        shell: pwsh
-
-      # Set up MSVC environment so electron-rebuild / node-gyp can find VS 2022.
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+
+      - name: Fix node-gyp
+        run: |
+          npm install --global node-gyp@latest
+          npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
+          $vsYear = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property catalog_productLineVersion 2>$null
+          if ($vsYear) {
+            npm config set msvs_version $vsYear.Trim()
+            echo "Detected VS $($vsYear.Trim())"
+          }
+          node-gyp install
+        shell: pwsh
 
       - name: Cache node_modules
         uses: actions/cache@v5
