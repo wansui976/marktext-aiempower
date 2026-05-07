@@ -43,7 +43,7 @@ jobs:
         #                         electron-builder                 | keyboard-layout         | keytar                      | fontmanager
         run: |
           sudo apt-get -y update
-          sudo apt-get install -y icnsutils graphicsmagick xz-utils xvfb libx11-dev libxkbfile-dev gnome-keyring libsecret-1-dev libfontconfig-dev libnss3 libnspr4 libatk-bridge2.0-0 libdrm2 libgbm1 libasound2 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2
+          sudo apt-get install -y icnsutils graphicsmagick xz-utils xvfb libx11-dev libxkbfile-dev gnome-keyring libsecret-1-dev libfontconfig-dev libnss3 libnspr4 libatk-bridge2.0-0 libdrm2 libgbm1 libasound2t64 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2
 
       - name: Cache node_modules
         uses: actions/cache@v5
@@ -90,6 +90,7 @@ jobs:
       # MARKTEXT_IS_STABLE: 1
       MARKTEXT_EXIT_ON_ERROR: 1
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      npm_config_msvs_version: 2022
 
     steps:
       - name: Check out Git repository
