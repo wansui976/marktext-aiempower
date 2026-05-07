@@ -123,7 +123,7 @@ jobs:
 
       - name: Fix node-gyp
         run: |
-          npm install --global node-gyp@latest
+          npm install --global node-gyp@10
           npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
           $vsYear = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property catalog_productLineVersion 2>$null
           if ($vsYear) {
