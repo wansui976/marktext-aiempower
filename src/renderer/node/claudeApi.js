@@ -148,6 +148,46 @@ export const TOOLS = [
       },
       required: ['path']
     }
+  },
+  {
+    name: 'glob_files',
+    description: 'Find file paths matching a glob pattern (e.g. "**/*.js", "src/**/*.vue"). Returns sorted list of matching file paths. Use this to discover files by name pattern before reading or searching within them.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        pattern: {
+          type: 'string',
+          description: 'The glob pattern to match file paths against (e.g. "**/*.js", "src/**/*.ts").'
+        },
+        path: {
+          type: 'string',
+          description: 'Optional directory to search in. Defaults to the project root.'
+        }
+      },
+      required: ['pattern']
+    }
+  },
+  {
+    name: 'grep_files',
+    description: 'Search for a regex pattern across files in the project. Returns matching lines with file paths and line numbers. Use this to find code patterns, function calls, or text across multiple files.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        pattern: {
+          type: 'string',
+          description: 'The regex pattern to search for in file contents.'
+        },
+        glob: {
+          type: 'string',
+          description: 'Optional glob pattern to filter which files to search (e.g. "*.js", "**/*.vue").'
+        },
+        path: {
+          type: 'string',
+          description: 'Optional directory to search in. Defaults to the project root.'
+        }
+      },
+      required: ['pattern']
+    }
   }
 ]
 
@@ -158,6 +198,11 @@ const SYSTEM_PROMPT = `You are an AI assistant embedded in MarkText, a Markdown 
 - Use get_document_section to fetch only the relevant sections by title or index.
 - Use search_document to locate specific keywords, topics, or code snippets.
 - Use get_document only when you truly need the full document content (e.g. for global rewrites or when the document is short). For long documents, prefer the targeted tools above.
+
+## Exploring the project
+- Use glob_files to discover files by name pattern (e.g. "src/**/*.vue").
+- Use grep_files to search code across files with regex patterns.
+- Use read_file to read a specific file after locating it via glob or grep.
 
 ## Editing the document
 - Prefer replace_text or insert_text for targeted edits.

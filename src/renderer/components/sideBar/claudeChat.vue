@@ -244,7 +244,7 @@ import Prism, { loadLanguage } from 'muya/lib/prism'
 import { ipcRenderer } from 'electron'
 import bus from '../../bus'
 import { PROVIDERS, normalizeProvider, resolveApiKey, resolveBaseUrl, resolveModel, sanitizeMessages, streamChat } from '../../node/claudeApi'
-import { parseSections, buildOutline, searchDocument, getSectionContent } from '../../node/smartContext'
+import { parseSections, buildOutline, searchDocument, getSectionContent, globFiles, grepFiles } from '../../node/smartContext'
 import sessionDb from '../../node/sessionDb'
 import { wordCount as getWordCount } from 'muya/lib/utils'
 import loadRenderer from 'muya/lib/renderers'
@@ -1618,6 +1618,27 @@ export default {
           return `${entries.slice(0, MAX_LIST_DIR_ENTRIES).join('\n')}\n\n[Truncated: directory has ${entries.length} entries; showing the first ${MAX_LIST_DIR_ENTRIES}.]`
         }
         return entries.join('\n')
+      }
+      if (name === 'glob_files') {
+        const globPattern = String(input.pattern || '')
+        if (!globPattern.trim()) return '(Empty glob pattern.)'
+        let baseDir = (this.projectTree && this.projectTree.pathname) || process.cwd()
+        if (input.path && path.isAbsolute(input.path)) {
+          this.assertPathAllowed(input.path)
+          baseDir = input.path
+        }
+        return globFiles(globPattern.trim(), baseDir)
+      }
+      if (name === 'grep_files') {
+        const rgPattern = String(input.pattern || '')
+        if (!rgPattern.trim()) return '(Empty regex pattern.)'
+        let baseDir = (this.projectTree && this.projectTree.pathname) || process.cwd()
+        if (input.path && path.isAbsolute(input.path)) {
+          this.assertPathAllowed(input.path)
+          baseDir = input.path
+        }
+        const fileGlob = input.glob ? String(input.glob).trim() : ''
+        return grepFiles(rgPattern.trim(), baseDir, fileGlob)
       }
       throw new Error(`Unknown tool: ${name}`)
     },

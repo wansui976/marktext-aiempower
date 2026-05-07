@@ -70,11 +70,13 @@ AI 可以使用以下工具，所有操作你都能在界面上看到实时状�
 | `get_document_section` | 按标题/索引读取指定章节 |
 | `search_document` | 在文档中全文搜索 |
 | `get_document` | 读取完整文档内容 |
+| `glob_files` | 按通配符匹配项目文件路径 |
+| `grep_files` | 跨文件正则搜索代码内容 |
+| `read_file` | 读取项目内的指定文件 |
+| `list_directory` | 列出目录内容 |
 | `replace_text` | 替换文档中的指定文本 |
 | `insert_text` | 在指定位置插入内容 |
 | `apply_edit` | 整篇替换文档 |
-| `read_file` | 读取项目内的其他文件 |
-| `list_directory` | 列出目录内容 |
 
 工具调用有自动循环上限（10 轮），不会无限执行下去。
 
@@ -268,7 +270,7 @@ src/
 │   ├── node/
 │   │   ├── claudeApi.js               # AI 接口抽象层：SSE 流、工具循环、双 provider 支持
 │   │   ├── sessionDb.js               # IndexedDB 会话持久化
-│   │   └── smartContext.js            # 文档分段、大纲、搜索等上下文工具
+│   │   └── smartContext.js            # 文档分段、大纲、搜索、glob/grep 等上下文工具
 │   ├── components/
 │   │   ├── sideBar/
 │   │   │   ├── claudeChat.vue         # AI 侧边栏主组件（会话、工具执行、编辑确认）
@@ -292,7 +294,7 @@ src/
 如果你对实现感兴趣：
 
 - **流式输出**基于 SSE（Server-Sent Events），通过 `ReadableStream` + `TextDecoder` 逐行解析，带 60 秒空闲超时保护
-- **工具调用**采用循环模式：AI 返回 tool_use → 前端执行 → 结果返回 AI → AI 继续或结束，最多 10 轮
+- **工具调用**采用循环模式：AI 返回 tool_use → 前端执行 → 结果返回 AI → AI 继续或结束，最多 10 轮。AI 可自由组合工具链（如 `glob_files` → `grep_files` → `read_file`）进行代码探索
 - **编辑预览**使用 LCS diff 算法生成逐行对比，长 diff 自动折叠中间不变的行
 - **会话存储**使用 IndexedDB（两个 object store：meta 索引 + messages 正文），按文档维度隔离
 - **凭证加密**在支持的平台上使用 keytar（操作系统原生密钥链），不可用时回退到 localStorage

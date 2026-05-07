@@ -3,9 +3,15 @@
  * instead of sending the full markdown every time.
  */
 
+import fs from 'fs'
+import path from 'path'
+
 const MAX_SEARCH_RESULTS = 8
 const SEARCH_CONTEXT_LINES = 2
 const MAX_SECTION_PREVIEW_LEN = 200
+const MAX_GLOB_RESULTS = 500
+const MAX_GREP_RESULTS = 100
+const MAX_GREP_FILE_BYTES = 256 * 1024
 
 /**
  * Parse markdown into sections based on ATX and setext headings.
@@ -172,4 +178,126 @@ export const estimateTokens = text => {
     else nonAscii++
   }
   return Math.ceil(ascii / 4) + Math.ceil(nonAscii / 2)
+}
+
+/**
+ * Simple glob matching. Supports **, *, ?.
+ */
+const globToRegex = (pattern) => {
+  let re = ''
+  let i = 0
+  while (i < pattern.length) {
+    if (pattern[i] === '.' || pattern[i] === '(' || pattern[i] === ')' ||
+        pattern[i] === '+' || pattern[i] === '^' || pattern[i] === '$' ||
+        pattern[i] === '|' || pattern[i] === '[' || pattern[i] === ']') {
+      re += '\\' + pattern[i]
+      i++
+    } else if (pattern.substring(i, i + 3) === '**/') {
+      re += '(?:.*/)?'
+      i += 3
+    } else if (pattern.substring(i, i + 2) === '**') {
+      re += '.*'
+      i += 2
+    } else if (pattern[i] === '*') {
+      re += '[^/]*'
+      i++
+    } else if (pattern[i] === '?') {
+      re += '[^/]'
+      i++
+    } else {
+      re += pattern[i]
+      i++
+    }
+  }
+  return new RegExp('^' + re + '$')
+}
+
+export const globFiles = (pattern, baseDir) => {
+  const dir = baseDir || process.cwd()
+  const results = []
+  const regex = globToRegex(pattern)
+
+  // Try relative match from baseDir
+  const walkDirLocal = (cur, rel) => {
+    if (results.length >= MAX_GLOB_RESULTS) return
+    let items
+    try { items = fs.readdirSync(cur, { withFileTypes: true }) } catch (_) { return }
+    for (const entry of items) {
+      if (results.length >= MAX_GLOB_RESULTS) return
+      if (entry.name.startsWith('.')) continue
+      const childRel = rel ? path.join(rel, entry.name) : entry.name
+      const childAbs = path.join(cur, entry.name)
+      if (regex.test(childRel) || regex.test(entry.name)) {
+        if (entry.isFile()) results.push(childRel)
+      }
+      if (entry.isDirectory()) walkDirLocal(childAbs, childRel)
+    }
+  }
+
+  walkDirLocal(dir, '')
+  results.sort()
+  if (results.length >= MAX_GLOB_RESULTS) {
+    return results.join('\n') + `\n\n[Truncated: showing first ${MAX_GLOB_RESULTS} results.]`
+  }
+  return results.length ? results.join('\n') : `(No files matched "${pattern}".)`
+}
+
+export const grepFiles = (pattern, baseDir, fileGlob) => {
+  const dir = baseDir || process.cwd()
+  let regex
+  try {
+    regex = new RegExp(pattern, 'gi')
+  } catch (_) {
+    return `(Invalid regex pattern: "${pattern}".)`
+  }
+
+  const fileFilter = fileGlob ? globToRegex(fileGlob) : null
+  const results = []
+  let totalMatches = 0
+
+  const walkAndSearch = (cur, rel) => {
+    if (results.length >= MAX_GREP_RESULTS) return
+    let items
+    try { items = fs.readdirSync(cur, { withFileTypes: true }) } catch (_) { return }
+    for (const entry of items) {
+      if (results.length >= MAX_GREP_RESULTS) return
+      if (entry.name.startsWith('.') || entry.name === 'node_modules') continue
+      const childRel = rel ? path.join(rel, entry.name) : entry.name
+      const childAbs = path.join(cur, entry.name)
+      if (entry.isFile()) {
+        if (fileFilter && !fileFilter.test(childRel) && !fileFilter.test(entry.name)) continue
+        let stat
+        try { stat = fs.statSync(childAbs) } catch (_) { return }
+        if (stat.size > MAX_GREP_FILE_BYTES) continue
+        let content
+        try { content = fs.readFileSync(childAbs, 'utf8') } catch (_) { return }
+        const lines = content.split('\n')
+        for (let i = 0; i < lines.length; i++) {
+          regex.lastIndex = 0
+          if (regex.test(lines[i])) {
+            totalMatches++
+            if (results.length < MAX_GREP_RESULTS) {
+              results.push(`${childRel}:${i + 1}:  ${lines[i].trim()}`)
+            }
+          }
+        }
+      } else if (entry.isDirectory()) {
+        walkAndSearch(childAbs, childRel)
+      }
+    }
+  }
+
+  walkAndSearch(dir, '')
+  results.sort()
+
+  if (!results.length) {
+    const hint = fileGlob ? ` matching "${fileGlob}"` : ''
+    return `(No results found for "${pattern}"${hint}.)`
+  }
+
+  let out = results.join('\n')
+  if (totalMatches > MAX_GREP_RESULTS) {
+    out += `\n\n[Truncated: ${totalMatches} total matches; showing first ${MAX_GREP_RESULTS}.]`
+  }
+  return out
 }
