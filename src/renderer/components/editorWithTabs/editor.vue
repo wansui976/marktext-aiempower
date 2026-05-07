@@ -1050,9 +1050,12 @@ export default {
           }
           bus.$emit('claude-selection-reference', reference)
         } else {
+          const hadSelection = !!this.lastClaudeSelectionChange
           this.lastClaudeSelectionChange = null
-          this.editor.contentState.clearPersistentSelection()
-          this.refreshPersistentClaudeSelection()
+          if (hadSelection) {
+            this.editor.contentState.clearPersistentSelection()
+            this.refreshPersistentClaudeSelection()
+          }
           bus.$emit('claude-selection-reference', null)
         }
         this.$store.dispatch('SELECTION_CHANGE', changes)
