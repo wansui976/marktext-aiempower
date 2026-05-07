@@ -141,13 +141,11 @@ export default {
         button.className = 'claude-code-copy'
         button.title = 'Copy content'
         button.setAttribute('aria-label', 'Copy content')
-        const icon = document.createElement('i')
+        const icon = document.createElement('img')
         icon.className = 'icon'
-        const iconInner = document.createElement('i')
-        iconInner.className = 'icon-inner'
-        iconInner.style.background = `url(${copyIcon}) no-repeat`
-        iconInner.style.backgroundSize = '100%'
-        icon.appendChild(iconInner)
+        icon.src = copyIcon
+        icon.alt = ''
+        icon.draggable = false
         button.appendChild(icon)
         pre.appendChild(button)
       })

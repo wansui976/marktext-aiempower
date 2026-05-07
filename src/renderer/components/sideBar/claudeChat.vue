@@ -1239,13 +1239,11 @@ export default {
         button.className = 'claude-code-copy'
         button.title = 'Copy content'
         button.setAttribute('aria-label', 'Copy content')
-        const icon = document.createElement('i')
+        const icon = document.createElement('img')
         icon.className = 'icon'
-        const iconInner = document.createElement('i')
-        iconInner.className = 'icon-inner'
-        iconInner.style.background = `url(${copyIcon}) no-repeat`
-        iconInner.style.backgroundSize = '100%'
-        icon.appendChild(iconInner)
+        icon.src = copyIcon
+        icon.alt = ''
+        icon.draggable = false
         button.appendChild(icon)
         pre.appendChild(button)
       })
@@ -3348,50 +3346,110 @@ export default {
     position: relative;
   }
 
+  .side-bar-claude-chat .block-text pre.claude-code-block {
+    position: relative;
+  }
+
   .block-text >>> .claude-code-copy {
     position: absolute;
-    top: .5em;
-    right: .5em;
-    width: 20px;
-    height: 20px;
-    padding: 0;
-    border: none;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+    padding: 0 !important;
+    border: none !important;
     border-radius: 4px;
-    background: transparent;
-    color: transparent;
+    background: transparent !important;
+    color: transparent !important;
     cursor: pointer;
     opacity: 0;
+    pointer-events: none;
     transition: opacity .2s ease-in-out;
     z-index: 1;
     outline: none;
+    line-height: 0 !important;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   .block-text >>> pre.claude-code-block:hover .claude-code-copy {
     opacity: .5;
+    pointer-events: auto;
   }
 
   .block-text >>> .claude-code-copy:hover {
     opacity: 1;
   }
 
-  .block-text >>> .claude-code-copy i.icon {
-    position: absolute;
-    top: 2px;
-    left: 2px;
+  .block-text >>> .claude-code-copy img.icon {
+    display: block;
     width: 16px;
     height: 16px;
     pointer-events: none;
+    user-select: none;
   }
 
-  .block-text >>> .claude-code-copy i.icon > i.icon-inner {
+  .side-bar-claude-chat .block-text .claude-code-copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 4px;
+    background: transparent !important;
+    color: transparent !important;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease-in-out;
+    z-index: 1;
+    outline: none;
+    line-height: 0 !important;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .side-bar-claude-chat .block-text pre.claude-code-block:hover .claude-code-copy {
+    opacity: .5;
+    pointer-events: auto;
+  }
+
+  .side-bar-claude-chat .block-text .claude-code-copy:hover {
+    opacity: 1;
+  }
+
+  .side-bar-claude-chat .block-text .claude-code-copy img.icon {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+    user-select: none;
   }
 
   .block-text >>> .claude-code-copy.error,
-  .block-text >>> .claude-code-copy.copied {
+  .block-text >>> .claude-code-copy.copied,
+  .side-bar-claude-chat .block-text .claude-code-copy.error,
+  .side-bar-claude-chat .block-text .claude-code-copy.copied {
     opacity: 1;
+    pointer-events: auto;
   }
 
   .block-text >>> .claude-code-copy[disabled] {
