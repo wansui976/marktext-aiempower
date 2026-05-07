@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 45
 
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest]
 
@@ -44,6 +45,10 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get install -y icnsutils graphicsmagick xz-utils xvfb libx11-dev libxkbfile-dev gnome-keyring libsecret-1-dev libfontconfig-dev libnss3 libnspr4 libatk-bridge2.0-0 libdrm2 libgbm1 libasound2t64 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2
+
+      - name: Fix Python distutils (macOS)
+        if: runner.os == 'macOS'
+        run: pip3 install --break-system-packages setuptools
 
       - name: Cache node_modules
         uses: actions/cache@v5
@@ -104,11 +109,13 @@ jobs:
           cache: yarn
           cache-dependency-path: yarn.lock
 
-      # Workaround: Fix native build failure due to outdated node-gyp version.
+      # Workaround: Fix native build failure due to outdated node-gyp version
+      # and missing VS detection.
       - name: Fix node-gyp
         run: |
           npm install --global node-gyp@10.3.1
           npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
+          npm config set msvs_version 2022
           node-gyp install
         shell: pwsh
 
