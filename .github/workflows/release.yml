@@ -147,8 +147,10 @@ jobs:
           npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
           $vsYear = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property catalog_productLineVersion 2>$null
           if ($vsYear) {
-            npm config set msvs_version $vsYear.Trim()
-            echo "Detected VS $($vsYear.Trim())"
+            $v = $vsYear.Trim()
+            npm config set msvs_version $v
+            echo "GYP_MSVS_VERSION=$v" >> $env:GITHUB_ENV
+            echo "Detected VS $v"
           }
           node-gyp install
         shell: pwsh
