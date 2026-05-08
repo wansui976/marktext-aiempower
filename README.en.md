@@ -89,14 +89,23 @@ Select any text and press `Cmd/Ctrl + Alt + K` (or click **AI** in the format to
 
 ### Download a release
 
-Pre-built binaries are not yet published in this fork. Build from source (see below) or grab the [original MarkText releases](https://github.com/marktext/marktext/releases) as a baseline.
+Pre-built binaries for Windows, macOS, and Linux are available on the project release page:
+
+[Download MarkText-AIEmpower releases](https://github.com/wansui976/marktext-aiempower/releases)
+
+The macOS build is currently unsigned and not notarized with Apple Developer ID. If macOS says "MarkText-AIEmpower.app is damaged and can't be opened", move the app to `/Applications`, then run:
+
+```bash
+sudo xattr -rd com.apple.quarantine /Applications/MarkText-AIEmpower.app
+open /Applications/MarkText-AIEmpower.app
+```
 
 ### Build from source
 
 ```bash
 # Node 18+ and Yarn required
-git clone https://github.com/wansui976/marktext.git
-cd marktext
+git clone https://github.com/wansui976/marktext-aiempower.git
+cd marktext-aiempower
 yarn
 yarn dev        # development mode
 yarn build      # production build

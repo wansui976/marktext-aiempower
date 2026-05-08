@@ -44,7 +44,7 @@ MarkText-AIEmpower 是 [MarkText](https://github.com/marktext/marktext) 的一�
 
 **文档感知**
 
-AI 可以��取你当前打开的 Markdown 文件。你问"帮我看看这篇文章结构有没有问题"，它会自动调用工具去读文档内容，然后给出建议。对于长文档，它会先读大纲，再按需读取某个章节，不会把整个文件塞进上下文浪费 token。
+AI 可以读取你当前打开的 Markdown 文件。你问"帮我看看这篇文章结构有没有问题"，它会自动调用工具去读文档内容，然后给出建议。对于长文档，它会先读大纲，再按需读取某个章节，不会把整个文件塞进上下文浪费 token。
 
 **编辑能力**
 
@@ -113,9 +113,8 @@ AI 可以使用以下工具，所有操作你都能在界面上看到实时状�
 
 - 输入框支持按 `↑` 召回历史输入
 - 代码块内有复制按钮，hover 显示
-- AI 修改文档后会自动同步到��辑器
+- AI 修改文档后会自动同步到编辑器
 - 支持导出整段聊天为 Markdown 文件
-- Model switcher 可以快速切换模型，无需进设置面板
 - 写作风格设置（Persona）让 AI 记住你的偏好
 
 ---
@@ -125,7 +124,7 @@ AI 可以使用以下工具，所有操作你都能在界面上看到实时状�
 有时候你不需要打开完整的聊天面板。选中一段文本，按 `Cmd/Ctrl + Alt + K`，会弹出一个轻量的浮窗：
 
 - **Ask**：针对选中的文本提问，AI 的回答显示在浮窗里
-- **Rewrite**：AI 对选中文��进行流式改写，你可以实时看到新版本，满意就 Accept，不满意就 Discard
+- **Rewrite**：AI 对选中文本进行流式改写，你可以实时看到新版本，满意就 Accept，不满意就 Discard
 
 改写是非破坏性的——在你点 Accept 之前，原文不会被修改。
 
@@ -192,11 +191,24 @@ OpenAI-compatible 模式意味着你可以接入：
 - Yarn（经典版本）
 - macOS / Windows / Linux
 
+### 下载发行版
+
+已发布 Windows / macOS / Linux 预构建安装包：
+
+[下载 MarkText-AIEmpower Releases](https://github.com/wansui976/marktext-aiempower/releases)
+
+macOS 版本目前未做 Apple Developer ID 签名和公证。如果系统提示"MarkText-AIEmpower.app 已损坏，无法打开"，可以先将 app 拖到 `/Applications`，然后执行：
+
+```bash
+sudo xattr -rd com.apple.quarantine /Applications/MarkText-AIEmpower.app
+open /Applications/MarkText-AIEmpower.app
+```
+
 ### 从源码运行
 
 ```bash
-git clone https://github.com/wansui976/marktext.git
-cd marktext
+git clone https://github.com/wansui976/marktext-aiempower.git
+cd marktext-aiempower
 yarn install
 yarn dev
 ```
@@ -210,8 +222,6 @@ yarn build
 ```
 
 构建产物在 `build/` 目录下，具体格式取决于你的操作系统（macOS 出 `.dmg`，Windows 出 `.exe`，Linux 出 `.AppImage`）。
-
-> 本 fork 暂未发布预构建安装包。如果你只想用原版编辑器，可以去 [MarkText 官方 Release](https://github.com/marktext/marktext/releases) 下载。
 
 ---
 
@@ -246,7 +256,7 @@ export OPENAI_MODEL="qwen2.5:14b"                        # 你的本地模型名
 
 ---
 
-## ��捷键
+## 快捷键
 
 | 功能 | 快捷键 |
 |---|---|
@@ -299,13 +309,13 @@ src/
 - **会话存储**使用 IndexedDB（两个 object store：meta 索引 + messages 正文），按文档维度隔离
 - **凭证加密**在支持的平台上使用 keytar（操作系统原生密钥链），不可用时回退到 localStorage
 - **Token 估算**：ASCII 字符按 4:1，CJK 字符按 2:1，用于进度条和 compact 阈值判断
-- **上下文压缩**：请求 AI 对整段对话做 3-4 段总结，替换掉原��� apiMessages，displayMessages 保留完整展示
+- **上下文压缩**：请求 AI 对整段对话做 3-4 段总结，替换掉原始 apiMessages，displayMessages 保留完整展示
 
 ---
 
 ## 已知限制
 
-- 暂未发布预构建安装包，需要从源码构建
+- macOS 发行包暂未签名和公证，首次打开可能需要手动移除 quarantine 标记
 - 内联 AI 目前只支持纯文本选区，不支持跨代码块选择
 - 图片上下文依赖 Provider 的多模态支持（部分本地模型可能不支持）
 - Token 估算是启发式的，不如 tiktoken 准确，但足够用于进度指示
