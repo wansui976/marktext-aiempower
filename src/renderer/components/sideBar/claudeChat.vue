@@ -235,6 +235,7 @@ import { ipcRenderer } from 'electron'
 import bus from '../../bus'
 import { PROVIDERS, normalizeProvider, resolveApiKey, resolveBaseUrl, resolveModel, sanitizeMessages, streamChat } from '../../node/claudeApi'
 import { parseSections, buildOutline, searchDocument, getSectionContent, globFiles, grepFiles } from '../../node/smartContext'
+import { fetchExternalUrl } from '../../node/urlFetchTool'
 import sessionDb from '../../node/sessionDb'
 import { wordCount as getWordCount } from 'muya/lib/utils'
 import loadRenderer from 'muya/lib/renderers'
@@ -1624,6 +1625,9 @@ export default {
         const fileGlob = input.glob ? String(input.glob).trim() : ''
         return grepFiles(rgPattern.trim(), baseDir, fileGlob)
       }
+      if (name === 'fetch_url') {
+        return fetchExternalUrl(input)
+      }
       throw new Error(`Unknown tool: ${name}`)
     },
     buildEditProposal (name, input) {
@@ -2879,7 +2883,7 @@ export default {
     user-select: text;
     min-width: 0;
     max-width: 100%;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .block-text >>> *:first-child {
@@ -2929,7 +2933,14 @@ export default {
     border-radius: 10px;
     padding: 12px 12px 13px;
     overflow-x: auto;
+    overflow-y: hidden;
+    white-space: pre;
     margin: 12px 0;
+  }
+
+  .block-text >>> pre::-webkit-scrollbar {
+    display: block;
+    height: 3px;
   }
 
   .block-text >>> pre code {
@@ -2941,6 +2952,7 @@ export default {
     padding: 0;
     font-size: 12px;
     line-height: 1.55;
+    white-space: pre;
   }
 
   .block-text >>> h1,

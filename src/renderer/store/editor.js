@@ -33,6 +33,9 @@ const mutations = {
   SET_TOC (state, toc) {
     state.listToc = toc
     state.toc = listToTree(toc)
+    if (hasKeys(state.currentFile)) {
+      state.currentFile.toc = toc
+    }
   },
   SET_CURRENT_FILE (state, currentFile) {
     const oldCurrentFile = state.currentFile
@@ -41,6 +44,9 @@ const mutations = {
       window.DIRNAME = pathname ? path.dirname(pathname) : ''
       // set state first, then emit file changed event
       state.currentFile = currentFile
+      const toc = currentFile.toc || []
+      state.listToc = toc
+      state.toc = listToTree(toc)
       bus.$emit('file-changed', { id, markdown, cursor, renderCursor: true, history })
     }
   },

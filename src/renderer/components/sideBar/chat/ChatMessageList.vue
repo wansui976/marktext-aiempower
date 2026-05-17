@@ -94,7 +94,8 @@ const TOOL_LABELS = {
   replace_text: 'Replace text',
   insert_text: 'Insert text',
   read_file: 'Read file',
-  list_directory: 'List directory'
+  list_directory: 'List directory',
+  fetch_url: 'Fetch URL'
 }
 
 export default {
@@ -175,3 +176,29 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+  .block-text {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  .block-text >>> pre {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: pre;
+  }
+
+  .block-text >>> pre code {
+    display: block;
+    width: max-content;
+    min-width: 100%;
+    white-space: pre;
+  }
+</style>

@@ -111,6 +111,7 @@
 <script>
 import marked from 'marked'
 import DOMPurify from 'dompurify'
+import { ipcRenderer } from 'electron'
 import Prism, { loadLanguage } from 'muya/lib/prism'
 import { PROVIDERS, normalizeProvider, resolveApiKey, resolveBaseUrl, resolveModel, streamChat } from '../../node/claudeApi'
 
@@ -135,7 +136,13 @@ export default {
       error: '',
       anchorRect: null,
       abortController: null,
-      copyLabel: 'Copy'
+      copyLabel: 'Copy',
+      credentialsLoaded: false,
+      storedProvider: '',
+      storedApiKey: '',
+      storedBaseUrl: '',
+      storedModel: '',
+      storedPersona: ''
     }
   },
   computed: {
@@ -154,9 +161,9 @@ export default {
       return this.phase === 'streaming' ? 'Thinking…' : 'Answer'
     },
     apiKeyAvailable () {
-      const provider = normalizeProvider(localStorage.getItem(PROVIDER_STORAGE_KEY) || '')
-      const stored = localStorage.getItem(STORAGE_KEY) || ''
-      const resolved = resolveApiKey(stored, provider)
+      if (!this.credentialsLoaded) return true
+      const provider = normalizeProvider(this.storedProvider)
+      const resolved = resolveApiKey(this.storedApiKey, provider)
       if (provider === PROVIDERS.ANTHROPIC) return !!resolved
       return true
     },
@@ -236,6 +243,7 @@ export default {
       this.phase = 'input'
       this.mode = mode === 'rewrite' ? 'rewrite' : 'ask'
       this.visible = true
+      this.loadCredentials()
       this.$nextTick(() => {
         const el = this.$refs.input
         if (el) {
@@ -250,6 +258,25 @@ export default {
         const el = this.$refs.input
         if (el) el.focus()
       })
+    },
+    async loadCredentials () {
+      try {
+        const credentials = await ipcRenderer.invoke('mt::ai-get-credentials')
+        const storedProvider = normalizeProvider(credentials.aiProvider || '')
+        this.storedProvider = storedProvider === PROVIDERS.ANTHROPIC ? '' : storedProvider
+        this.storedApiKey = credentials.aiApiKey || ''
+        this.storedBaseUrl = credentials.aiBaseUrl || ''
+        this.storedModel = credentials.aiModel || ''
+        this.storedPersona = credentials.aiPersona || ''
+      } catch (err) {
+        const storedProvider = normalizeProvider(localStorage.getItem(PROVIDER_STORAGE_KEY) || '')
+        this.storedProvider = storedProvider === PROVIDERS.ANTHROPIC ? '' : storedProvider
+        this.storedApiKey = localStorage.getItem(STORAGE_KEY) || ''
+        this.storedBaseUrl = localStorage.getItem(BASE_URL_STORAGE_KEY) || ''
+        this.storedModel = localStorage.getItem(MODEL_STORAGE_KEY) || ''
+        this.storedPersona = localStorage.getItem(PERSONA_STORAGE_KEY) || ''
+      }
+      this.credentialsLoaded = true
     },
     resetToInput () {
       this.phase = 'input'
@@ -297,15 +324,16 @@ export default {
     async submit () {
       const instruction = this.instruction.trim()
       if (!instruction) return
-      const provider = normalizeProvider(localStorage.getItem(PROVIDER_STORAGE_KEY) || '')
-      const apiKey = resolveApiKey(localStorage.getItem(STORAGE_KEY) || '', provider)
+      await this.loadCredentials()
+      const provider = normalizeProvider(this.storedProvider)
+      const apiKey = resolveApiKey(this.storedApiKey, provider)
       if (provider === PROVIDERS.ANTHROPIC && !apiKey) {
         this.error = 'No API key configured.'
         return
       }
-      const baseUrl = resolveBaseUrl(localStorage.getItem(BASE_URL_STORAGE_KEY) || '', provider)
-      const model = resolveModel(localStorage.getItem(MODEL_STORAGE_KEY) || '', provider)
-      const persona = localStorage.getItem(PERSONA_STORAGE_KEY) || ''
+      const baseUrl = resolveBaseUrl(this.storedBaseUrl, provider)
+      const model = resolveModel(this.storedModel, provider)
+      const persona = this.storedPersona || ''
 
       const userPrompt = this.mode === 'rewrite'
         ? `You are rewriting a portion of a Markdown document selected by the user.
@@ -605,13 +633,23 @@ const stripWrappers = (text) => {
     border-radius: 5px;
     background: var(--editorColor04, rgba(0,0,0,.05));
     overflow-x: auto;
+    overflow-y: hidden;
+    white-space: pre;
     font-size: 11px;
     line-height: 1.5;
   }
+  .answer-text >>> pre::-webkit-scrollbar {
+    display: block;
+    height: 3px;
+  }
   .answer-text >>> pre code {
+    display: block;
+    width: max-content;
+    min-width: 100%;
     padding: 0;
     background: transparent;
     font-size: inherit;
+    white-space: pre;
   }
   .answer-text >>> blockquote {
     margin: 6px 0;

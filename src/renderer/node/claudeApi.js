@@ -188,6 +188,24 @@ export const TOOLS = [
       },
       required: ['pattern']
     }
+  },
+  {
+    name: 'fetch_url',
+    description: 'Fetch the text content of an external http(s) URL. Use this when the user asks about web content, documentation, articles, or any external URL. Localhost, private-network, file, and other non-web URLs are blocked.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        url: {
+          type: 'string',
+          description: 'The external http or https URL to fetch.'
+        },
+        max_chars: {
+          type: 'number',
+          description: 'Optional maximum number of response characters to return. Defaults to 60000 and is capped at 120000.'
+        }
+      },
+      required: ['url']
+    }
   }
 ]
 
@@ -203,6 +221,10 @@ const SYSTEM_PROMPT = `You are an AI assistant embedded in MarkText, a Markdown 
 - Use glob_files to discover files by name pattern (e.g. "src/**/*.vue").
 - Use grep_files to search code across files with regex patterns.
 - Use read_file to read a specific file after locating it via glob or grep.
+
+## Reading external URLs
+- Use fetch_url when the user gives or asks about an external web URL.
+- Do not use fetch_url for localhost, private-network resources, local files, or credentials-bearing URLs.
 
 ## Editing the document
 - Prefer replace_text or insert_text for targeted edits.
@@ -315,23 +337,35 @@ const sanitizeContentBlocks = blocks => {
 export const sanitizeMessages = messages => {
   return messages.map(message => {
     if (typeof message.content === 'string') {
-      return {
+      const msg = {
         role: message.role,
         content: message.content
       }
+      if (message.reasoning_content) {
+        msg.reasoning_content = message.reasoning_content
+      }
+      return msg
     }
 
     if (Array.isArray(message.content)) {
-      return {
+      const msg = {
         role: message.role,
         content: sanitizeContentBlocks(message.content)
       }
+      if (message.reasoning_content) {
+        msg.reasoning_content = message.reasoning_content
+      }
+      return msg
     }
 
-    return {
+    const msg = {
       role: message.role,
       content: ''
     }
+    if (message.reasoning_content) {
+      msg.reasoning_content = message.reasoning_content
+    }
+    return msg
   })
 }
 
@@ -494,7 +528,10 @@ const toOpenAiMessages = (messages, persona) => {
       if (toolCalls.length) {
         assistantMessage.tool_calls = toolCalls
       }
-      if (text || toolCalls.length) {
+      if (message.reasoning_content) {
+        assistantMessage.reasoning_content = message.reasoning_content
+      }
+      if (text || toolCalls.length || message.reasoning_content) {
         openAiMessages.push(assistantMessage)
       }
       continue
@@ -679,6 +716,7 @@ async function * streamOpenAiChat ({ apiKey, baseUrl, model, messages, executeTo
   while (true) {
     const response = await callOpenAiApi({ apiKey, baseUrl: resolvedBaseUrl, model: resolvedModel, messages: workingMessages, signal, persona })
     let assistantText = ''
+    let assistantReasoning = ''
     const toolCalls = new Map()
     const toolCallOrder = []
 
@@ -690,6 +728,9 @@ async function * streamOpenAiChat ({ apiKey, baseUrl, model, messages, executeTo
       if (delta.content) {
         assistantText += delta.content
         yield { type: 'text', text: delta.content }
+      }
+      if (delta.reasoning_content) {
+        assistantReasoning += delta.reasoning_content
       }
 
       if (Array.isArray(delta.tool_calls)) {
@@ -759,7 +800,11 @@ async function * streamOpenAiChat ({ apiKey, baseUrl, model, messages, executeTo
     }
 
     const cleanedBlocks = sanitizeContentBlocks(assistantBlocks)
-    workingMessages.push({ role: 'assistant', content: cleanedBlocks })
+    const assistantMsg = { role: 'assistant', content: cleanedBlocks }
+    if (assistantReasoning) {
+      assistantMsg.reasoning_content = assistantReasoning
+    }
+    workingMessages.push(assistantMsg)
 
     const toolUses = cleanedBlocks.filter(block => block.type === 'tool_use')
 

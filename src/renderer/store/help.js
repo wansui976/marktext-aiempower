@@ -35,6 +35,7 @@ export const defaultFileState = {
     matches: [],
     value: ''
   },
+  toc: [],
   // Per tab notifications
   notifications: []
 }

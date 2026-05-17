@@ -126,19 +126,28 @@ Anthropic 和 OpenAI 的工具格式不同，所以 `claudeApi.js` 内部做了�
 
 统一工具 schema 定义在 `claudeApi.js` 的 `TOOLS` 中，目前包含：
 
-- `get_document`：读取当前打开 Markdown 文档。
+- `get_document_outline`：读取当前文档标题大纲，适合先定位长文档结构。
+- `get_document_section`：按标题或大纲序号读取当前文档的某个章节。
+- `search_document`：在当前文档中搜索关键词并返回上下文片段。
+- `get_document`：读取当前打开 Markdown 文档全文。
 - `apply_edit`：用完整 Markdown 替换当前文档。
 - `replace_text`：精确替换当前文档中的文本。
 - `insert_text`：在文档开头、结尾或锚点前后插入文本。
 - `read_file`：读取当前项目或当前文档目录内的文件。
 - `list_directory`：列出当前项目或当前文档目录内的目录项。
+- `glob_files`：按 glob 模式发现当前项目或当前文档目录内的文件。
+- `grep_files`：在当前项目或当前文档目录内按正则搜索文件内容。
+- `fetch_url`：访问外部 `http/https` URL，返回状态、最终 URL、Content-Type 和截断后的文本内容。
 
 工具真正执行在 `claudeChat.vue` 的 `executeTool()` 中。这样模型调用层不直接依赖 Vuex、当前文件、文件系统权限和编辑确认 UI。
 
 工具执行有几个重要边界：
 
 - `get_document` 从 `currentFile.markdown` 读取，不直接读磁盘，因此总是使用编辑器内最新状态。
+- `get_document_outline`、`get_document_section` 和 `search_document` 只读取当前编辑器内存中的 Markdown，用于减少长文档上下文传输。
 - `read_file` 和 `list_directory` 要求绝对路径，并且必须位于当前项目目录或当前 Markdown 文件所在目录内。
+- `glob_files` 和 `grep_files` 默认从项目根目录搜索；如果传入绝对路径，也必须通过同样的项目/文档目录限制。
+- `fetch_url` 只允许外部 `http/https` URL，拒绝 localhost、私有网段、本地文件协议和包含用户名/密码的 URL。
 - 文件读取最大 1 MB，目录列表最多 500 项。
 - 同一 turn 中如果文档没有变化，重复 `get_document` 会返回缓存提示，避免反复传输全文。
 

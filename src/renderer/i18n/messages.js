@@ -136,7 +136,8 @@ export default {
         replace_text: 'Replacing text',
         insert_text: 'Inserting text',
         read_file: 'Reading file',
-        list_directory: 'Listing directory'
+        list_directory: 'Listing directory',
+        fetch_url: 'Fetching URL'
       },
       export: {
         saved: 'Chat exported to {path}',
@@ -286,7 +287,8 @@ export default {
         replace_text: '替换文本',
         insert_text: '插入文本',
         read_file: '读取文件',
-        list_directory: '列出目录'
+        list_directory: '列出目录',
+        fetch_url: '访问 URL'
       },
       export: {
         saved: '对话已导出到 {path}',
