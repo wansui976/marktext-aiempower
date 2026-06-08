@@ -2362,7 +2362,7 @@ export default {
 
 <style>
   .side-bar-claude-chat {
-    --claude-bg: var(--sideBarBgColor);
+    --claude-bg: var(--editorBgColor);
     --claude-surface: var(--floatBgColor);
     --claude-surface-soft: var(--editorBgColor);
     --claude-border: var(--editorColor10);
@@ -2388,9 +2388,7 @@ export default {
     overflow: hidden;
     position: relative;
     isolation: isolate;
-    background:
-      linear-gradient(180deg, var(--claude-tint), transparent 120px),
-      linear-gradient(180deg, var(--claude-bg), var(--claude-bg));
+    background: var(--claude-bg);
   }
 
   .chat-header {
@@ -2402,7 +2400,7 @@ export default {
     justify-content: space-between;
     border-bottom: 1px solid var(--themeColor10);
     flex-shrink: 0;
-    background: var(--claude-tint);
+    background: var(--claude-bg);
     backdrop-filter: blur(6px);
     position: relative;
     z-index: 100;
@@ -2783,6 +2781,7 @@ export default {
     overscroll-behavior: contain;
     position: relative;
     z-index: 1;
+    background: var(--claude-bg);
   }
 
   .empty-hint {
