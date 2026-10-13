@@ -14,7 +14,8 @@
           :class="[{ 'active': c.name === rightColumn }, `icon-${c.name}`]"
         >
           <span class="icon-wrap">
-            <svg :viewBox="c.icon.viewBox">
+            <lucide-icon v-if="c.lucide" :name="c.lucide" :size="18"></lucide-icon>
+            <svg v-else class="sprite-icon" :viewBox="c.icon.viewBox">
               <use :xlink:href="c.icon.url"></use>
             </svg>
           </span>
@@ -26,9 +27,9 @@
           :key="index"
           @click="handleLeftBottomClick(c.name)"
         >
-          <svg :viewBox="c.icon.viewBox">
-            <use :xlink:href="c.icon.url"></use>
-          </svg>
+          <span class="icon-wrap">
+            <lucide-icon :name="c.lucide" :size="18"></lucide-icon>
+          </span>
         </li>
       </ul>
     </div>
@@ -155,15 +156,11 @@ export default {
     height: 100vh;
     min-width: 220px;
     position: relative;
-    color: var(--sideBarColor);
+    color: var(--text-secondary);
+    font-size: var(--font-size-md);
     user-select: none;
-    background: var(--sideBarBgColor);
-    border-right: 1px solid var(--itemBgColor);
-    & .left-column {
-      & svg {
-        fill: var(--iconColor);
-      }
-    }
+    background: var(--surface-sidebar);
+    border-right: 1px solid var(--border-subtle);
   }
 
   .left-column {
@@ -172,79 +169,52 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding-top: 40px;
+    padding: 40px 0 var(--space-2);
     box-sizing: border-box;
-    & > ul {
-      opacity: 1;
-    }
   }
 
   .left-column ul {
     list-style: none;
     display: flex;
     flex-direction: column;
+    gap: var(--space-1);
     margin: 0;
     padding: 0;
     & > li {
       width: 45px;
-      height: 42px;
+      height: 34px;
       margin: 0;
       padding: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      position: relative;
+      color: var(--sideBarIconColor);
       & .icon-wrap {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 6px;
-        transition: background-color .15s ease-out;
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-md);
+        transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
       }
-      & svg {
+      & .sprite-icon {
         width: 18px;
         height: 18px;
-        fill: var(--sideBarIconColor);
-        opacity: 1;
-        transition: fill .15s ease-out, transform .25s ease-in-out;
+        fill: currentColor;
       }
       &:hover .icon-wrap {
-        background: var(--itemBgColor);
-      }
-      &.active::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 8px;
-        bottom: 8px;
-        width: 3px;
-        border-radius: 0 2px 2px 0;
-        background: var(--themeColor);
+        color: var(--text-primary);
+        background: var(--surface-hover);
       }
       &.active .icon-wrap {
-        background: var(--itemBgColor);
-      }
-      &.active svg {
-        fill: var(--themeColor);
-      }
-      &.icon-claude.active::before {
-        background: var(--themeColor);
-      }
-      &.icon-claude.active svg {
-        fill: var(--themeColor);
-      }
-      &.icon-claude:hover svg {
-        fill: var(--themeColor);
+        color: var(--text-primary);
+        background: var(--surface-active);
       }
     }
   }
 
-  .side-bar:hover .left-column ul li svg {
-    opacity: 1;
-  }
   .right-column {
     flex: 1;
     width: calc(100% - 50px);
@@ -253,13 +223,15 @@ export default {
   .drag-bar {
     position: absolute;
     top: 0;
-    right: 0;
+    right: -2px;
     bottom: 0;
     height: 100%;
-    width: 3px;
+    width: 4px;
     cursor: col-resize;
+    z-index: 1;
+    transition: background-color var(--duration-normal) var(--ease);
     &:hover {
-      border-right: 2px solid var(--iconColor);
+      background: var(--themeColor50);
     }
   }
 </style>

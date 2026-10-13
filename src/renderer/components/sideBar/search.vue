@@ -15,9 +15,7 @@
             :class="{'active': isCaseSensitive}"
             @click.stop="caseSensitiveClicked()"
           >
-            <svg :viewBox="FindCaseIcon.viewBox" aria-hidden="true">
-              <use :xlink:href="FindCaseIcon.url" />
-            </svg>
+            <lucide-icon name="case-sensitive" :size="15"></lucide-icon>
           </span>
           <span
             title="Select whole word"
@@ -25,9 +23,7 @@
             :class="{'active': isWholeWord}"
             @click.stop="wholeWordClicked()"
           >
-            <svg :viewBox="FindWordIcon.viewBox" aria-hidden="true">
-              <use :xlink:href="FindWordIcon.url" />
-            </svg>
+            <lucide-icon name="whole-word" :size="15"></lucide-icon>
           </span>
           <span
             title="Use query as RegEx"
@@ -35,9 +31,7 @@
             :class="{'active': isRegexp}"
             @click.stop="regexpClicked()"
           >
-            <svg :viewBox="FindRegexIcon.viewBox" aria-hidden="true">
-              <use :xlink:href="FindRegexIcon.url" />
-            </svg>
+            <lucide-icon name="regex" :size="15"></lucide-icon>
           </span>
         </div>
       </div>
@@ -88,9 +82,6 @@ import bus from '../../bus'
 import log from 'electron-log'
 import SearchResultItem from './searchResultItem.vue'
 import RipgrepDirectorySearcher from '../../node/ripgrepSearcher'
-import FindCaseIcon from '@/assets/icons/searchIcons/iconCase.svg'
-import FindWordIcon from '@/assets/icons/searchIcons/iconWord.svg'
-import FindRegexIcon from '@/assets/icons/searchIcons/iconRegex.svg'
 import { MARKDOWN_INCLUSIONS } from '../../../common/filesystem/paths'
 
 export default {
@@ -100,9 +91,6 @@ export default {
     this.keyUpTimer = null
     this.searcherCancelCallback = null
     this.ripgrepDirectorySearcher = new RipgrepDirectorySearcher()
-    this.FindCaseIcon = FindCaseIcon
-    this.FindWordIcon = FindWordIcon
-    this.FindRegexIcon = FindRegexIcon
     return {
       keyword: '',
       searchResult: [],
@@ -326,89 +314,85 @@ export default {
     display: flex;
     flex-direction: column;
     height: 100%;
+    font-size: var(--font-size-md);
   }
   .search-wrapper {
     display: flex;
-    margin: 37px 15px 10px 15px;
-    padding: 0 6px;
-    border-radius: 14px;
-    height: 28px;
-    border: 1px solid var(--floatBorderColor);
-    background: var(--inputBgColor);
-    box-sizing: border-box;
     align-items: center;
+    margin: 39px var(--space-2) var(--space-3);
+    padding: 0 var(--space-1) 0 var(--space-2);
+    height: var(--control-height);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-input);
+    box-sizing: border-box;
+    transition: border-color var(--duration-fast) var(--ease), box-shadow var(--duration-fast) var(--ease);
+    &:focus-within {
+      border-color: var(--themeColor);
+      box-shadow: var(--focus-ring);
+    }
     & > input {
-      color: var(--sideBarColor);
+      color: var(--text-primary);
       background: transparent;
       height: 100%;
       flex: 1;
       border: none;
       outline: none;
-      padding: 0 8px;
-      font-size: 13px;
+      padding: 0 var(--space-1);
+      font-family: var(--font-ui);
+      font-size: var(--font-size-md);
       width: 50%;
+      &::placeholder {
+        color: var(--text-muted);
+      }
     }
     & > .controls {
       display: flex;
       flex-shrink: 0;
-      margin-top: 3px;
+      gap: 2px;
       & > span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        width: 20px;
-        height: 20px;
-        margin-left: 2px;
-        margin-right: 2px;
+        width: 22px;
+        height: 22px;
+        color: var(--text-muted);
+        border-radius: var(--radius-xs);
+        transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
         &:hover {
-          color: var(--sideBarIconColor);
+          color: var(--text-primary);
+          background: var(--surface-hover);
         }
-        & > svg {
-          fill: var(--sideBarIconColor);
-          &:hover {
-            fill: var(--highlightThemeColor);
-          }
+        &.active {
+          color: var(--themeColor);
+          background: var(--surface-selected);
         }
-        &.active svg {
-            fill: var(--highlightThemeColor);
-        }
-      }
-    }
-
-    & > svg {
-      cursor: pointer;
-      flex-shrink: 0;
-      width: 20px;
-      height: 20px;
-      margin-right: 10px;
-      &:hover {
-        color: var(--sideBarIconColor);
       }
     }
   }
   .cancel-area {
     text-align: center;
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
   }
   .search-message-section {
     overflow-wrap: break-word;
   }
   .search-result-info,
   .search-message-section {
-    padding-left: 15px;
-    margin-bottom: 5px;
-    font-size: 12px;
-    color: var(--sideBarColor);
+    padding: 0 var(--space-4);
+    margin-bottom: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
   }
   .empty,
   .search-result {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    &::-webkit-scrollbar:vertical {
-      width: 8px;
-    }
   }
   .empty {
-    font-size: 14px;
+    font-size: var(--font-size-md);
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -421,11 +405,11 @@ export default {
     }
     & .no-data svg {
       fill: var(--themeColor);
-      width: 120px;
+      width: 96px;
+      opacity: .5;
     }
     & .no-data .button-primary {
-      display: block;
-      margin-top: 20px;
+      margin-top: var(--space-5);
     }
   }
 </style>

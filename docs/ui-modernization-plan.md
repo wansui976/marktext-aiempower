@@ -1,6 +1,6 @@
 # UI 现代化改造计划
 
-> 分支：`feat/ui-modernize`　·　状态：进行中（阶段 0～3）
+> 分支：`feat/ui-modernize`　·　状态：阶段 0～3 已完成，待确认后继续阶段 4
 
 ## 设计方向
 
@@ -26,8 +26,8 @@
 |---|---|---|---|
 | 0 | 准备：分支、Playwright 截图脚本、改造前基线截图 | 0.5d | ✅ |
 | 1 | 设计 token：间距/圆角/阴影/动效/字体/语义色；滚动条、focus ring | 1d | ✅ |
-| 2 | Element UI 覆盖层 `element-overrides.css`（button/dialog/input/switch/tabs/tooltip/table/tree） | 1–1.5d | |
-| 3 | 主框架：标题栏、侧边栏（树/目录/搜索）、标签页、通知；Lucide 图标替换 | 3–4d | |
+| 2 | Element UI 覆盖层 `element-overrides.css`（button/dialog/input/switch/tabs/tooltip/table/tree） | 1–1.5d | ✅ |
+| 3 | 主框架：标题栏、侧边栏（树/目录/搜索）、标签页、通知；Lucide 图标替换 | 3–4d | ✅ |
 | 4 | 浮层与弹窗：命令面板、Muya 浮层（`baseFloat` 等）、业务弹窗 | 2d | |
 | 5 | 设置窗口 | 1.5d | |
 | 6 | AI 模块对齐：`claudeChat.vue`、`chat/*`、`inlineAiPrompt.vue` | 1.5d | |
@@ -59,6 +59,13 @@ yarn run ui:screenshots ui-screenshots/after nord dracula # 指定主题
 字体   --font-ui           系统 UI 字体栈（含 PingFang SC / Microsoft YaHei）
 语义   --surface-*, --border-subtle, --text-primary/secondary/muted  → 映射到旧变量
 ```
+
+## 实施记录
+
+- **图标**：Lucide 源文件放在 `src/renderer/assets/icons/lucide/lucide-*.svg`（`lucide-` 前缀避免与已有 sprite ID 冲突），只保留 path，描边/填充由 CSS 控制。全局组件 `<lucide-icon name="x" :size="14">`（`components/lucideIcon`）。通知服务的 HTML 模板内联 Lucide SVG。
+- **主题中的标签栏规则**：38 个主题原本带有相同模板的 `.editor-tabs` / `.tabs-container > li` `!important` 规则，会覆盖新标签栏设计。已统一移除，并把各主题的颜色保留为变量 `--tabBarBgColor`、`--tabBarBorderColor`。
+- **选中态**：使用中性色 `--surface-selected`（= `--surface-active`），主题色只用于小面积强调（未保存圆点、激活开关等）。
+- **测试注意**：`yarn unit` 的 karma 构建会覆盖 `dist/electron/index.html`；单独跑 e2e 或截图前需重新 `yarn run pack:renderer`。
 
 ## 验收标准
 

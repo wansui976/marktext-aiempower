@@ -2,7 +2,7 @@
   <div
     :title="file.pathname"
     class="side-bar-file"
-    :style="{'padding-left': `${(depth * 20) + 20}px`, 'opacity': file.isMarkdown ? 1 : 0.75 }"
+    :style="{'padding-left': `${(depth * 16) + 26}px`, 'opacity': file.isMarkdown ? 1 : 0.7 }"
     @click="handleFileClick()"
     :class="[{'current': currentFile.pathname === file.pathname, 'active': file.id === activeItem.id }]"
     ref="file"
@@ -98,48 +98,41 @@ export default {
     align-items: center;
     cursor: default;
     user-select: none;
-    height: 30px;
+    height: 28px;
     box-sizing: border-box;
-    padding-right: 15px;
+    padding-right: var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: background-color var(--duration-fast) var(--ease);
     &:hover {
-      background: var(--sideBarItemHoverBgColor);
+      background: var(--surface-hover);
     }
     & > span {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    &::before {
-      content: '';
-      position: absolute;
-      display: block;
-      left: 0;
-      background: var(--themeColor);
-      width: 2px;
-      height: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      transition: all .2s ease;
-    }
   }
-  .side-bar-file.current::before {
-    height: 100%;
+  .side-bar-file.current {
+    background: var(--surface-selected);
+    color: var(--text-primary);
+    font-weight: 500;
   }
-  .side-bar-file.current > span {
-    color: var(--themeColor);
-  }
-  .side-bar-file.active > span {
-    color: var(--sideBarTitleColor);
+  .side-bar-file.active {
+    color: var(--text-primary);
+    box-shadow: inset 0 0 0 1px var(--border-subtle);
   }
   input.rename {
     height: 22px;
     outline: none;
-    margin: 5px 0;
-    padding: 0 8px;
-    color: var(--sideBarColor);
-    border: 1px solid var(--floatBorderColor);
-    background: var(--floatBorderColor);
+    margin: 0;
+    padding: 0 var(--space-2);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    border: 1px solid var(--themeColor);
+    background: var(--surface-base);
     width: 100%;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
   }
 </style>

@@ -58,7 +58,7 @@ export const addThemeStyle = theme => {
   const css = getThemeCss(theme)
   const themeFix = `
 .title-bar-editor-bg.tabs-visible {
-  background: var(--editorBgColor) !important;
+  background: var(--tabBarBgColor) !important;
 }
 `
   themeStyleEle.innerHTML = css ? patchTheme(css) + themeFix : ''

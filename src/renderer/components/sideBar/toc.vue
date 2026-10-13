@@ -59,29 +59,39 @@ export default {
     display: flex;
     flex-direction: column;
     & .title {
-      color: var(--sideBarTitleColor);
+      display: flex;
+      align-items: center;
+      height: 28px;
+      margin: 39px var(--space-2) var(--space-1);
+      padding: 0 var(--space-2);
+      font-size: var(--font-size-xs);
       font-weight: 600;
-      font-size: 16px;
-      margin: 37px 0 10px 0;
-      padding-left: 25px;
-    }
-    & .el-tree-node {
-      margin-top: 8px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
     }
     & .el-tree {
+      padding: 0 var(--space-2) var(--space-4);
+      font-size: var(--font-size-md);
       background: transparent;
-      color: var(--sideBarColor);
+      color: var(--text-secondary);
     }
-    & .el-tree-node:focus > .el-tree-node__content {
-      background-color: var(--sideBarItemHoverBgColor);
-      }
+    & .el-tree-node__content {
+      height: 28px;
+      padding-right: var(--space-2);
+      border-radius: var(--radius-sm);
+      transition: background-color var(--duration-fast) var(--ease);
+    }
+    & .el-tree-node:focus > .el-tree-node__content,
     & .el-tree-node__content:hover {
-      background: var(--sideBarItemHoverBgColor);
+      background: var(--surface-hover);
+      color: var(--text-primary);
     }
-    & > li {
-      font-size: 14px;
-      margin-bottom: 15px;
-      cursor: pointer;
+    & .el-tree-node__expand-icon {
+      color: var(--text-muted);
+    }
+    & .el-tree-node__expand-icon.is-leaf {
+      color: transparent;
     }
     & .no-data {
       flex: 1;
@@ -91,8 +101,9 @@ export default {
       justify-content: space-around;
       padding-bottom: 50px;
       & svg {
-        width: 120px;
+        width: 96px;
         fill: var(--themeColor);
+        opacity: .5;
       }
     }
   }
@@ -105,7 +116,7 @@ export default {
     & .el-tree-node__content {
       white-space: normal;
       height: auto;
-      min-height: 26px;
+      min-height: 28px;
     }
   }
 </style>

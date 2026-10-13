@@ -73,45 +73,9 @@
   --editorAreaWidth: 750px;
 }
 
-.editor-tabs {
-  background: #f4f4f4 !important;
-  box-shadow: none !important;
-}
-.editor-tabs:after {
-  position: absolute;
-  content: '';
-  border-bottom: 1px solid #dedede;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1;
-}
-.editor-tabs ul.tabs-container:after {
-  position: absolute;
-  content: '';
-  border-bottom: 1px solid #dedede;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-}
-.title-bar-editor-bg.tabs-visible {
-  background: #f4f4f4 !important;
-}
-
-.tabs-container > li {
-  background: none !important;
-}
-.tabs-container > li.active {
-  border: 1px solid #dedede;
-  border-top: none;
-  border-bottom: none;
-  background: var(--floatBgColor) !important;
-}
-.tabs-container > li.active:after {
-  top: 0 !important;
-  bottom: auto !important;
-  background: var(--themeColor) !important;
+:root {
+  --tabBarBgColor: #f4f4f4;
+  --tabBarBorderColor: #dedede;
 }
 
 /* ------------------------------------ */

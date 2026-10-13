@@ -5,11 +5,9 @@
       @click="selectFile(file)"
       :class="[{'active': currentFile.id === file.id, 'unsaved': !file.isSaved }]"
     >
-      <svg class="icon" aria-hidden="true"
-        @click.stop="removeFileInTab(file)"
-      >
-        <use xlink:href="#icon-close-small"></use>
-      </svg>
+      <span class="close" @click.stop="removeFileInTab(file)">
+        <lucide-icon name="x" :size="12"></lucide-icon>
+      </span>
       <span class="name">{{ file.filename }}</span>
     </div>
 </template>
@@ -37,44 +35,57 @@ export default {
 <style scoped>
   .opened-file {
     display: flex;
+    align-items: center;
     user-select: none;
     height: 28px;
-    line-height: 28px;
-    padding-left: 35px;
+    padding-left: 26px;
+    padding-right: var(--space-2);
     position: relative;
-    color: var(--sideBarColor);
-    & > svg {
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--duration-fast) var(--ease);
+    & > .close {
       display: none;
-      width: 10px;
-      height: 10px;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
       position: absolute;
-      top: 9px;
-      left: 10px;
+      top: 5px;
+      left: 4px;
+      color: var(--text-muted);
+      border-radius: var(--radius-xs);
+      &:hover {
+        color: var(--text-primary);
+        background: var(--surface-active);
+      }
     }
-    &:hover > svg {
-      display: inline-block;
+    &:hover > .close {
+      display: inline-flex;
     }
     &:hover {
-      background: var(--sideBarItemHoverBgColor);
+      background: var(--surface-hover);
     }
-    & > span {
+    & > span.name {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
   }
   .opened-file.active {
-    color: var(--highlightThemeColor);
+    color: var(--text-primary);
+    background: var(--surface-selected);
+    font-weight: 500;
   }
   .unsaved.opened-file::before {
     content: '';
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: var(--highlightThemeColor);
+    background: var(--themeColor);
     position: absolute;
     top: 11px;
-    left: 12px;
+    left: 10px;
   }
   .unsaved.opened-file:hover::before {
     content: none;

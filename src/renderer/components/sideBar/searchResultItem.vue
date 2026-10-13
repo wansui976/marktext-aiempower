@@ -4,14 +4,13 @@
         class="search-result"
         :title="searchResult.filePath"
       >
-        <svg
-          class="icon icon-arrow"
+        <lucide-icon
+          name="chevron-right"
+          :size="14"
+          class="icon-arrow"
           :class="{'fold': !showSearchMatches}"
-          aria-hidden="true"
-          @click.stop="toggleSearchMatches()"
-        >
-          <use xlink:href="#icon-arrow"></use>
-        </svg>
+          @click.native.stop="toggleSearchMatches()"
+        ></lucide-icon>
         <div
           class="file-info"
           @click.stop="toggleSearchMatches()"
@@ -137,14 +136,21 @@ export default {
   .search-result-item {
     position: relative;
     user-select: none;
-    padding: 0 10px 8px 10px;
-    color: var(--sideBarColor);
-    font-size: 14px;
+    padding: 0 var(--space-2) var(--space-1);
+    color: var(--text-secondary);
+    font-size: var(--font-size-md);
     & > .search-result {
       display: flex;
       align-items: center;
-      & > svg:first-child {
-        margin-right: 3px;
+      height: 28px;
+      padding: 0 var(--space-1);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      &:hover {
+        background: var(--surface-hover);
+      }
+      & > .icon-arrow {
+        margin-right: var(--space-1);
       }
       & > .file-info {
         flex: 1;
@@ -152,101 +158,98 @@ export default {
       }
     }
     & .title .filename {
-      font-size: 14px;
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
-      padding-right: 8px;
+      padding-right: var(--space-2);
     }
     & .matches {
       & ul {
+        margin: 2px 0 0;
         padding-left: 0;
         list-style-type: none;
         & li {
           display: block;
-          padding: 2px 16px;
-          padding-right: 0;
+          padding: 3px var(--space-2) 3px 26px;
           cursor: pointer;
+          border-radius: var(--radius-sm);
           /* Hide space between inline spans */
           font-size: 0;
           & .highlight {
-            background: var(--highlightColor);
-            line-height: 16px;
-            height: 16px;
-            display: inline-block;
-            color: var(--sideBarTextColor);
-            border-radius: 1px;
+            background: var(--themeColor20);
+            color: var(--text-primary);
+            border-radius: 2px;
           }
           &:hover {
-            background: var(--sideBarItemHoverBgColor);
+            background: var(--surface-hover);
           }
           & span {
-            font-size: 13px;
+            font-size: var(--font-size-sm);
+            line-height: 18px;
             white-space: pre;
           }
         }
       }
       & .button {
-        width: 130px;
-        margin: 0 auto;
-        text-align: center;
+        display: flex;
+        width: 140px;
+        margin: var(--space-1) auto var(--space-2);
       }
     }
   }
   .search-result-item.active {
-    font-weight: 600;
     .title {
       color: var(--themeColor);
     }
   }
-  .search-result-item.active::before {
-    height: 100%;
-  }
   .title {
     display: flex;
-    color: var(--sideBarTextColor);
+    align-items: center;
+    color: var(--text-secondary);
     & .filename {
       flex: 1;
       & .name {
-        font-weight: 600;
+        font-weight: 500;
+        color: var(--text-primary);
       }
       & .extension {
-        color: var(--sideBarTextColor);
-        font-size: 12px;
+        color: var(--text-muted);
       }
     }
     & .match-count {
       display: inline-block;
-      font-size: 12px;
+      padding: 0 6px;
+      font-size: var(--font-size-xs);
+      font-weight: 500;
       line-height: 18px;
       text-align: center;
       min-width: 18px;
       height: 18px;
+      box-sizing: border-box;
       border-radius: 9px;
       flex-shrink: 0;
-      background: var(--itemBgColor);
-      color: var(--sideBarTextColor);
+      background: var(--surface-active);
+      color: var(--text-secondary);
     }
   }
 
   .folder-path {
-    font-size: 12px;
+    font-size: var(--font-size-sm);
   }
 
   .folder-path > span,
   .matches {
     width: 100%;
-    margin-top: 5px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--sideBarTextColor);
+    color: var(--text-muted);
   }
 
   .icon-arrow {
-    transition: all .25s ease-out;
+    color: var(--text-muted);
+    transition: transform var(--duration-normal) var(--ease);
     transform: rotate(90deg);
-    fill: var(--sideBarTextColor);
   }
   .icon-arrow.fold {
     transform: rotate(0);

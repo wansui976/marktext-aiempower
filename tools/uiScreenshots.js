@@ -74,6 +74,16 @@ const capture = async (outDir, theme) => {
     await shot('command-palette')
     await page.keyboard.press('Escape')
 
+    // Toast notifications (reuses the auto-update notification channels)
+    await app.evaluate(({ BrowserWindow }) => {
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send('mt::UPDATE_ERROR', 'Could not reach the update server.')
+        win.webContents.send('mt::UPDATE_AVAILABLE', 'Version 2.0.0 is available. Download now?')
+      }
+    })
+    await sleep(600)
+    await shot('notifications')
+
     // Preferences window
     const capturePreferences = async () => {
       await app.evaluate(({ ipcMain }) => { ipcMain.emit('app-create-settings-window', 'theme') })

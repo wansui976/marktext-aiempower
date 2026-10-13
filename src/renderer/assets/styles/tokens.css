@@ -45,7 +45,7 @@
   --surface-overlay: var(--floatBgColor);
   --surface-hover: var(--sideBarItemHoverBgColor);
   --surface-active: var(--editorColor10);
-  --surface-selected: var(--themeColor10);
+  --surface-selected: var(--surface-active);
   --surface-input: var(--inputBgColor);
 
   /* Semantic borders */
@@ -57,6 +57,11 @@
   --text-secondary: var(--sideBarColor);
   --text-muted: var(--sideBarTextColor);
   --text-accent: var(--themeColor);
+
+  /* Tab bar (themes may override the colors) */
+  --tabBarBgColor: var(--editorBgColor);
+  --tabBarBorderColor: var(--border-subtle);
+  --tabBarHeight: 36px;
 
   /* Controls */
   --control-height: 30px;

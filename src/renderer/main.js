@@ -36,6 +36,7 @@ import {
 import services from './services'
 import routes from './router'
 import { addElementStyle } from '@/util/theme'
+import LucideIcon from './components/lucideIcon'
 
 import './assets/styles/tokens.css'
 import './assets/styles/index.css'
@@ -85,6 +86,8 @@ Vue.use(TableColumn)
 Vue.use(Tabs)
 Vue.use(TabPane)
 Vue.use(Input)
+
+Vue.component('LucideIcon', LucideIcon)
 
 Vue.use(VueRouter)
 

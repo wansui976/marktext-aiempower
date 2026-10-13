@@ -3,11 +3,13 @@ import { getUniqueId } from '../../util'
 import { sanitize, EXPORT_DOMPURIFY_CONFIG } from '../../util/dompurify'
 import './index.css'
 
+// Lucide icons (ISC License), inlined because the template is plain HTML.
+const lucide = paths => `<svg class="lucide" viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`
 const INON_HASH = {
-  primary: 'icon-message',
-  error: 'icon-error',
-  warning: 'icon-warn',
-  info: 'icon-info'
+  primary: lucide('<circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />'),
+  error: lucide('<circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" />'),
+  warning: lucide('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" />'),
+  info: lucide('<circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />')
 }
 const TYPE_HASH = {
   primary: 'mt-primary',
@@ -18,7 +20,7 @@ const TYPE_HASH = {
 
 const fillTemplate = (type, title, message) => {
   return template
-    .replace(/\{\{icon\}\}/, INON_HASH[type])
+    .replace(/\{\{icon\}\}/, () => INON_HASH[type])
     .replace(/\{\{title\}\}/, sanitize(title, EXPORT_DOMPURIFY_CONFIG))
     .replace(/\{\{message\}\}/, sanitize(message, EXPORT_DOMPURIFY_CONFIG))
 }

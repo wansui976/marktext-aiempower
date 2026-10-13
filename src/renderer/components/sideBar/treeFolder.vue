@@ -4,14 +4,13 @@
   >
     <div
       class="folder-name" @click="folderNameClick"
-      :style="{'padding-left': `${(depth * 20) + 20}px`}"
+      :style="{'padding-left': `${(depth * 16) + 8}px`}"
       :class="[{ 'active': folder.id === activeItem.id }]"
       :title="folder.pathname"
       ref="folder"
     >
-      <svg class="icon" aria-hidden="true">
-        <use :xlink:href="`#${folder.isCollapsed ? 'icon-folder-close' : 'icon-folder-open'}`"></use>
-      </svg>
+      <lucide-icon name="chevron-right" :size="14" class="folder-arrow" :class="{ 'open': !folder.isCollapsed }"></lucide-icon>
+      <lucide-icon :name="folder.isCollapsed ? 'folder' : 'folder-open'" :size="15" class="folder-icon"></lucide-icon>
       <input
         type="text"
         @click.stop="noop"
@@ -35,7 +34,7 @@
       <input
         type="text" v-if="createCache.dirname === folder.pathname"
         class="new-input"
-        :style="{'margin-left': `${depth * 5 + 15}px` }"
+        :style="{'margin-left': `${(depth + 1) * 16 + 12}px` }"
         ref="input"
         @keydown.enter="handleInputEnter"
         v-model="createName"
@@ -126,27 +125,43 @@ export default {
       user-select: none;
       display: flex;
       align-items: center;
-      height: 30px;
-      padding-right: 15px;
-      & > svg {
-        flex-shrink: 0;
+      height: 28px;
+      padding-right: var(--space-2);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      transition: background-color var(--duration-fast) var(--ease);
+      & > .folder-arrow {
+        margin-right: 2px;
+        color: var(--text-muted);
+        transition: transform var(--duration-normal) var(--ease);
+        &.open {
+          transform: rotate(90deg);
+        }
+      }
+      & > .folder-icon {
+        margin-right: 6px;
         color: var(--sideBarIconColor);
-        margin-right: 5px;
       }
       &:hover {
-        background: var(--sideBarItemHoverBgColor);
+        background: var(--surface-hover);
+      }
+      &.active {
+        color: var(--text-primary);
+        box-shadow: inset 0 0 0 1px var(--border-subtle);
       }
     }
   }
   .new-input, input.rename {
     outline: none;
     height: 22px;
-    margin: 5px 0;
-    padding: 0 6px;
-    color: var(--sideBarColor);
-    border: 1px solid var(--floatBorderColor);
-    background: var(--floatBorderColor);
+    margin: 2px 0;
+    padding: 0 var(--space-2);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    border: 1px solid var(--themeColor);
+    background: var(--surface-base);
     width: 70%;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
   }
 </style>
