@@ -37,7 +37,9 @@ import services from './services'
 import routes from './router'
 import { addElementStyle } from '@/util/theme'
 
+import './assets/styles/tokens.css'
 import './assets/styles/index.css'
+import './assets/styles/element-overrides.css'
 import './assets/styles/printService.css'
 
 // -----------------------------------------------

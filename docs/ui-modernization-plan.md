@@ -25,7 +25,7 @@
 | # | 内容 | 预计 | 状态 |
 |---|---|---|---|
 | 0 | 准备：分支、Playwright 截图脚本、改造前基线截图 | 0.5d | ✅ |
-| 1 | 设计 token：间距/圆角/阴影/动效/字体/语义色；滚动条、focus ring | 1d | |
+| 1 | 设计 token：间距/圆角/阴影/动效/字体/语义色；滚动条、focus ring | 1d | ✅ |
 | 2 | Element UI 覆盖层 `element-overrides.css`（button/dialog/input/switch/tabs/tooltip/table/tree） | 1–1.5d | |
 | 3 | 主框架：标题栏、侧边栏（树/目录/搜索）、标签页、通知；Lucide 图标替换 | 3–4d | |
 | 4 | 浮层与弹窗：命令面板、Muya 浮层（`baseFloat` 等）、业务弹窗 | 2d | |
