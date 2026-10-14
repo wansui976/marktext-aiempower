@@ -6,19 +6,19 @@
         <span v-if="contextLabel" class="title-doc-tag" :title="contextLabel">· {{ contextLabel }}</span>
       </div>
       <div class="chat-actions">
-        <button type="button" class="toolbar-btn icon primary" :title="$t('ai.header.newChat')" :disabled="streaming" @click="newChat">+</button>
-        <button type="button" class="toolbar-btn icon" :title="$t('ai.header.more')" @click.stop="showHeaderMenu = !showHeaderMenu">⋯</button>
+        <button type="button" class="toolbar-btn icon primary" :title="$t('ai.header.newChat')" :disabled="streaming" @click="newChat"><lucide-icon name="plus" :size="16"></lucide-icon></button>
+        <button type="button" class="toolbar-btn icon" :title="$t('ai.header.more')" @click.stop="showHeaderMenu = !showHeaderMenu"><lucide-icon name="ellipsis" :size="16"></lucide-icon></button>
         <div v-if="showHeaderMenu" class="header-menu" @click.stop>
           <button type="button" class="header-menu-item" :disabled="streaming" @click="openSessionsFromMenu">
-            <span class="header-menu-icon">◷</span>
+            <lucide-icon name="history" :size="14" class="header-menu-icon"></lucide-icon>
             <span>{{ $t('common.sessions') }}</span>
           </button>
           <button type="button" class="header-menu-item" @click="openSettingsFromMenu">
-            <span class="header-menu-icon">⚙</span>
+            <lucide-icon name="settings" :size="14" class="header-menu-icon"></lucide-icon>
             <span>{{ $t('common.settings') }}</span>
           </button>
           <button type="button" class="header-menu-item" :disabled="!displayMessages.length" @click="exportChatMarkdown">
-            <span class="header-menu-icon">⇪</span>
+            <lucide-icon name="download" :size="14" class="header-menu-icon"></lucide-icon>
             <span>{{ $t('ai.header.exportMarkdown') }}</span>
           </button>
         </div>
@@ -243,7 +243,7 @@ import { darkThemes as darkThemeSet } from '../../util/themeColor'
 import ChatSettings from './chat/ChatSettings.vue'
 import ChatSessionList from './chat/ChatSessionList.vue'
 import ChatMessageList from './chat/ChatMessageList.vue'
-import copyIcon from 'muya/lib/assets/pngicon/copy/2.png'
+import { COPY_ICON_SVG } from './chat/copyIcon'
 
 const PROVIDER_STORAGE_KEY = 'marktext.claudeProvider'
 const STORAGE_KEY = 'marktext.claudeApiKey'
@@ -1208,12 +1208,7 @@ export default {
         button.className = 'claude-code-copy'
         button.title = 'Copy content'
         button.setAttribute('aria-label', 'Copy content')
-        const icon = document.createElement('img')
-        icon.className = 'icon'
-        icon.src = copyIcon
-        icon.alt = ''
-        icon.draggable = false
-        button.appendChild(icon)
+        button.innerHTML = COPY_ICON_SVG
         pre.appendChild(button)
       })
       const html = wrapper.innerHTML
@@ -2363,15 +2358,15 @@ export default {
 <style>
   .side-bar-claude-chat {
     --claude-bg: var(--editorBgColor);
-    --claude-surface: var(--floatBgColor);
-    --claude-surface-soft: var(--editorBgColor);
-    --claude-border: var(--editorColor10);
-    --claude-border-strong: var(--editorColor30);
+    --claude-surface: var(--surface-overlay);
+    --claude-surface-soft: var(--surface-base);
+    --claude-border: var(--border-subtle);
+    --claude-border-strong: var(--border-strong);
     --claude-text: var(--editorColor);
-    --claude-text-strong: var(--sideBarTitleColor);
-    --claude-text-muted: var(--sideBarTextColor);
+    --claude-text-strong: var(--text-primary);
+    --claude-text-muted: var(--text-muted);
     --claude-tint: var(--editorColor04);
-    --claude-tint-strong: var(--editorColor10);
+    --claude-tint-strong: var(--surface-active);
     --claude-selection-line: var(--themeColor);
     --claude-success: #2c7a2c;
     --claude-success-bg: rgba(0, 180, 0, 0.12);
@@ -2383,6 +2378,7 @@ export default {
     height: 100%;
     display: flex;
     flex-direction: column;
+    font-family: var(--font-ui);
     color: var(--sideBarColor);
     box-sizing: border-box;
     overflow: hidden;
@@ -2398,7 +2394,7 @@ export default {
     gap: 8px;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--themeColor10);
+    border-bottom: 1px solid var(--claude-border);
     flex-shrink: 0;
     background: var(--claude-bg);
     backdrop-filter: blur(6px);
@@ -2458,9 +2454,9 @@ export default {
     right: 0;
     min-width: 140px;
     background: var(--claude-surface);
-    border: 1px solid var(--claude-border);
-    border-radius: 8px;
-    box-shadow: 0 6px 20px var(--claude-tint-strong);
+    border: none;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-3);
     z-index: 200;
     padding: 4px;
     display: flex;
@@ -2494,8 +2490,7 @@ export default {
   }
 
   .header-menu-icon {
-    width: 14px;
-    text-align: center;
+    flex-shrink: 0;
     color: var(--claude-text-muted);
   }
 
@@ -2521,6 +2516,9 @@ export default {
   }
 
   .toolbar-btn.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 26px;
     padding: 0 !important;
     background: transparent !important;
@@ -2557,8 +2555,8 @@ export default {
 
   .settings-panel {
     padding: 14px 14px 16px 18px;
-    border-bottom: 1px solid var(--themeColor10);
-    background: linear-gradient(180deg, var(--claude-tint), transparent 120px), var(--claude-surface);
+    border-bottom: 1px solid var(--claude-border);
+    background: var(--claude-bg);
     display: flex;
     flex-direction: column;
     gap: 7px;
@@ -2572,11 +2570,12 @@ export default {
   .settings-panel input,
   .settings-panel select,
   .settings-panel textarea {
-    border: 1px solid var(--editorColor10);
-    border-radius: 4px;
+    border: 1px solid var(--claude-border);
+    border-radius: var(--radius-sm);
     padding: 6px 8px;
+    font-family: var(--font-ui);
     font-size: 12px;
-    background: var(--editorBgColor);
+    background: var(--surface-input);
     color: var(--editorColor);
     outline: none;
   }
@@ -2592,6 +2591,7 @@ export default {
   .settings-panel select:focus,
   .settings-panel textarea:focus {
     border-color: var(--themeColor);
+    box-shadow: var(--focus-ring);
   }
 
   .settings-hint {
@@ -2620,8 +2620,8 @@ export default {
     max-height: 220px;
     overflow-y: auto;
     padding: 12px 12px 12px 18px;
-    border-bottom: 1px solid var(--themeColor10);
-    background: var(--floatBgColor);
+    border-bottom: 1px solid var(--claude-border);
+    background: var(--claude-bg);
   }
 
   .sessions-header {
@@ -3394,10 +3394,16 @@ export default {
     opacity: 1;
   }
 
-  .block-text >>> .claude-code-copy img.icon {
+  .block-text >>> .claude-code-copy .icon {
     display: block;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    /* The button itself uses `color: transparent`, so set the stroke explicitly. */
+    stroke: var(--claude-text-muted);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
     pointer-events: none;
     user-select: none;
   }
@@ -3441,10 +3447,16 @@ export default {
     opacity: 1;
   }
 
-  .side-bar-claude-chat .block-text .claude-code-copy img.icon {
+  .side-bar-claude-chat .block-text .claude-code-copy .icon {
     display: block;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    /* The button itself uses `color: transparent`, so set the stroke explicitly. */
+    stroke: var(--claude-text-muted);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
     pointer-events: none;
     user-select: none;
   }
@@ -3600,7 +3612,7 @@ export default {
 
   .composer-input-wrap:focus-within {
     border-color: var(--themeColor);
-    box-shadow: 0 0 0 3px var(--claude-tint-strong);
+    box-shadow: var(--focus-ring);
   }
 
   .chat-input textarea {

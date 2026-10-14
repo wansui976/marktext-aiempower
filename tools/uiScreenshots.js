@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 // Capture UI screenshots of the packed app for visual comparison.
 //
-// Usage: yarn run pack && node tools/uiScreenshots.js <outDir> [theme ...]
-//   Defaults to the six representative themes when no theme is given.
+// Usage: yarn run pack && node tools/uiScreenshots.js <outDir> [theme ... | all]
+//   Defaults to the six representative themes when no theme is given; `all`
+//   captures every built-in theme. Set UI_SHOTS_QUICK=1 to capture only a few
+//   representative views per theme (useful for checking all themes).
 
 const fs = require('fs')
 const os = require('os')
@@ -13,6 +15,12 @@ const ROOT = path.resolve(__dirname, '..')
 const SAMPLE_DIR = path.join(ROOT, 'test/e2e/data/ui-sample')
 const SAMPLE_FILE = path.join(SAMPLE_DIR, 'README.md')
 const DEFAULT_THEMES = ['graphite-red', 'graphite-black', 'nord', 'catppuccin-latte', 'tokyo-night', 'rose-pine']
+const QUICK = process.env.UI_SHOTS_QUICK === '1'
+
+const allThemes = () => fs.readdirSync(path.join(ROOT, 'src/renderer/assets/themes'))
+  .filter(name => name.endsWith('.theme.css'))
+  .map(name => name.replace(/\.theme\.css$/, ''))
+  .sort()
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -60,9 +68,12 @@ const capture = async (outDir, theme) => {
 
     await clickSideBar('files') && await shot('files')
     await page.locator('.side-bar .tree-view .folder').first().click().catch(() => {})
-    await clickSideBar('search') && await shot('search')
-    await clickSideBar('toc') && await shot('toc')
-    await clickSideBar('files')
+    if (!QUICK) {
+      await clickSideBar('search') && await shot('search')
+      await clickSideBar('toc') && await shot('toc')
+      await clickSideBar('claude') && await shot('ai-chat')
+      await clickSideBar('files')
+    }
 
     // Menu accelerators don't fire for synthetic key events, so send menu actions directly.
     const sendToWindows = (channel, ...args) => app.evaluate(({ BrowserWindow }, [channel, args]) => {
@@ -72,7 +83,8 @@ const capture = async (outDir, theme) => {
     }, [channel, args])
 
     // Editor floats: each step is optional so one failure doesn't abort the run.
-    const optional = async (name, fn) => {
+    const optional = async (name, fn, { quick = false } = {}) => {
+      if (QUICK && !quick) return
       try {
         await fn()
         await shot(name)
@@ -87,7 +99,7 @@ const capture = async (outDir, theme) => {
     await optional('format-picker', async () => {
       await paragraph.click({ clickCount: 3, timeout: 5000 })
       await page.waitForSelector('.ag-format-picker-container[x-placement]', { timeout: 3000 })
-    })
+    }, { quick: true })
     await optional('front-menu', async () => {
       await paragraph.click({ timeout: 5000 })
       await page.locator('.ag-paragraph.ag-active > .ag-front-icon').first().click({ timeout: 3000 })
@@ -122,14 +134,12 @@ const capture = async (outDir, theme) => {
     })
 
     // Toast notifications (reuses the auto-update notification channels)
-    await app.evaluate(({ BrowserWindow }) => {
-      for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send('mt::UPDATE_ERROR', 'Could not reach the update server.')
-        win.webContents.send('mt::UPDATE_AVAILABLE', 'Version 2.0.0 is available. Download now?')
-      }
-    })
-    await sleep(600)
-    await shot('notifications')
+    if (!QUICK) {
+      await sendToWindows('mt::UPDATE_ERROR', 'Could not reach the update server.')
+      await sendToWindows('mt::UPDATE_AVAILABLE', 'Version 2.0.0 is available. Download now?')
+      await sleep(600)
+      await shot('notifications')
+    }
 
     // Preferences window
     const capturePreferences = async () => {
@@ -143,7 +153,8 @@ const capture = async (outDir, theme) => {
       await prefPage.waitForSelector('.pref-container, .pref-setting, body', { timeout: 10000 })
       await sleep(1500)
       await prefPage.screenshot({ path: path.join(outDir, `${theme}--preferences.png`), timeout: 10000 })
-      for (const category of ['general', 'editor', 'markdown', 'spelling', 'image', 'keybindings']) {
+      const categories = QUICK ? ['general'] : ['general', 'editor', 'markdown', 'spelling', 'image', 'keybindings']
+      for (const category of categories) {
         await prefPage.evaluate(category => { location.hash = `#/preference/${category}` }, category)
         await sleep(600)
         await prefPage.screenshot({ path: path.join(outDir, `${theme}--preferences-${category}.png`), timeout: 10000 })
@@ -164,7 +175,8 @@ const capture = async (outDir, theme) => {
 const main = async () => {
   const [outDir = 'ui-screenshots', ...themes] = process.argv.slice(2)
   fs.mkdirSync(outDir, { recursive: true })
-  for (const theme of themes.length ? themes : DEFAULT_THEMES) {
+  const list = themes[0] === 'all' ? allThemes() : themes.length ? themes : DEFAULT_THEMES
+  for (const theme of list) {
     process.stdout.write(`Capturing ${theme}... `)
     await capture(outDir, theme)
     console.log('done')

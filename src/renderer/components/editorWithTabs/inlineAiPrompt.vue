@@ -413,10 +413,11 @@ const stripWrappers = (text) => {
     position: fixed;
     z-index: 1000;
     background: var(--floatBgColor, #fff);
-    border: 1px solid var(--editorColor10, #e0e0e0);
-    border-radius: 10px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+    border: none;
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: var(--shadow-3, 0 12px 36px rgba(0, 0, 0, 0.18));
     padding: 12px;
+    font-family: var(--font-ui);
     font-size: 13px;
     color: var(--editorColor, #333);
     outline: none;
@@ -497,10 +498,12 @@ const stripWrappers = (text) => {
     resize: vertical;
     min-height: 50px;
     font-family: inherit;
+    transition: border-color var(--duration-fast) var(--ease), box-shadow var(--duration-fast) var(--ease);
   }
 
   .prompt-textarea:focus {
     border-color: var(--themeColor, #d97757);
+    box-shadow: var(--focus-ring);
   }
 
   .prompt-actions {
@@ -514,11 +517,14 @@ const stripWrappers = (text) => {
     height: 26px;
     padding: 0 12px;
     border-radius: 6px;
+    font-family: var(--font-ui);
     font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
     border: 1px solid var(--editorColor10, #e0e0e0);
     background: var(--floatBgColor, #fff);
     color: var(--editorColor, #333);
+    transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
   }
 
   .prompt-actions button.ghost {
@@ -527,8 +533,8 @@ const stripWrappers = (text) => {
   }
 
   .prompt-actions button.ghost:hover:not(:disabled) {
-    border-color: var(--themeColor, #d97757);
-    color: var(--themeColor, #d97757);
+    background: var(--surface-hover);
+    color: var(--text-primary);
   }
 
   .prompt-actions button.primary {

@@ -86,7 +86,7 @@
 import marked from 'marked'
 import DOMPurify from 'dompurify'
 import Prism from 'muya/lib/prism'
-import copyIcon from 'muya/lib/assets/pngicon/copy/2.png'
+import { COPY_ICON_SVG } from './copyIcon'
 
 const TOOL_LABELS = {
   get_document: 'Read document',
@@ -142,12 +142,7 @@ export default {
         button.className = 'claude-code-copy'
         button.title = 'Copy content'
         button.setAttribute('aria-label', 'Copy content')
-        const icon = document.createElement('img')
-        icon.className = 'icon'
-        icon.src = copyIcon
-        icon.alt = ''
-        icon.draggable = false
-        button.appendChild(icon)
+        button.innerHTML = COPY_ICON_SVG
         pre.appendChild(button)
       })
       const html = wrapper.innerHTML

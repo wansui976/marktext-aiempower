@@ -1,6 +1,6 @@
 # UI 现代化改造计划
 
-> 分支：`feat/ui-modernize`　·　状态：阶段 0～5 已完成
+> 分支：`feat/ui-modernize`　·　状态：阶段 0～6 已完成
 
 ## 设计方向
 
@@ -30,7 +30,7 @@
 | 3 | 主框架：标题栏、侧边栏（树/目录/搜索）、标签页、通知；Lucide 图标替换 | 3–4d | ✅ |
 | 4 | 浮层与弹窗：命令面板、Muya 浮层（`baseFloat` 等）、业务弹窗 | 2d | ✅ |
 | 5 | 设置窗口 | 1.5d | ✅ |
-| 6 | AI 模块对齐：`claudeChat.vue`、`chat/*`、`inlineAiPrompt.vue` | 1.5d | |
+| 6 | AI 模块对齐：`claudeChat.vue`、`chat/*`、`inlineAiPrompt.vue` | 1.5d | ✅ |
 | 7 | 主题回归：41 个主题截图检查；精修 6 个代表主题（`graphite-red` 默认浅色、`graphite-black` 默认深色、`nord`、`catppuccin-latte`、`tokyo-night`、`rose-pine`） | 1.5d | |
 | 8 | （可选）macOS vibrancy 毛玻璃，设置项开关，默认关闭 | — | |
 
@@ -42,6 +42,7 @@
 yarn run pack
 yarn run ui:screenshots ui-screenshots/after            # 6 个代表主题
 yarn run ui:screenshots ui-screenshots/after nord dracula # 指定主题
+UI_SHOTS_QUICK=1 yarn run ui:screenshots ui-screenshots/all all  # 全部主题，只截代表性视图
 ```
 
 覆盖视图：文件树、搜索、目录、格式工具栏、块菜单、快速插入、查找替换、命令面板、关于/反馈弹窗、通知、设置窗口（主题、通用、编辑器、Markdown、拼写、图片、快捷键）。输出目录 `ui-screenshots/` 已加入 `.gitignore`。
@@ -65,11 +66,12 @@ yarn run ui:screenshots ui-screenshots/after nord dracula # 指定主题
 - **图标**：Lucide 源文件放在 `src/renderer/assets/icons/lucide/lucide-*.svg`（`lucide-` 前缀避免与已有 sprite ID 冲突），只保留 path，描边/填充由 CSS 控制。全局组件 `<lucide-icon name="x" :size="14">`（`components/lucideIcon`）。通知服务的 HTML 模板内联 Lucide SVG。
 - **主题中的标签栏规则**：38 个主题原本带有相同模板的 `.editor-tabs` / `.tabs-container > li` `!important` 规则，会覆盖新标签栏设计。已统一移除，并把各主题的颜色保留为变量 `--tabBarBgColor`、`--tabBarBorderColor`。
 - **选中态**：使用中性色 `--surface-selected`（= `--surface-active`），主题色只用于小面积强调（未保存圆点、激活开关等）。
-- **Muya 图标**：Muya 原 PNG 图标（`assets/pngicon`）换成 Lucide，生成为 `src/muya/lib/assets/icons/lucide.js` 中的 SVG data URI，沿用原有 `background: url()` + `drop-shadow` 着色机制，渲染代码无需改动，也不依赖 webpack 的 SVG loader（渲染进程与 Muya 独立构建的 SVG 规则不同）。`pngicon/copy` 仍被 AI 聊天组件引用，阶段 6 一并替换后删除。
+- **Muya 图标**：Muya 原 PNG 图标（`assets/pngicon`）换成 Lucide，生成为 `src/muya/lib/assets/icons/lucide.js` 中的 SVG data URI，沿用原有 `background: url()` + `drop-shadow` 着色机制，渲染代码无需改动，也不依赖 webpack 的 SVG loader（渲染进程与 Muya 独立构建的 SVG 规则不同）。`pngicon` 目录已删除（阶段 6 把 AI 聊天中的复制按钮换成内联 Lucide SVG）。
 - **iconfont sprite**：`assets/symbolIcon` 已无引用，已删除；渲染进程图标全部为 Lucide。
 - **Muya 浮层**：样式使用 token 并带回退值（如 `var(--radius-md, 8px)`），保证 Muya 单独发布时可用；去掉了 popper 箭头；21 个深色主题中强制浮层阴影的 `!important` 规则已移除。
 - **遮罩**：`.v-modal` 颜色仍由主题 `--maskColor` 决定，仅调整不透明度。
 - **设置窗口**：侧边栏宽度 220px，分类图标换成 Lucide；设置项分组（`compound`）改为圆角卡片、行间细分隔线，分组标题为小号大写灰字；去掉描述末尾的冒号；删除 `bool`/`select`/`fontTextBox` 中覆盖 Element 开关、下拉的全局样式，统一由 `element-overrides.css` 控制；快捷键表格去掉单元格边框（Muya 的全局 `table td::before` 边框对 `.el-table` 关闭）。
+- **AI 模块**：`--claude-*` 变量映射到语义 token；标题栏字符图标（`+ ⋯ ◷ ⚙ ⇪`）换成 Lucide；设置、会话面板与聊天区同底色；内联 AI 输入框使用统一阴影、圆角和 focus ring。
 - **测试注意**：构建用 `yarn run pack`，不要用 `yarn pack`（Yarn 内置的打包 tarball 命令会抢先执行，构建产物不会更新）。
 - **测试注意**：`yarn unit` 的 karma 构建会覆盖 `dist/electron/index.html`；单独跑 e2e 或截图前需重新 `yarn run pack:renderer`。
 
