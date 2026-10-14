@@ -6,7 +6,6 @@ import VueRouter from 'vue-router'
 import axios from './axios'
 import store from './store'
 import i18n from './i18n'
-import './assets/symbolIcon'
 import {
   Dialog,
   Form,

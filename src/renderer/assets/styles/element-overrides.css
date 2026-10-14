@@ -333,9 +333,9 @@ textarea.el-textarea__inner::placeholder {
  * Dialog
  * ------------------------------------------------------------------------ */
 
+/* Mask color comes from the theme (--maskColor, see muya/themes/default.css). */
 .v-modal {
-  background: #000;
-  opacity: .28;
+  opacity: .7;
 }
 
 .el-dialog,

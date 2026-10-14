@@ -64,15 +64,62 @@ const capture = async (outDir, theme) => {
     await clickSideBar('toc') && await shot('toc')
     await clickSideBar('files')
 
-    // Command palette
-    // Menu accelerators don't fire for synthetic key events, so trigger the menu action directly.
-    await app.evaluate(({ BrowserWindow }) => {
+    // Menu accelerators don't fire for synthetic key events, so send menu actions directly.
+    const sendToWindows = (channel, ...args) => app.evaluate(({ BrowserWindow }, [channel, args]) => {
       for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send('mt::show-command-palette')
+        win.webContents.send(channel, ...args)
       }
+    }, [channel, args])
+
+    // Editor floats: each step is optional so one failure doesn't abort the run.
+    const optional = async (name, fn) => {
+      try {
+        await fn()
+        await shot(name)
+      } catch (err) {
+        console.warn(`\n  [warn] ${name}: ${err.message.split('\n')[0]}`)
+      }
+      await page.keyboard.press('Escape').catch(() => {})
+      await sleep(200)
+    }
+    const paragraph = page.locator('.ag-paragraph', { hasText: 'A paragraph with' }).first()
+
+    await optional('format-picker', async () => {
+      await paragraph.click({ clickCount: 3, timeout: 5000 })
+      await page.waitForSelector('.ag-format-picker-container[x-placement]', { timeout: 3000 })
     })
+    await optional('front-menu', async () => {
+      await paragraph.click({ timeout: 5000 })
+      await page.locator('.ag-paragraph.ag-active > .ag-front-icon').first().click({ timeout: 3000 })
+      await page.waitForSelector('.ag-front-menu', { state: 'visible', timeout: 3000 })
+    })
+    await optional('quick-insert', async () => {
+      await page.locator('.ag-paragraph', { hasText: 'Final paragraph' }).first().click({ timeout: 5000 })
+      await page.keyboard.press('End')
+      await page.keyboard.press('Enter')
+      await page.keyboard.type('@')
+      await page.waitForSelector('.ag-quick-insert', { state: 'visible', timeout: 3000 })
+      await sleep(300)
+    })
+    await optional('find-replace', async () => {
+      await sendToWindows('mt::editor-edit-action', 'replace')
+      await page.waitForSelector('.search-bar', { state: 'visible', timeout: 3000 })
+      await page.locator('.search-bar .search input').type('item', { delay: 30 })
+      await sleep(300)
+    })
+
+    await sendToWindows('mt::show-command-palette')
     await shot('command-palette')
     await page.keyboard.press('Escape')
+
+    await optional('about-dialog', async () => {
+      await sendToWindows('mt::about-dialog')
+      await page.waitForSelector('.about-dialog .el-dialog', { state: 'visible', timeout: 3000 })
+    })
+    await optional('tweet-dialog', async () => {
+      await sendToWindows('mt::tweet', 'twitter')
+      await page.waitForSelector('.tweet-dialog .el-dialog', { state: 'visible', timeout: 3000 })
+    })
 
     // Toast notifications (reuses the auto-update notification channels)
     await app.evaluate(({ BrowserWindow }) => {

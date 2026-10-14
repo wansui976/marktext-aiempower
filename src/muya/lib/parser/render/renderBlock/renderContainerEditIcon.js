@@ -1,6 +1,6 @@
 import { h } from '../snabbdom'
 import { CLASS_OR_ID } from '../../../config'
-import htmlIcon from '../../../assets/pngicon/html/2.png'
+import { codeXml as htmlIcon } from '../../../assets/icons/lucide'
 
 export const renderEditIcon = () => {
   const selector = `a.${CLASS_OR_ID.AG_CONTAINER_ICON}`

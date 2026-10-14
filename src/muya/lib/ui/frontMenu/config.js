@@ -1,7 +1,9 @@
-import copyIcon from '../../assets/pngicon/copy/2.png'
-import newIcon from '../../assets/pngicon/paragraph/2.png'
-import deleteIcon from '../../assets/pngicon/delete/2.png'
-import turnIcon from '../../assets/pngicon/turninto/2.png'
+import {
+  copy as copyIcon,
+  pilcrow as newIcon,
+  trash2 as deleteIcon,
+  repeat2 as turnIcon
+} from '../../assets/icons/lucide'
 import { isOsx } from '../../config'
 import { quickInsertObj } from '../quickInsert/config'
 

@@ -67,24 +67,33 @@ export default {
     display: block;
   }
 
+  .about-dialog .el-dialog__body {
+    padding: var(--space-6) var(--space-6) var(--space-5);
+  }
+
   .about-dialog img.logo {
-    width: 80px;
-    height: 80px;
+    width: 72px;
+    height: 72px;
     display: inherit;
-    margin: 0 auto;
+    margin: 0 auto var(--space-3);
   }
 
   .about-dialog .title,
   .about-dialog .text {
-    min-height: 32px;
     text-align: center;
   }
 
   .about-dialog .title {
-    color: var(--floatFontColor);
+    margin: 0 0 var(--space-1);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
   .about-dialog .text {
-    color: var(--floatFontColor);
+    min-height: 22px;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-ui);
+    color: var(--text-muted);
   }
 </style>

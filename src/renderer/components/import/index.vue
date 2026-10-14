@@ -16,10 +16,10 @@
           @drop="dropHandler"
         >
           <div class="img-wrapper">
-            <img :src="`${importIcon.url}`" alt="import file">
+            <lucide-icon name="file-down" :size="36"></lucide-icon>
           </div>
-          <div>Import or Open</div>
-          <p> Drop here to get you stuff into MarkText</p>
+          <div class="headline">Import or Open</div>
+          <p>Drop here to get your stuff into MarkText</p>
         </div>
         <div class="file-list">
           <div>.md</div>
@@ -36,11 +36,9 @@
 <script>
 import bus from '@/bus'
 import { ipcRenderer } from 'electron'
-import importIcon from '@/assets/icons/import_file.svg'
 
 export default {
   data () {
-    this.importIcon = importIcon
     return {
       showImport: false,
       isOver: false
@@ -80,40 +78,50 @@ export default {
 
 <style scoped>
 .drop-container {
-  border-radius: 5px;
-  color: var(--sideBarColor);
-  border: 1px dashed var(--sideBarTextColor);
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  border: 1.5px dashed var(--border-strong);
+  transition: border-color var(--duration-fast) var(--ease), background-color var(--duration-fast) var(--ease);
   & div,
   & p {
     text-align: center;
   }
+  & .headline {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  & p {
+    margin: var(--space-1) 0 0;
+    font-size: var(--font-size-md);
+    color: var(--text-muted);
+  }
   &.active {
-    border: 1px dashed var(--themeColor);
-    background-color: var(--itemBgColor);
+    border-color: var(--themeColor);
+    background-color: var(--surface-hover);
   }
 }
 .img-wrapper {
-  width: 50px;
-  height: 70px;
-  margin: 40px auto 0 auto;
-  & img {
-    width: 100%;
-    height: 100%;
-  }
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-3);
+  color: var(--text-muted);
 }
 .file-list {
-  margin-top: 20px;
+  margin-top: var(--space-4);
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap: var(--space-2);
   & div {
-    width: 70px;
-    height: 70px;
-    border: 1px solid var(--sideBarTextColor);
-    border-radius: 3px;
-    text-align: center;
-    font-size: 18px;
-    line-height: 70px;
-    color: var(--sideBarTitleColor);
+    padding: 0 var(--space-3);
+    height: 26px;
+    line-height: 26px;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface-hover);
+    border-radius: 13px;
   }
 }
 </style>

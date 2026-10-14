@@ -1,5 +1,5 @@
 import { h } from '../snabbdom'
-import copyIcon from '../../../assets/pngicon/copy/2.png'
+import { copy as copyIcon } from '../../../assets/icons/lucide'
 
 const renderCopyButton = () => {
   const selector = 'a.ag-code-copy'

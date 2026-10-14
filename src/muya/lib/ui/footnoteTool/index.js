@@ -1,6 +1,6 @@
 import BaseFloat from '../baseFloat'
 import { patch, h } from '../../parser/render/snabbdom'
-import WarningIcon from '../../assets/pngicon/warning/2.png'
+import { triangleAlert as WarningIcon } from '../../assets/icons/lucide'
 
 import './index.css'
 

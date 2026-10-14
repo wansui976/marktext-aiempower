@@ -452,6 +452,12 @@ export default {
   .print-settings-dialog {
     user-select: none;
   }
+  h3 {
+    margin: var(--space-2) 0 var(--space-3);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
   .row {
     margin-bottom: 8px;
   }

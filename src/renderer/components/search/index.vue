@@ -7,13 +7,11 @@
       class="left-arrow"
       @click="toggleSearchType"
     >
-      <svg
-        class="icon"
-        aria-hidden="true"
+      <lucide-icon
+        name="chevron-down"
+        :size="14"
         :class="{'arrow-right': type === 'search'}"
-      >
-        <use xlink:href="#icon-arrowdown"></use>
-      </svg>
+      ></lucide-icon>
     </div>
     <div class="right-controls">
       <section class="search">
@@ -36,9 +34,7 @@
               :class="{'active': isCaseSensitive}"
               @click.stop="toggleCtrl('isCaseSensitive')"
             >
-              <svg :viewBox="FindCaseIcon.viewBox" aria-hidden="true">
-                <use :xlink:href="FindCaseIcon.url" />
-              </svg>
+              <lucide-icon name="case-sensitive" :size="15"></lucide-icon>
             </span>
             <span
               title="Select whole word"
@@ -46,9 +42,7 @@
               :class="{'active': isWholeWord}"
               @click.stop="toggleCtrl('isWholeWord')"
             >
-              <svg :viewBox="FindWordIcon.viewBox" aria-hidden="true">
-                <use :xlink:href="FindWordIcon.url" />
-              </svg>
+              <lucide-icon name="whole-word" :size="15"></lucide-icon>
             </span>
             <span
               title="Use query as RegEx"
@@ -56,9 +50,7 @@
               :class="{'active': isRegexp}"
               @click.stop="toggleCtrl('isRegexp')"
             >
-              <svg :viewBox="FindRegexIcon.viewBox" aria-hidden="true">
-                <use :xlink:href="FindRegexIcon.url" />
-              </svg>
+              <lucide-icon name="regex" :size="15"></lucide-icon>
             </span>
           </div>
           <div class="error-msg" v-if="searchErrorMsg">
@@ -66,15 +58,11 @@
           </div>
         </div>
         <div class="button-group">
-          <button class="button right" @click="find('prev')">
-            <svg class="icon" aria-hidden="true">
-              <use xlink:href="#icon-arrow-up"></use>
-            </svg>
+          <button class="icon-button" title="Previous match" @click="find('prev')">
+            <lucide-icon name="arrow-up" :size="16"></lucide-icon>
           </button>
-          <button class="button" @click="find('next')">
-            <svg class="icon" aria-hidden="true">
-              <use xlink:href="#icon-arrowdown"></use>
-            </svg>
+          <button class="icon-button" title="Next match" @click="find('next')">
+            <lucide-icon name="arrow-down" :size="16"></lucide-icon>
           </button>
         </div>
       </section>
@@ -90,10 +78,8 @@
             :visible-arrow="false"
             :open-delay="1000"
           >
-            <button class="button right" @click="replace(false)">
-              <svg class="icon" aria-hidden="true">
-                <use xlink:href="#icon-all-inclusive"></use>
-              </svg>
+            <button class="icon-button" @click="replace(false)">
+              <lucide-icon name="replace-all" :size="16"></lucide-icon>
             </button>
           </el-tooltip>
           <el-tooltip class="item"
@@ -103,10 +89,8 @@
             :visible-arrow="false"
             :open-delay="1000"
           >
-            <button class="button" @click="replace(true)">
-              <svg class="icon" aria-hidden="true">
-                <use xlink:href="#icon-replace"></use>
-              </svg>
+            <button class="icon-button" @click="replace(true)">
+              <lucide-icon name="replace" :size="16"></lucide-icon>
             </button>
           </el-tooltip>
         </div>
@@ -118,15 +102,9 @@
 <script>
 import bus from '../../bus'
 import { mapState } from 'vuex'
-import FindCaseIcon from '@/assets/icons/searchIcons/iconCase.svg'
-import FindWordIcon from '@/assets/icons/searchIcons/iconWord.svg'
-import FindRegexIcon from '@/assets/icons/searchIcons/iconRegex.svg'
 
 export default {
   data () {
-    this.FindCaseIcon = FindCaseIcon
-    this.FindWordIcon = FindWordIcon
-    this.FindRegexIcon = FindRegexIcon
     return {
       showSearch: false,
       isCaseSensitive: false,
@@ -304,147 +282,171 @@ export default {
 <style scoped>
   .search-bar {
     position: absolute;
-    width: 400px;
-    padding: 0;
-    top: 0;
-    right: 20px;
-    border-radius: 3px;
-    box-shadow: var(--floatShadow);
-    background: var(--floatBgColor);
+    width: 420px;
+    padding: 6px 6px 6px 2px;
+    top: var(--space-2);
+    right: var(--space-5);
+    box-sizing: border-box;
+    font-family: var(--font-ui);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-3);
+    background: var(--surface-overlay);
     display: flex;
     flex-direction: row;
+    z-index: 10;
   }
   .search-bar .left-arrow {
-    width: 20px;
+    width: 22px;
+    margin-right: 2px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
     cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease);
+    & .lucide-icon {
+      transition: transform var(--duration-normal) var(--ease);
+    }
+    & .lucide-icon.arrow-right {
+      transform: rotate(-90deg);
+    }
   }
   .search-bar .left-arrow:hover {
-    background: var(--floatHoverColor);
-  }
-  .search-bar .left-arrow svg {
-    height: 12px;
-    width: 12px;
-  }
-  .search-bar .left-arrow svg.arrow-right {
-    transform: rotate(-90deg);
+    color: var(--text-primary);
+    background: var(--surface-hover);
   }
 
   .search-bar .right-controls {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
   .search, .replace {
-    height: 28px;
     display: flex;
-    padding: 4px 10px 0 4px;
-    margin-bottom: 5px;
+    align-items: center;
   }
 
-  .search-bar .button {
+  .button-group {
+    display: flex;
+    flex-shrink: 0;
+    gap: 2px;
+    margin-left: 6px;
+  }
+  .icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
     outline: none;
     cursor: pointer;
-    box-sizing: border-box;
-    height: 28px;
-    width: 28px;
-    text-align: center;
-    padding: 5px;
-    display: inline-block;
-    font-weight: 500;
-    color: var(--sideBarIconColor);
-    &.left {
-      margin-right: 10px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+    &:hover {
+      color: var(--text-primary);
+      background: var(--surface-hover);
     }
-    &.right {
-      margin-left: 10px;
+    &:active {
+      background: var(--surface-active);
+    }
+    &:focus-visible {
+      box-shadow: var(--focus-ring);
     }
   }
-  .button.active {
-    color: var(--themeColor);
-  }
-  .search-bar .button > svg {
-    width: 16px;
-    height: 16px;
-  }
-  .search-bar .button:active {
-    opacity: .5;
-  }
+
   .input-wrapper {
     display: flex;
     flex: 1;
+    align-items: center;
     position: relative;
-    border: 1px solid var(--inputBgColor);
-    background: var(--inputBgColor);
-    border-radius: 3px;
+    height: 28px;
+    box-sizing: border-box;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-input);
+    border-radius: var(--radius-sm);
     overflow: visible;
+    transition: border-color var(--duration-fast) var(--ease), box-shadow var(--duration-fast) var(--ease);
+    &:focus-within {
+      border-color: var(--themeColor);
+      box-shadow: var(--focus-ring);
+    }
   }
   .input-wrapper.error {
-    border: 1px solid var(--notificationErrorBg);
+    border-color: var(--notificationErrorBg);
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0;
   }
   .input-wrapper .controls {
-    position: absolute;
-    top: 6px;
-    right: 10px;
-    font-size: 12px;
     display: flex;
-    color: var(--sideBarTitleColor);
+    align-items: center;
+    flex-shrink: 0;
+    gap: 1px;
+    padding-right: 3px;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
     & > span.search-result {
-      height: 20px;
-      margin-right: 5px;
-      line-height: 17px;
+      margin-right: var(--space-1);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
     & > span:not(.search-result) {
-        cursor: pointer;
-        width: 20px;
-        height: 20px;
-        margin-left: 2px;
-        margin-right: 2px;
-        &:hover {
-          color: var(--sideBarIconColor);
-        }
-        & > svg {
-          fill: var(--sideBarIconColor);
-          &:hover {
-            fill: var(--highlightThemeColor);
-          }
-        }
-        &.active svg {
-            fill: var(--highlightThemeColor);
-        }
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      width: 22px;
+      height: 22px;
+      border-radius: var(--radius-xs);
+      color: var(--text-muted);
+      transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+      &:hover {
+        color: var(--text-primary);
+        background: var(--surface-hover);
       }
+      &.active {
+        color: var(--themeColor);
+        background: var(--surface-active);
+      }
+    }
   }
 
   .input-wrapper .error-msg {
     position: absolute;
-    top: 27px;
+    top: 26px;
     width: calc(100% + 2px);
-    height: 28px;
     left: -1px;
-    padding: 0 8px;
+    padding: 4px var(--space-2);
     box-sizing: border-box;
-    border-bottom-left-radius: 3px;
-    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
     background: var(--notificationErrorBg);
-    line-height: 28px;
     color: #ffffff;
-    font-size: 14px;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-ui);
     z-index: 1;
   }
 
   .input-wrapper input {
     flex: 1;
-    padding: 0 8px;
-    height: 26px;
+    min-width: 0;
+    height: 100%;
+    padding: 0 var(--space-2);
     outline: none;
     border: none;
     box-sizing: border-box;
-    font-size: 14px;
-    color: var(--editorColor);
-    padding: 0 8px;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
     background: transparent;
+    &::placeholder {
+      color: var(--text-muted);
+    }
   }
 </style>

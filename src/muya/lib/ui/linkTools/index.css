@@ -1,6 +1,6 @@
 .ag-link-tools {
-  height: 34px;
-  width: 100px;
+  height: 36px;
+  width: 80px;
   position: relative;
 }
 
@@ -16,17 +16,18 @@
   height: 100%;
   align-items: center;
   justify-content: space-between;
+  padding: 0 4px;
+  box-sizing: border-box;
 }
 
 .ag-link-tools li.item {
-  margin: 0 11px;
   position: relative;
   list-style: none;
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm, 6px);
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
   cursor: pointer;
 }
@@ -39,15 +40,15 @@
   content: '';
   width: 1px;
   position: absolute;
-  height: 18px;
+  height: 16px;
   background: var(--editorColor10);
-  left: -12px;
+  left: -8px;
   top: 6px;
 }
 
 .ag-link-tools li.item .icon-wrapper {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .ag-link-tools li.item .icon-wrapper i.icon {
@@ -57,14 +58,17 @@
   width: 100%;
   overflow: hidden;
   color: var(--iconColor);
-  transition: all .25s ease-in-out;
+}
+
+.ag-link-tools li.item:hover .icon-wrapper i.icon {
+  color: var(--editorColor);
 }
 
 .ag-link-tools li.item .icon-wrapper i.icon > i[class^=icon-] {
   display: inline-block;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(18px 0 currentColor); 
+  filter: drop-shadow(16px 0 currentColor);
   position: relative;
-  left: -18px;
+  left: -16px;
 }

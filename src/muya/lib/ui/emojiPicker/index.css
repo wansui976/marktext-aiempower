@@ -1,21 +1,22 @@
 .ag-emoji-picker {
   width: 348px;
   max-height: 350px;
+  padding-bottom: 8px;
   overflow-y: auto;
 }
 
 .ag-emoji-picker .title {
-  color: var(--editorColor80);
-  line-height: 1.15;
-  font-size: 12px;
-  padding: 10px 12px 12px 12px;
+  color: var(--editorColor50);
+  line-height: 1;
+  font-size: 11px;
+  padding: 12px 14px 8px;
   display: flex;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: .06em;
   font-weight: 600;
   position: sticky;
   top: 0;
-  background: var(--itemBgColor);
+  background: var(--floatBgColor);
   z-index: 1001;
 }
 
@@ -35,7 +36,7 @@
   justify-content: space-around;
   align-items: center;
   box-sizing: border-box;
-  border-radius: 50%;
+  border-radius: var(--radius-sm, 6px);
 }
 
 .ag-emoji-picker:hover .active {

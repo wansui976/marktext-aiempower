@@ -8,8 +8,13 @@
       custom-class="ag-dialog-table"
       width="500px"
     >
-      <div slot="title" class="search-wrapper">
+      <div
+        slot="title"
+        class="search-wrapper"
+        :class="{ 'has-results': availableCommands.length, 'busy': searcherBusy }"
+      >
         <div class="input-wrapper">
+          <lucide-icon name="search" :size="18"></lucide-icon>
           <input
             ref="search"
             type="text"
@@ -282,38 +287,49 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 500px;
+    width: 560px;
     height: auto;
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    padding: 8px;
     margin: 0 auto;
     margin-top: 8px;
     box-sizing: border-box;
-    color: var(--editorColor);
-    background: var(--floatBgColor);
-    border: 1px solid var(--floatBorderColor);
-    border-radius: 4px;
-    box-shadow: 0 3px 8px 3px var(--floatShadow);
+    font-family: var(--font-ui);
+    color: var(--text-primary);
+    background: var(--surface-overlay);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-3);
+    overflow: hidden;
     z-index: 10000;
   }
   .input-wrapper {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 100%;
-    border: 1px solid var(--inputBgColor);
-    background: var(--inputBgColor);
-    border-radius: 3px;
+    height: 48px;
+    padding: 0 var(--space-4);
+    box-sizing: border-box;
+    color: var(--text-muted);
+  }
+  .search-wrapper.has-results .input-wrapper,
+  .search-wrapper.busy .input-wrapper {
+    border-bottom: 1px solid var(--border-subtle);
   }
   input.search {
-    width: 100%;
-    height: 30px;
-    margin: 0 10px;
-    font-size: 14px;
-    color: var(--editorColor);
+    flex: 1;
+    height: 100%;
+    margin: 0 0 0 var(--space-3);
+    padding: 0;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text-primary);
     background: transparent;
     outline: none;
     border: none;
+    &::placeholder {
+      color: var(--text-muted);
+    }
   }
   .cpt-loading {
     position: relative;
@@ -322,16 +338,16 @@ export default {
     width: 100%;
     height: 50px;
     padding: 0;
-    margin: 8px 0 0 0;
+    margin: 0;
     box-sizing: border-box;
   }
   ul.commands {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-height: 300px;
-    padding: 0;
-    margin: 8px 0 0 0;
+    max-height: 340px;
+    padding: 6px;
+    margin: 0;
     box-sizing: border-box;
     list-style: none;
     overflow: hidden;
@@ -341,40 +357,55 @@ export default {
     position: relative;
     display: flex;
     flex-direction: row;
+    flex-shrink: 0;
     justify-content: space-between;
     align-items: center;
     max-width: 100%;
-    height: 35px;
-    padding: 0 8px;
-    font-size: 14px;
-    line-height: 35px;
+    height: 34px;
+    padding: 0 var(--space-3);
+    font-size: var(--font-size-md);
+    color: var(--editorColor80);
+    border-radius: var(--radius-sm);
     text-overflow: ellipsis;
     cursor: pointer;
   }
   ul.commands li:hover {
-    background: var(--floatHoverColor);
-    opacity: 0.9;
+    background: var(--surface-hover);
   }
   ul.commands li.active {
-    background: var(--floatHoverColor);
+    color: var(--text-primary);
+    background: var(--surface-active);
   }
   ul.commands li span {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
   }
-  ul.commands li span.shortcut {
-    font-size: 12px;
-    line-height: 20px;
-    & > kbd {
-      margin-left: 2px;
-    }
+  ul.commands li > span.shortcut {
+    display: flex;
+    flex-shrink: 0;
+    gap: 3px;
+    margin-left: var(--space-3);
+  }
+  ul.commands li span.shortcut kbd {
+    display: inline-block;
+    min-width: 12px;
+    padding: 0 5px;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-xs);
+    line-height: 18px;
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--surface-hover);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xs);
+    box-shadow: none;
   }
 
   .fade-enter-active, .fade-leave-active {
-    transition: opacity .2s;
+    transition: opacity var(--duration-normal) var(--ease);
   }
-  .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  .fade-enter, .fade-leave-to {
     opacity: 0;
   }
 </style>

@@ -1142,7 +1142,8 @@ span.ag-reference-link {
 }
 
 .ag-front-icon:hover {
-  background: var(--selectionColor);
+  background: var(--editorColor10);
+  opacity: 1;
 }
 
 .ag-front-icon::before {

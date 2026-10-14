@@ -1,8 +1,8 @@
 .ag-table-picker {
   box-sizing: border-box;
   font-size: 12px;
-  width: 153px;
-  padding: 10px;
+  width: 157px;
+  padding: 12px;
 }
 
 .ag-table-picker .checker {
@@ -20,6 +20,7 @@
   margin-right: 1px;
   margin-bottom: 1px;
   border: 1px solid var(--editorColor10);
+  border-radius: 2px;
   cursor: pointer;
 }
 .ag-table-picker-header span {
@@ -42,32 +43,38 @@
 }
 .ag-table-picker .footer {
   padding: 10px 0 0 0;
-  border-top: 1px solid var(--floatBorderColor);
+  border-top: 1px solid var(--editorColor10);
   text-align: center;
   display: flex;
-  justify-content: space-around;
+  align-items: center;
+  justify-content: space-between;
   color: var(--editorColor);
 }
 .ag-table-picker .footer input {
   color: var(--editorColor);
-  background: var(--floatBorderColor);
+  background: var(--inputBgColor);
   outline: none;
-  border-radius: 3px;
+  border-radius: var(--radius-xs, 4px);
   text-align: center;
-  border: none;
+  border: 1px solid var(--editorColor10);
   box-sizing: border-box;
   padding: 0;
-  height: 20px;
-  width: 30px;
-  border: none;
+  height: 22px;
+  width: 32px;
+}
+.ag-table-picker .footer input:focus {
+  border-color: var(--themeColor);
 }
 .ag-table-picker .footer button {
   outline: none;
   cursor: pointer;
-  border-radius: 3px;
-  line-height: 20px;
+  border-radius: var(--radius-xs, 4px);
+  line-height: 22px;
   border: none;
-  height: 20px;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 500;
   background: var(--themeColor);
   color: #fff;
 }

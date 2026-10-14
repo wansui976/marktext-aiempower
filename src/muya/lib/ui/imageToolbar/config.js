@@ -1,9 +1,11 @@
-import editIcon from '../../assets/pngicon/imageEdit/2.png'
-import inlineIcon from '../../assets/pngicon/inline_image/2.png'
-import leftIcon from '../../assets/pngicon/algin_left/2.png'
-import middleIcon from '../../assets/pngicon/algin_center/2.png'
-import rightIcon from '../../assets/pngicon/algin_right/2.png'
-import deleteIcon from '../../assets/pngicon/image_delete/2.png'
+import {
+  pencil as editIcon,
+  wrapText as inlineIcon,
+  alignLeft as leftIcon,
+  alignCenter as middleIcon,
+  alignRight as rightIcon,
+  trash2 as deleteIcon
+} from '../../assets/icons/lucide'
 
 const icons = [
   {
