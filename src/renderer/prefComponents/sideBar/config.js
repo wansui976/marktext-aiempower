@@ -1,47 +1,40 @@
-import GeneralIcon from '@/assets/icons/pref_general.svg'
-import EditorIcon from '@/assets/icons/pref_editor.svg'
-import MarkdownIcon from '@/assets/icons/pref_markdown.svg'
-import ThemeIcon from '@/assets/icons/pref_theme.svg'
-import ImageIcon from '@/assets/icons/pref_image.svg'
-import SpellIcon from '@/assets/icons/pref_spellcheck.svg'
-import KeyBindingIcon from '@/assets/icons/pref_key_binding.svg'
-
+// Category icons are Lucide icon names (see components/lucideIcon).
 import preferences from '../../../main/preferences/schema'
 
 export const category = [{
   name: 'General',
   label: 'general',
-  icon: GeneralIcon,
+  icon: 'settings',
   path: '/preference/general'
 }, {
   name: 'Editor',
   label: 'editor',
-  icon: EditorIcon,
+  icon: 'square-pen',
   path: '/preference/editor'
 }, {
   name: 'Markdown',
   label: 'markdown',
-  icon: MarkdownIcon,
+  icon: 'file-text',
   path: '/preference/markdown'
 }, {
   name: 'Spelling',
   label: 'spelling',
-  icon: SpellIcon,
+  icon: 'spell-check',
   path: '/preference/spelling'
 }, {
   name: 'Theme',
   label: 'theme',
-  icon: ThemeIcon,
+  icon: 'palette',
   path: '/preference/theme'
 }, {
   name: 'Image',
   label: 'image',
-  icon: ImageIcon,
+  icon: 'image',
   path: '/preference/image'
 }, {
   name: 'Key Bindings',
   label: 'keybindings',
-  icon: KeyBindingIcon,
+  icon: 'keyboard',
   path: '/preference/keybindings'
 }]
 

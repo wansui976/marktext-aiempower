@@ -1,7 +1,7 @@
 <template>
   <section class="pref-switch-item" :class="{'ag-underdevelop': disable}">
     <div class="description">
-      <span>{{description}}:</span>
+      <span>{{description}}</span>
       <i class="el-icon-info" v-if="more"
         @click="handleMoreClick"
       ></i>
@@ -68,49 +68,32 @@ export default {
 
 <style>
   .pref-switch-item {
-    font-size: 14px;
+    font-size: var(--font-size-md);
     user-select: none;
-    margin: 20px 0;
-    color: var(--editorColor);
+    margin: var(--space-4) 0;
+    color: var(--editorColor80);
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    & .description {
-      & i {
-        cursor: pointer;
-        opacity: .7;
-        color: var(--iconColor);
-      }
-      & i:hover {
-        color: var(--themeColor);
-      }
-    }
-
+    gap: var(--space-4);
     & .notes {
-      font-style: italic;
-      font-size: 12px;
+      display: block;
     }
-  }
-
-  span.el-switch__core::after {
-    top: 3px;
-    left: 7px;
-    width: 10px;
-    height: 10px;
-  }
-
-  .el-switch .el-switch__core {
-    border: 2px solid var(--iconColor);
-    background: transparent;
-    box-sizing: border-box;
-  }
-
-  span.el-switch__label {
-    color: var(--editorColor50);
-  }
-
-  .el-switch:not(.is-checked) .el-switch__core::after {
-    background: var(--iconColor);
+    & .description i,
+    & i.el-icon-info {
+      margin-left: var(--space-1);
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+    & .description i:hover,
+    & i.el-icon-info:hover {
+      color: var(--themeColor);
+    }
+    & .notes {
+      margin-top: 6px;
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-ui);
+      color: var(--text-muted);
+    }
   }
 </style>

@@ -38,7 +38,7 @@
     </div>
 
     <div v-if="!isOsx && spellcheckerEnabled">
-      <h6 class="title">Custom dictionary:</h6>
+      <h6 class="title">Custom dictionary</h6>
       <div class="description">Edit words in custom dictionary.</div>
       <el-table
         :data="wordsInCustomDictionary"

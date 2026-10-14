@@ -143,10 +143,15 @@ const capture = async (outDir, theme) => {
       await prefPage.waitForSelector('.pref-container, .pref-setting, body', { timeout: 10000 })
       await sleep(1500)
       await prefPage.screenshot({ path: path.join(outDir, `${theme}--preferences.png`), timeout: 10000 })
+      for (const category of ['general', 'editor', 'markdown', 'spelling', 'image', 'keybindings']) {
+        await prefPage.evaluate(category => { location.hash = `#/preference/${category}` }, category)
+        await sleep(600)
+        await prefPage.screenshot({ path: path.join(outDir, `${theme}--preferences-${category}.png`), timeout: 10000 })
+      }
     }
     await Promise.race([
       capturePreferences(),
-      sleep(30000).then(() => { throw new Error('preferences capture timed out') })
+      sleep(45000).then(() => { throw new Error('preferences capture timed out') })
     ]).catch(err => console.warn(`\n  [warn] ${err.message}`))
   } finally {
     const proc = app.process()

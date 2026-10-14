@@ -518,6 +518,19 @@ div.el-tab-pane {
   font-weight: 600;
   color: var(--text-muted);
 }
+/* Muya's global table styles add margins and draw cell borders via ::before;
+   neither applies to UI tables. */
+.el-table table {
+  margin: 0;
+  border: none;
+}
+.el-table tr th::before,
+.el-table tr td::before {
+  display: none;
+}
+.el-table .el-table__cell {
+  padding: 6px 0;
+}
 .el-table--enable-row-hover .el-table__body tr:hover > td,
 .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
   background: var(--surface-hover);

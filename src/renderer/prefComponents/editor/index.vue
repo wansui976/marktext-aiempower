@@ -3,7 +3,7 @@
     <h4>Editor</h4>
     <compound>
       <template #head>
-        <h6 class="title">Text editor settings:</h6>
+        <h6 class="title">Text editor settings</h6>
       </template>
       <template #children>
         <range
@@ -40,7 +40,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Code block settings:</h6>
+        <h6 class="title">Code block settings</h6>
       </template>
       <template #children>
         <range
@@ -75,7 +75,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Writing behavior:</h6>
+        <h6 class="title">Writing behavior</h6>
       </template>
       <template #children>
         <bool
@@ -98,7 +98,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">File representation:</h6>
+        <h6 class="title">File representation</h6>
       </template>
       <template #children>
         <cur-select
@@ -135,7 +135,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Misc:</h6>
+        <h6 class="title">Misc</h6>
       </template>
       <template #children>
         <cur-select

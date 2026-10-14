@@ -3,7 +3,7 @@
     <h4>General</h4>
     <compound>
       <template #head>
-        <h6 class="title">Auto Save:</h6>
+        <h6 class="title">Auto Save</h6>
       </template>
       <template #children>
         <bool
@@ -25,7 +25,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Window:</h6>
+        <h6 class="title">Window</h6>
       </template>
       <template #children>
         <cur-select
@@ -62,7 +62,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Sidebar:</h6>
+        <h6 class="title">Sidebar</h6>
       </template>
       <template #children>
         <bool
@@ -84,7 +84,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Action on startup:</h6>
+        <h6 class="title">Action on startup</h6>
       </template>
       <template #children>
         <section class="startup-action-ctrl">
@@ -103,7 +103,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Misc:</h6>
+        <h6 class="title">Misc</h6>
       </template>
       <template #children>
         <cur-select
