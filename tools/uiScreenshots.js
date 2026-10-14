@@ -13,6 +13,8 @@ const path = require('path')
 const { _electron } = require('playwright')
 
 const ROOT = path.resolve(__dirname, '..')
+// Override with MT_DIST to use a separate production build (e.g. while `yarn dev` owns dist/).
+const DIST = process.env.MT_DIST || path.join(ROOT, 'dist/electron')
 const SAMPLE_DIR = path.join(ROOT, 'test/e2e/data/ui-sample')
 const SAMPLE_FILE = path.join(SAMPLE_DIR, 'README.md')
 const DEFAULT_THEMES = ['graphite-red', 'graphite-black', 'nord', 'catppuccin-latte', 'tokyo-night', 'rose-pine']
@@ -45,7 +47,7 @@ const capture = async (outDir, theme) => {
     // The real Electron binary (not the node_modules/.bin wrapper), so that
     // killing app.process() actually terminates Electron.
     executablePath: require('electron'),
-    args: [path.join(ROOT, 'dist/electron/main.js'), '--user-data-dir', userDataDir, SAMPLE_DIR, SAMPLE_FILE],
+    args: [path.join(DIST, 'main.js'), '--user-data-dir', userDataDir, SAMPLE_DIR, SAMPLE_FILE],
     cwd: ROOT,
     timeout: 30000
   })

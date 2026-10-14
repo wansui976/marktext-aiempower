@@ -1,79 +1,93 @@
 <template>
   <div class="settings-panel">
-    <label>{{ $t('ai.settings.provider') }}</label>
-    <select v-model="localProvider">
-      <option value="anthropic">Anthropic</option>
-      <option value="openai">{{ $t('ai.settings.openAICompatible') }}</option>
-    </select>
-    <div class="settings-hint">
-      {{ $t('ai.settings.providerHint') }}
-    </div>
+    <div class="settings-scroll">
+      <div class="settings-group-title">
+        <lucide-icon name="plug" :size="13"></lucide-icon>
+        {{ $t('ai.settings.connection') }}
+      </div>
+      <div class="settings-card">
+        <label>{{ $t('ai.settings.provider') }}</label>
+        <select v-model="localProvider">
+          <option value="anthropic">Anthropic</option>
+          <option value="openai">{{ $t('ai.settings.openAICompatible') }}</option>
+        </select>
+        <div class="settings-hint">
+          {{ $t('ai.settings.providerHint') }}
+        </div>
 
-    <label>{{ $t('ai.settings.apiKey', { provider: providerLabel }) }}</label>
-    <input
-      type="password"
-      v-model="localApiKey"
-      spellcheck="false"
-      autocomplete="off"
-      :placeholder="apiKeyPlaceholder"
-    />
-    <div class="settings-hint">
-      <span v-if="currentProvider === 'anthropic'">{{ $t('ai.settings.apiKeyHintAnthropic', { env: apiKeyEnvName }) }}</span>
-      <span v-else>{{ $t('ai.settings.apiKeyHintOpenAI', { env: apiKeyEnvName }) }}</span>
-    </div>
+        <label>{{ $t('ai.settings.apiKey', { provider: providerLabel }) }}</label>
+        <input
+          type="password"
+          v-model="localApiKey"
+          spellcheck="false"
+          autocomplete="off"
+          :placeholder="apiKeyPlaceholder"
+        />
+        <div class="settings-hint">
+          <span v-if="currentProvider === 'anthropic'">{{ $t('ai.settings.apiKeyHintAnthropic', { env: apiKeyEnvName }) }}</span>
+          <span v-else>{{ $t('ai.settings.apiKeyHintOpenAI', { env: apiKeyEnvName }) }}</span>
+        </div>
 
-    <label>{{ $t('ai.settings.baseUrl') }}</label>
-    <input
-      type="text"
-      v-model="localBaseUrl"
-      spellcheck="false"
-      autocomplete="off"
-      :placeholder="baseUrlPlaceholder"
-    />
-    <div class="settings-hint">
-      {{ $t('ai.settings.baseUrlHint', { env: baseUrlEnvName, value: resolvedBaseUrl }) }}
-    </div>
+        <label>{{ $t('ai.settings.baseUrl') }}</label>
+        <input
+          type="text"
+          v-model="localBaseUrl"
+          spellcheck="false"
+          autocomplete="off"
+          :placeholder="baseUrlPlaceholder"
+        />
+        <div class="settings-hint">
+          {{ $t('ai.settings.baseUrlHint', { env: baseUrlEnvName, value: resolvedBaseUrl }) }}
+        </div>
 
-    <label>{{ $t('ai.settings.model') }}</label>
-    <input
-      type="text"
-      v-model="localModel"
-      spellcheck="false"
-      autocomplete="off"
-      :placeholder="modelPlaceholder"
-    />
-    <div class="settings-hint">
-      {{ $t('ai.settings.modelHint', { env: modelEnvName, value: resolvedModel }) }}
-    </div>
+        <label>{{ $t('ai.settings.model') }}</label>
+        <input
+          type="text"
+          v-model="localModel"
+          spellcheck="false"
+          autocomplete="off"
+          :placeholder="modelPlaceholder"
+        />
+        <div class="settings-hint">
+          {{ $t('ai.settings.modelHint', { env: modelEnvName, value: resolvedModel }) }}
+        </div>
+      </div>
 
-    <label>{{ $t('ai.settings.contextLimit') }}</label>
-    <input
-      type="number"
-      v-model.number="localContextLimit"
-      min="4096"
-      max="2000000"
-      step="1000"
-      :placeholder="128000"
-    />
-    <div class="settings-hint">
-      {{ $t('ai.settings.contextLimitHint') }}
-    </div>
+      <div class="settings-group-title">
+        <lucide-icon name="notebook-pen" :size="13"></lucide-icon>
+        {{ $t('ai.settings.writing') }}
+      </div>
+      <div class="settings-card">
+        <label>{{ $t('ai.settings.contextLimit') }}</label>
+        <input
+          type="number"
+          v-model.number="localContextLimit"
+          min="4096"
+          max="2000000"
+          step="1000"
+          :placeholder="128000"
+        />
+        <div class="settings-hint">
+          {{ $t('ai.settings.contextLimitHint') }}
+        </div>
 
-    <label>{{ $t('ai.settings.writingStyle') }}</label>
-    <textarea
-      class="settings-persona"
-      v-model="localPersona"
-      spellcheck="false"
-      rows="4"
-      :placeholder="personaPlaceholder"
-    ></textarea>
-    <div class="settings-hint">
-      {{ $t('ai.settings.personaHint') }}
+        <label>{{ $t('ai.settings.writingStyle') }}</label>
+        <textarea
+          class="settings-persona"
+          v-model="localPersona"
+          spellcheck="false"
+          rows="4"
+          :placeholder="personaPlaceholder"
+        ></textarea>
+        <div class="settings-hint">
+          {{ $t('ai.settings.personaHint') }}
+        </div>
+      </div>
     </div>
 
     <div class="settings-actions">
-      <button type="button" @click="save">{{ $t('common.save') }}</button>
       <button v-if="hasStoredValues" type="button" class="ghost" @click="$emit('clear')">{{ $t('common.clear') }}</button>
+      <button type="button" class="primary" @click="save">{{ $t('common.save') }}</button>
     </div>
   </div>
 </template>

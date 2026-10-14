@@ -2,10 +2,13 @@
   <div class="sessions-panel">
     <div class="sessions-header">
       <div class="sessions-heading">
-        <span>{{ $t('common.sessions') }}</span>
+        <span class="sessions-title">{{ $t('common.sessions') }}</span>
         <span class="sessions-subtitle">{{ scopeLabel }}</span>
       </div>
-      <button type="button" :disabled="disabled" @click="$emit('new-chat')">{{ $t('common.new') }}</button>
+      <button type="button" class="sessions-new" :disabled="disabled" @click="$emit('new-chat')">
+        <lucide-icon name="plus" :size="13"></lucide-icon>
+        {{ $t('common.new') }}
+      </button>
     </div>
     <div v-if="!sessions.length" class="empty-sessions">
       {{ $t('ai.sessions.empty') }}
@@ -22,9 +25,14 @@
         :disabled="disabled"
         @click="$emit('select', session.id)"
       >
-        <span class="session-title">{{ session.title || $t('ai.sessions.newChat') }}</span>
-        <span v-if="session.documentLabel" class="session-doc">{{ session.documentLabel }}</span>
-        <span class="session-meta">{{ formatTime(session.updatedAt) }}</span>
+        <lucide-icon name="message-square-text" :size="14" class="session-icon"></lucide-icon>
+        <span class="session-copy">
+          <span class="session-title">{{ session.title || $t('ai.sessions.newChat') }}</span>
+          <span class="session-meta">
+            <span v-if="session.documentLabel" class="session-doc">{{ session.documentLabel }}</span>
+            <span>{{ formatTime(session.updatedAt) }}</span>
+          </span>
+        </span>
       </button>
       <button
         type="button"
@@ -33,7 +41,7 @@
         :disabled="disabled"
         @click.stop="$emit('delete', session.id)"
       >
-        &times;
+        <lucide-icon name="trash-2" :size="13"></lucide-icon>
       </button>
     </div>
   </div>

@@ -33,6 +33,7 @@
 | 6 | AI 模块对齐：`claudeChat.vue`、`chat/*`、`inlineAiPrompt.vue` | 1.5d | ✅ |
 | 7 | 主题回归：38 个主题截图检查；精修 6 个代表主题（`graphite-red` 默认浅色、`graphite-black` 默认深色、`nord`、`catppuccin-latte`、`tokyo-night`、`rose-pine`） | 1.5d | ✅ |
 | 8 | （可选）macOS vibrancy 毛玻璃，设置项开关，默认关闭 | — | ✅ |
+| 9 | AI 侧栏前端升级：无气泡文档流、工具活动行、空状态建议卡片、精简输入框、编辑预览/会话/设置重排 | — | ✅ |
 
 每个阶段独立提交，可在任意阶段停下。
 
@@ -76,6 +77,7 @@ UI_SHOTS_QUICK=1 yarn run ui:screenshots ui-screenshots/all all  # 全部主题�
 - **代表主题精修**：`graphite-red`（默认浅色）侧边栏改为浅灰 `#f7f7f8`，标签栏与编辑区同为白色；`catppuccin-latte` 按官方层级使用 mantle/base/crust。四个深色代表主题原本层级正确，未改。
 - **截图脚本**：直接启动真实 Electron 二进制（`require('electron')`），结束时一律 `SIGKILL`（kill -9），避免关闭时卡在未保存提示或遗留进程。
 - **macOS 毛玻璃（阶段 8）**：新增偏好 `sideBarVibrancy`（默认关闭，仅 macOS 显示，位于「通用 → 窗口」）。开启后编辑窗口使用 `vibrancy: 'sidebar'` 并设透明背景，可实时切换无需重启；侧边栏背景改为半透明色 `--sideBarVibrancyTint`（浅色 35% 白、深色 25% 黑），编辑区、标签栏、标题栏保持不透明。毛玻璃材质的明暗跟随主题（主进程已按主题设置 `nativeTheme.themeSource`）。设置窗口不受影响。原生材质无法用 Playwright 截图验证，需人工目视确认。
+- **AI 侧栏升级（阶段 9）**：消息区改为无气泡文档流（用户消息浅底块，AI 回复正文直排）；连续工具调用合并为一行"工具活动"，补齐 5 个工具的中英文名称并配 Lucide 图标；空状态显示 4 个建议卡片，6 个快捷提示收进输入框的 `/` 菜单；发送/停止改为圆形图标按钮，Token 用量改为小圆环；模式图标、上下文标签、提及菜单全部换成 Lucide；编辑预览改为标题行 + 实心「接受」按钮；会话列表改为普通行、悬停显示删除；设置分「连接」「写作」两组卡片，底部固定保存按钮，打开时占满整个面板。`claudeChat.vue` 样式原本是全局且使用 `.title`、`.message`、`.error` 等通用类名，会泄漏到应用其他部分，现已全部收拢到 `.side-bar-claude-chat` 命名空间下。截图脚本 `tools/aiChatScreenshots.js` 用模拟数据渲染 AI 侧栏各状态。`yarn dev` 运行时会把 `dist/electron/main.js` 换成开发版，截图脚本可用 `MT_DIST` 指向单独的生产构建副本。
 - **测试注意**：构建用 `yarn run pack`，不要用 `yarn pack`（Yarn 内置的打包 tarball 命令会抢先执行，构建产物不会更新）。
 - **测试注意**：`yarn unit` 的 karma 构建会覆盖 `dist/electron/index.html`；单独跑 e2e 或截图前需重新 `yarn run pack:renderer`。
 
