@@ -63,6 +63,9 @@
   --tabBarBorderColor: var(--border-subtle);
   --tabBarHeight: 36px;
 
+  /* Tint over the macOS vibrancy material when the sidebar is translucent */
+  --sideBarVibrancyTint: rgba(255, 255, 255, .35);
+
   /* Controls */
   --control-height: 30px;
   --control-height-sm: 26px;
@@ -70,6 +73,7 @@
 }
 
 body.dark {
+  --sideBarVibrancyTint: rgba(0, 0, 0, .25);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, .3);
   --shadow-2: 0 0 0 1px var(--border-subtle), 0 4px 12px rgba(0, 0, 0, .3);
   --shadow-3: 0 0 0 1px var(--border-subtle), 0 12px 32px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .25);

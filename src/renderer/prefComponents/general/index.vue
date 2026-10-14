@@ -42,6 +42,13 @@
           :onChange="value => onSelectChange('hideScrollbar', value)"
         ></bool>
         <bool
+          v-if="isOsx"
+          description="Translucent sidebar"
+          notes="Uses the macOS vibrancy material behind the sidebar."
+          :bool="sideBarVibrancy"
+          :onChange="value => onSelectChange('sideBarVibrancy', value)"
+        ></bool>
+        <bool
           description="Open files in new window"
           :bool="openFilesInNewWindow"
           :onChange="value => onSelectChange('openFilesInNewWindow', value)"
@@ -159,6 +166,7 @@ export default {
       openFolderInNewWindow: state => state.preferences.openFolderInNewWindow,
       zoom: state => state.preferences.zoom,
       hideScrollbar: state => state.preferences.hideScrollbar,
+      sideBarVibrancy: state => state.preferences.sideBarVibrancy,
       wordWrapInToc: state => state.preferences.wordWrapInToc,
       fileSortBy: state => state.preferences.fileSortBy,
       language: state => state.preferences.language

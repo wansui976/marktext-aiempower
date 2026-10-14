@@ -1,6 +1,6 @@
 # UI 现代化改造计划
 
-> 分支：`feat/ui-modernize`　·　状态：阶段 0～7 已完成（阶段 8 可选）
+> 分支：`feat/ui-modernize`　·　状态：阶段 0～8 已完成
 
 ## 设计方向
 
@@ -32,7 +32,7 @@
 | 5 | 设置窗口 | 1.5d | ✅ |
 | 6 | AI 模块对齐：`claudeChat.vue`、`chat/*`、`inlineAiPrompt.vue` | 1.5d | ✅ |
 | 7 | 主题回归：38 个主题截图检查；精修 6 个代表主题（`graphite-red` 默认浅色、`graphite-black` 默认深色、`nord`、`catppuccin-latte`、`tokyo-night`、`rose-pine`） | 1.5d | ✅ |
-| 8 | （可选）macOS vibrancy 毛玻璃，设置项开关，默认关闭 | — | |
+| 8 | （可选）macOS vibrancy 毛玻璃，设置项开关，默认关闭 | — | ✅ |
 
 每个阶段独立提交，可在任意阶段停下。
 
@@ -75,6 +75,7 @@ UI_SHOTS_QUICK=1 yarn run ui:screenshots ui-screenshots/all all  # 全部主题�
 - **主题回归**：38 个主题全部截图检查，无破损。21 个深色主题里的滚动条规则改为变量 `--scrollbarThumbColor` / `--scrollbarThumbHoverColor`（保留各主题配色，统一细圆角样式）。
 - **代表主题精修**：`graphite-red`（默认浅色）侧边栏改为浅灰 `#f7f7f8`，标签栏与编辑区同为白色；`catppuccin-latte` 按官方层级使用 mantle/base/crust。四个深色代表主题原本层级正确，未改。
 - **截图脚本**：直接启动真实 Electron 二进制（`require('electron')`），结束时一律 `SIGKILL`（kill -9），避免关闭时卡在未保存提示或遗留进程。
+- **macOS 毛玻璃（阶段 8）**：新增偏好 `sideBarVibrancy`（默认关闭，仅 macOS 显示，位于「通用 → 窗口」）。开启后编辑窗口使用 `vibrancy: 'sidebar'` 并设透明背景，可实时切换无需重启；侧边栏背景改为半透明色 `--sideBarVibrancyTint`（浅色 35% 白、深色 25% 黑），编辑区、标签栏、标题栏保持不透明。毛玻璃材质的明暗跟随主题（主进程已按主题设置 `nativeTheme.themeSource`）。设置窗口不受影响。原生材质无法用 Playwright 截图验证，需人工目视确认。
 - **测试注意**：构建用 `yarn run pack`，不要用 `yarn pack`（Yarn 内置的打包 tarball 命令会抢先执行，构建产物不会更新）。
 - **测试注意**：`yarn unit` 的 karma 构建会覆盖 `dist/electron/index.html`；单独跑 e2e 或截图前需重新 `yarn run pack:renderer`。
 

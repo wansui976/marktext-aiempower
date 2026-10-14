@@ -2,6 +2,7 @@
   <div
     v-show="showSideBar"
     class="side-bar"
+    :class="{ 'vibrancy': vibrancy }"
     ref="sideBar"
     :style="[ !rightColumn ? { 'min-width': '45px' } : {}, { 'width': `${finalSideBarWidth}px` } ]"
   >
@@ -62,6 +63,7 @@ import SideBarSearch from './search.vue'
 import Toc from './toc.vue'
 import ClaudeChat from './claudeChat.vue'
 import { mapState } from 'vuex'
+import { isOsx } from '@/util'
 
 export default {
   data () {
@@ -84,8 +86,13 @@ export default {
       showSideBar: state => state.layout.showSideBar,
       projectTree: state => state.project.projectTree,
       sideBarWidth: state => state.layout.sideBarWidth,
-      tabs: state => state.editor.tabs
+      tabs: state => state.editor.tabs,
+      sideBarVibrancy: state => state.preferences.sideBarVibrancy
     }),
+    vibrancy () {
+      // The window only gets the native vibrancy material on macOS.
+      return isOsx && this.sideBarVibrancy
+    },
     finalSideBarWidth () {
       const { showSideBar, rightColumn, sideBarViewWidth } = this
       if (!showSideBar) return 0
@@ -161,6 +168,14 @@ export default {
     user-select: none;
     background: var(--surface-sidebar);
     border-right: 1px solid var(--border-subtle);
+  }
+
+  /* Translucent sidebar over the macOS vibrancy material (see sideBarVibrancy). */
+  .side-bar.vibrancy {
+    background: var(--sideBarVibrancyTint);
+  }
+  .side-bar.vibrancy >>> .side-bar-claude-chat {
+    --claude-bg: transparent;
   }
 
   .left-column {

@@ -441,6 +441,14 @@ class WindowManager extends EventEmitter {
     })
 
     ipcMain.on('broadcast-preferences-changed', prefs => {
+      if (typeof prefs.sideBarVibrancy !== 'undefined') {
+        for (const window of this._windows.values()) {
+          if (window.type === WindowType.EDITOR) {
+            window.setSideBarVibrancy(prefs.sideBarVibrancy)
+          }
+        }
+      }
+
       // We can not dynamic change the title bar style, so do not need to send it to renderer.
       if (typeof prefs.titleBarStyle !== 'undefined') {
         delete prefs.titleBarStyle

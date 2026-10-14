@@ -11,6 +11,11 @@ import { showEditorContextMenu } from '../contextMenu/editor'
 import { loadMarkdownFile } from '../filesystem/markdown'
 import { switchLanguage } from '../spellchecker'
 
+// macOS vibrancy material shown through the translucent sidebar. The window
+// background must be transparent for the material to be visible.
+const VIBRANCY_MATERIAL = 'sidebar'
+const TRANSPARENT_BACKGROUND = '#00000000'
+
 class EditorWindow extends BaseWindow {
   /**
    * @param {Accessor} accessor The application accessor for application instances.
@@ -60,7 +65,8 @@ class EditorWindow extends BaseWindow {
       tabBarVisibility,
       sourceCodeModeEnabled,
       spellcheckerEnabled,
-      spellcheckerLanguage
+      spellcheckerLanguage,
+      sideBarVibrancy
     } = preferences.getAll()
 
     // Enable native or custom/frameless window and titlebar
@@ -72,6 +78,10 @@ class EditorWindow extends BaseWindow {
     }
 
     winOptions.backgroundColor = this._getPreferredBackgroundColor(theme)
+    if (isOsx && sideBarVibrancy) {
+      winOptions.vibrancy = VIBRANCY_MATERIAL
+      winOptions.backgroundColor = TRANSPARENT_BACKGROUND
+    }
     if (env.disableSpellcheck) {
       winOptions.webPreferences.spellcheck = false
     }
@@ -394,6 +404,21 @@ class EditorWindow extends BaseWindow {
       buf.push({ id, score })
     }
     return buf
+  }
+
+  /**
+   * Toggles the macOS vibrancy material behind the translucent sidebar.
+   *
+   * @param {boolean} enabled Whether vibrancy is enabled.
+   */
+  setSideBarVibrancy (enabled) {
+    const { browserWindow } = this
+    if (!isOsx || !browserWindow) {
+      return
+    }
+    const { theme } = this._accessor.preferences.getAll()
+    browserWindow.setVibrancy(enabled ? VIBRANCY_MATERIAL : null)
+    browserWindow.setBackgroundColor(enabled ? TRANSPARENT_BACKGROUND : this._getPreferredBackgroundColor(theme))
   }
 
   reload () {

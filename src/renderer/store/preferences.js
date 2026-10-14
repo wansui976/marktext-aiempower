@@ -11,6 +11,7 @@ const state = {
   openFolderInNewWindow: false,
   zoom: 1.0,
   hideScrollbar: false,
+  sideBarVibrancy: false,
   wordWrapInToc: false,
   fileSortBy: 'created',
   startUpAction: 'lastState',
