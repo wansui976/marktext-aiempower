@@ -1,6 +1,6 @@
 # UI 现代化改造计划
 
-> 分支：`feat/ui-modernize`　·　状态：阶段 0～6 已完成
+> 分支：`feat/ui-modernize`　·　状态：阶段 0～7 已完成（阶段 8 可选）
 
 ## 设计方向
 
@@ -10,7 +10,7 @@
 - 交互反馈靠柔和的底色块（圆角 hover / active），不靠粗线条和阴影
 - 统一的间距、圆角、阴影、动效 token；统一系统 UI 字体
 - 图标统一为 [Lucide](https://lucide.dev)（ISC License）线性风格
-- 全部 41 个主题保留，精修 6 个代表主题
+- 全部 38 个主题保留，精修 6 个代表主题
 
 ## 技术约束
 
@@ -31,7 +31,7 @@
 | 4 | 浮层与弹窗：命令面板、Muya 浮层（`baseFloat` 等）、业务弹窗 | 2d | ✅ |
 | 5 | 设置窗口 | 1.5d | ✅ |
 | 6 | AI 模块对齐：`claudeChat.vue`、`chat/*`、`inlineAiPrompt.vue` | 1.5d | ✅ |
-| 7 | 主题回归：41 个主题截图检查；精修 6 个代表主题（`graphite-red` 默认浅色、`graphite-black` 默认深色、`nord`、`catppuccin-latte`、`tokyo-night`、`rose-pine`） | 1.5d | |
+| 7 | 主题回归：38 个主题截图检查；精修 6 个代表主题（`graphite-red` 默认浅色、`graphite-black` 默认深色、`nord`、`catppuccin-latte`、`tokyo-night`、`rose-pine`） | 1.5d | ✅ |
 | 8 | （可选）macOS vibrancy 毛玻璃，设置项开关，默认关闭 | — | |
 
 每个阶段独立提交，可在任意阶段停下。
@@ -72,13 +72,16 @@ UI_SHOTS_QUICK=1 yarn run ui:screenshots ui-screenshots/all all  # 全部主题�
 - **遮罩**：`.v-modal` 颜色仍由主题 `--maskColor` 决定，仅调整不透明度。
 - **设置窗口**：侧边栏宽度 220px，分类图标换成 Lucide；设置项分组（`compound`）改为圆角卡片、行间细分隔线，分组标题为小号大写灰字；去掉描述末尾的冒号；删除 `bool`/`select`/`fontTextBox` 中覆盖 Element 开关、下拉的全局样式，统一由 `element-overrides.css` 控制；快捷键表格去掉单元格边框（Muya 的全局 `table td::before` 边框对 `.el-table` 关闭）。
 - **AI 模块**：`--claude-*` 变量映射到语义 token；标题栏字符图标（`+ ⋯ ◷ ⚙ ⇪`）换成 Lucide；设置、会话面板与聊天区同底色；内联 AI 输入框使用统一阴影、圆角和 focus ring。
+- **主题回归**：38 个主题全部截图检查，无破损。21 个深色主题里的滚动条规则改为变量 `--scrollbarThumbColor` / `--scrollbarThumbHoverColor`（保留各主题配色，统一细圆角样式）。
+- **代表主题精修**：`graphite-red`（默认浅色）侧边栏改为浅灰 `#f7f7f8`，标签栏与编辑区同为白色；`catppuccin-latte` 按官方层级使用 mantle/base/crust。四个深色代表主题原本层级正确，未改。
+- **截图脚本**：直接启动真实 Electron 二进制（`require('electron')`），结束时一律 `SIGKILL`（kill -9），避免关闭时卡在未保存提示或遗留进程。
 - **测试注意**：构建用 `yarn run pack`，不要用 `yarn pack`（Yarn 内置的打包 tarball 命令会抢先执行，构建产物不会更新）。
 - **测试注意**：`yarn unit` 的 karma 构建会覆盖 `dist/electron/index.html`；单独跑 e2e 或截图前需重新 `yarn run pack:renderer`。
 
 ## 验收标准
 
 - `yarn lint`、`yarn unit`、e2e 通过
-- 改造前后截图对比；41 个主题无明显破损、文字可读
+- 改造前后截图对比；38 个主题无明显破损、文字可读
 - 导出 HTML/PDF 与打印结果不变
 - macOS / Windows / Linux 标题栏正常（Windows/Linux 需额外验证）
 

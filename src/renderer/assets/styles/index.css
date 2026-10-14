@@ -102,15 +102,16 @@
   height: 10px;
 }
 
+/* Themes may set --scrollbarThumbColor / --scrollbarThumbHoverColor. */
 ::-webkit-scrollbar-thumb {
-  background: var(--editorColor10);
+  background: var(--scrollbarThumbColor, var(--editorColor10));
   background-clip: padding-box;
   border: 2px solid transparent;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--editorColor30);
+  background: var(--scrollbarThumbHoverColor, var(--editorColor30));
   background-clip: padding-box;
 }
 

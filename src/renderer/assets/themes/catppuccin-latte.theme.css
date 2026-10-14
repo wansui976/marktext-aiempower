@@ -61,7 +61,7 @@
   --sideBarIconColor: var(--iconColor);
   --sideBarTitleColor: rgba(23, 146, 153, 1);
   --sideBarTextColor: rgba(76, 79, 105, 0.4);
-  --sideBarBgColor: rgba(242, 244, 247, 0.9);
+  --sideBarBgColor: #e6e9ef; /* mantle */
   --sideBarItemHoverBgColor: rgba(76, 79, 105, 0.03);
   --itemBgColor: rgba(229, 231, 235, 0.6);
 
@@ -74,8 +74,8 @@
 }
 
 :root {
-  --tabBarBgColor: #e8eaee;
-  --tabBarBorderColor: #d2d4d8;
+  /* Tab bar merges with the editor (base); borders use crust. */
+  --tabBarBorderColor: #dce0e8;
 }
 
 /* ------------------------------------ */

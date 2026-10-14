@@ -7,6 +7,7 @@
 //   representative views per theme (useful for checking all themes).
 
 const fs = require('fs')
+const { execSync } = require('child_process')
 const os = require('os')
 const path = require('path')
 const { _electron } = require('playwright')
@@ -41,7 +42,9 @@ const capture = async (outDir, theme) => {
   writePreferences(userDataDir, theme)
 
   const app = await _electron.launch({
-    executablePath: path.join(ROOT, 'node_modules/.bin/electron'),
+    // The real Electron binary (not the node_modules/.bin wrapper), so that
+    // killing app.process() actually terminates Electron.
+    executablePath: require('electron'),
     args: [path.join(ROOT, 'dist/electron/main.js'), '--user-data-dir', userDataDir, SAMPLE_DIR, SAMPLE_FILE],
     cwd: ROOT,
     timeout: 30000
@@ -165,9 +168,14 @@ const capture = async (outDir, theme) => {
       sleep(45000).then(() => { throw new Error('preferences capture timed out') })
     ]).catch(err => console.warn(`\n  [warn] ${err.message}`))
   } finally {
-    const proc = app.process()
-    await Promise.race([app.close().catch(() => {}), sleep(5000)])
-    if (proc.exitCode === null) proc.kill('SIGKILL')
+    // Always terminate Electron with SIGKILL (kill -9); a graceful close can hang on
+    // the unsaved-changes prompt. Helper processes share the user-data-dir argument.
+    app.process().kill('SIGKILL')
+    try {
+      execSync(`pkill -9 -f ${JSON.stringify(userDataDir)}`)
+    } catch (_) {
+      // No remaining processes.
+    }
     fs.rmSync(userDataDir, { recursive: true, force: true })
   }
 }

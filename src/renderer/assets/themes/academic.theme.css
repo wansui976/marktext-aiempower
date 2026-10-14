@@ -74,21 +74,9 @@
   --editorAreaWidth: 750px;
 }
 
-::-webkit-scrollbar,
-::-webkit-scrollbar-corner {
-  background: var(--editorBgColor);
-}
-::-webkit-scrollbar:vertical {
-  width: 10px;
-}
-::-webkit-scrollbar:vertical:hover {
-  width: 12px;
-}
-::-webkit-scrollbar-thumb {
-  background: #776b67;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #837774;
+:root {
+  --scrollbarThumbColor: #776b67;
+  --scrollbarThumbHoverColor: #837774;
 }
 
 .title-bar .frameless-titlebar-button > div > svg {

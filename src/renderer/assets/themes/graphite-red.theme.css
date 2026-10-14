@@ -61,7 +61,7 @@
   --sideBarIconColor: var(--iconColor);
   --sideBarTitleColor: rgba(51, 51, 51, 1);
   --sideBarTextColor: rgba(102, 102, 102, 0.4);
-  --sideBarBgColor: rgba(255, 255, 255, 0.9);
+  --sideBarBgColor: #f7f7f8;
   --sideBarItemHoverBgColor: rgba(102, 102, 102, 0.03);
   --itemBgColor: rgba(245, 245, 245, 0.6);
 
@@ -74,8 +74,8 @@
 }
 
 :root {
-  --tabBarBgColor: #f7f7f7;
-  --tabBarBorderColor: #e0e0e0;
+  /* Tab bar merges with the editor; the sidebar carries the subtle gray. */
+  --tabBarBorderColor: #ececec;
 }
 
 /* ------------------------------------ */
