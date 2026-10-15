@@ -29,7 +29,7 @@ MarkText-AIEmpower 是 [MarkText](https://github.com/marktext/marktext) 的一�
 
 ### AI 侧边栏
 
-编辑器左侧有一个聊天面板和当前编辑的文档联动。
+编辑器左侧活动栏有一个 AI 面板（快捷键 `Cmd/Ctrl + Alt + J`），和当前编辑的文档联动。
 
 **文档感知**
 
@@ -51,6 +51,8 @@ AI 可以读取你当前打开的 Markdown 文件。你问"帮我看看这篇文
 
 **流式输出**
 
+AI 的回复逐字流式渲染，支持 Markdown、代码高亮和 Mermaid 图表预览。消息区采用无气泡的文档流排版：你的消息是浅底色块，AI 的回复直接排成正文，窄侧栏里读长回复也不拥挤。
+
 **工具调用**
 
 AI 可以使用以下工具：
@@ -70,7 +72,7 @@ AI 可以使用以下工具：
 | `insert_text` | 在指定位置插入内容 |
 | `apply_edit` | 整篇替换文档 |
 
-工具调用有自动循环上限（10 轮）。
+工具调用有自动循环上限（10 轮）。调用过程会以一行"工具活动"显示在回复里（例如"读取大纲 · 读取小节"），正在执行的步骤带加载动画。
 
 **文件和上下文引用**
 
@@ -82,7 +84,7 @@ AI 可以使用以下工具：
 
 **快捷模板**
 
-输入框下方有一排快捷按钮，一键触发常见任务：
+在输入框里输入 `/`，或点击输入框工具栏上的 `/` 按钮，可以调出快捷模板；新对话的空白页也会把常用模板显示成建议卡片，点一下就能开始：
 
 - `/polish` — 润色当前文档
 - `/continue` — 续写
@@ -97,7 +99,7 @@ AI 可以使用以下工具：
 - 会话持久化到 IndexedDB
 - 支持多会话，可以新建、切换、删除
 - 长对话可以一键压缩（compaction），减少 token 消耗的同时保留关键信息
-- 实时显示 token 使用量和进度条
+- 输入框工具栏用一个小圆环实时显示 token 使用量，悬停可看具体数字
 
 **其他细节**
 
@@ -106,6 +108,7 @@ AI 可以使用以下工具：
 - AI 修改文档后会自动同步到编辑器
 - 支持导出整段聊天为 Markdown 文件
 - 写作风格设置（Persona）
+- 设置面板分为「连接」和「写作」两组，保存按钮固定在底部
 
 ---
 
@@ -131,9 +134,22 @@ AI 可以使用以下工具：
 
 ---
 
+### 界面
+
+整个界面按"内容优先、界面元素尽量淡化"的方向做了现代化改造：
+
+- **统一的设计规范**：间距、圆角、阴影、动效和系统 UI 字体统一管理，所有主题自动适配
+- **Lucide 图标**：标题栏、侧边栏、标签页、编辑器浮层、设置窗口、AI 面板的图标统一换成 [Lucide](https://lucide.dev) 线性图标
+- **更安静的主框架**：圆角的悬停和选中状态、扁平标签页、细滚动条、卡片式通知
+- **编辑器浮层**：格式工具栏、块菜单、快速插入、查找替换、命令面板都改成圆角卡片
+- **设置窗口**：设置项按组放进卡片，快捷键表格去掉了多余边框
+- **半透明侧边栏（macOS）**：在「偏好设置 → 通用 → 窗口」里打开「Translucent sidebar」，侧边栏会透出系统毛玻璃效果，默认关闭
+
 ### 主题
 
 38 套主题，17 浅色 + 21 深色。主题选择改为卡片式预览，支持搜索和按 Light/Dark 标签筛选。
+
+全部 38 套主题都已适配新界面并逐一截图检查过。默认浅色主题 Graphite Red 和 Catppuccin Latte 针对新界面调整了配色层级（侧边栏浅灰、标签栏与编辑区同色）。
 
 <details>
 <summary>完整主题列表</summary>
@@ -198,6 +214,12 @@ yarn dev
 
 `yarn dev` 会启动 Electron 开发模式，修改代码后 renderer 侧会热更新。
 
+> 如果本机的 Python 是 3.12 或更高版本，`yarn install` 重新编译原生模块（如 `keytar`、`ced`）时可能报 `No module named 'distutils'`。可以准备一个装了 `setuptools` 的 Python 虚拟环境和 `node-gyp@10`，再执行：
+>
+> ```bash
+> PYTHON=<venv>/bin/python npm_config_node_gyp=<node-gyp@10>/bin/node-gyp.js yarn rebuild
+> ```
+
 ### 构建发行包
 
 ```bash
@@ -214,7 +236,7 @@ yarn build
 
 ### 方式一：界面配置
 
-1. 点击右侧栏的 AI 图标打开侧边栏
+1. 点击左侧活动栏的 AI 图标（或按 `Cmd/Ctrl + Alt + J`）打开 AI 面板
 2. 点击面板右上角 `⋯` → Settings
 3. 选择 Provider、填入 API Key、按需填 Base URL 和模型名
 4. 点 Save
@@ -243,13 +265,14 @@ export OPENAI_MODEL="qwen2.5:14b"                        # 你的本地模型名
 
 | 功能 | 快捷键 |
 |---|---|
-| 打开/关闭 AI 侧边栏 | 点击右侧栏图标 |
+| 打开/关闭 AI 侧边栏 | `Cmd/Ctrl + Alt + J`，或点击左侧活动栏图标 |
 | 打开内联 AI 浮窗 | `Cmd/Ctrl + Alt + K` |
 | 发送消息 | `Enter` |
 | 换行（不发送） | `Shift + Enter` |
 | 撤销 AI 对文档的修改 | AI 面板内 `Cmd/Ctrl + Z` |
 | 召回上一条输入 | 输入框行首按 `↑` |
-| 停止生成 | 点击 Stop 按钮 |
+| 停止生成 | 点击输入框右下角的停止按钮 |
+| 快捷模板 | 在输入框行首输入 `/` |
 
 ---
 
@@ -269,17 +292,42 @@ src/
 │   │   ├── sideBar/
 │   │   │   ├── claudeChat.vue         # AI 侧边栏主组件（会话、工具执行、编辑确认）
 │   │   │   └── chat/
-│   │   │       ├── ChatMessageList.vue  # 消息列表渲染
+│   │   │       ├── ChatMessageList.vue  # 消息列表渲染（文档流排版、工具活动行、空状态建议）
 │   │   │       ├── ChatSessionList.vue  # 会话列表
 │   │   │       └── ChatSettings.vue     # 设置面板
 │   │   └── editorWithTabs/
 │   │       ├── inlineAiPrompt.vue     # 内联 AI 浮窗（Ask / Rewrite）
 │   │       ├── editor.vue             # Muya 编辑器 ↔ AI 桥接
 │   │       └── sourceCode.vue         # CodeMirror ↔ AI 桥接
-│   ├── assets/themes/                 # 38 套主题 CSS
+│   │   └── lucideIcon/                # 全局 <lucide-icon> 组件
+│   ├── assets/
+│   │   ├── styles/tokens.css          # 设计 token（间距、圆角、阴影、语义色等）
+│   │   ├── styles/element-overrides.css # Element UI 控件统一样式
+│   │   ├── icons/lucide/              # Lucide 图标（ISC License）
+│   │   └── themes/                    # 38 套主题 CSS
 │   └── i18n/                          # 多语言（中/英）
 └── muya/                              # MarkText 的编辑器引擎
+tools/
+├── uiScreenshots.js                   # 界面截图（按主题批量截图，用于视觉回归）
+└── aiChatScreenshots.js               # 用模拟数据截取 AI 面板各状态
+docs/
+└── ui-modernization-plan.md           # 界面改造计划与实施记录
 ```
+
+---
+
+## 界面截图（开发用）
+
+修改界面后，可以批量截图检查各主题下的效果：
+
+```bash
+yarn run pack                                                   # 注意是 yarn run pack，不是 yarn pack
+yarn run ui:screenshots ui-screenshots/after                    # 6 个代表主题的完整视图
+UI_SHOTS_QUICK=1 yarn run ui:screenshots ui-screenshots/all all # 全部 38 个主题的快速视图
+node tools/aiChatScreenshots.js ui-screenshots/ai               # AI 面板各状态（模拟数据）
+```
+
+截图输出在 `ui-screenshots/`（已加入 `.gitignore`）。`yarn dev` 运行时会把 `dist/electron/main.js` 换成开发版，这时可以把生产构建复制到别处，用 `MT_DIST` 指定路径。
 
 ---
 

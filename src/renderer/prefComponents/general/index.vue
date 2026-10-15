@@ -3,7 +3,7 @@
     <h4>General</h4>
     <compound>
       <template #head>
-        <h6 class="title">Auto Save:</h6>
+        <h6 class="title">Auto Save</h6>
       </template>
       <template #children>
         <bool
@@ -25,7 +25,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Window:</h6>
+        <h6 class="title">Window</h6>
       </template>
       <template #children>
         <cur-select
@@ -40,6 +40,13 @@
           description="Hide scrollbars"
           :bool="hideScrollbar"
           :onChange="value => onSelectChange('hideScrollbar', value)"
+        ></bool>
+        <bool
+          v-if="isOsx"
+          description="Translucent sidebar"
+          notes="Uses the macOS vibrancy material behind the sidebar."
+          :bool="sideBarVibrancy"
+          :onChange="value => onSelectChange('sideBarVibrancy', value)"
         ></bool>
         <bool
           description="Open files in new window"
@@ -62,7 +69,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Sidebar:</h6>
+        <h6 class="title">Sidebar</h6>
       </template>
       <template #children>
         <bool
@@ -84,7 +91,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Action on startup:</h6>
+        <h6 class="title">Action on startup</h6>
       </template>
       <template #children>
         <section class="startup-action-ctrl">
@@ -103,7 +110,7 @@
 
     <compound>
       <template #head>
-        <h6 class="title">Misc:</h6>
+        <h6 class="title">Misc</h6>
       </template>
       <template #children>
         <cur-select
@@ -159,6 +166,7 @@ export default {
       openFolderInNewWindow: state => state.preferences.openFolderInNewWindow,
       zoom: state => state.preferences.zoom,
       hideScrollbar: state => state.preferences.hideScrollbar,
+      sideBarVibrancy: state => state.preferences.sideBarVibrancy,
       wordWrapInToc: state => state.preferences.wordWrapInToc,
       fileSortBy: state => state.preferences.fileSortBy,
       language: state => state.preferences.language

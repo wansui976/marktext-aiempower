@@ -1,25 +1,27 @@
-import paragraphIcon from '../../assets/pngicon/paragraph/2.png'
-import htmlIcon from '../../assets/pngicon/html/2.png'
-import hrIcon from '../../assets/pngicon/horizontal_line/2.png'
-import frontMatterIcon from '../../assets/pngicon/front_matter/2.png'
-import header1Icon from '../../assets/pngicon/heading_1/2.png'
-import header2Icon from '../../assets/pngicon/heading_2/2.png'
-import header3Icon from '../../assets/pngicon/heading_3/2.png'
-import header4Icon from '../../assets/pngicon/heading_4/2.png'
-import header5Icon from '../../assets/pngicon/heading_5/2.png'
-import header6Icon from '../../assets/pngicon/heading_6/2.png'
-import newTableIcon from '../../assets/pngicon/new_table/2.png'
-import bulletListIcon from '../../assets/pngicon/bullet_list/2.png'
-import codeIcon from '../../assets/pngicon/code/2.png'
-import quoteIcon from '../../assets/pngicon/quote_block/2.png'
-import todoListIcon from '../../assets/pngicon/todolist/2.png'
-import mathblockIcon from '../../assets/pngicon/math/2.png'
-import orderListIcon from '../../assets/pngicon/order_list/2.png'
-import flowchartIcon from '../../assets/pngicon/flowchart/2.png'
-import sequenceIcon from '../../assets/pngicon/sequence/2.png'
-import plantumlIcon from '../../assets/pngicon/plantuml/2.png'
-import mermaidIcon from '../../assets/pngicon/mermaid/2.png'
-import vegaIcon from '../../assets/pngicon/chart/2.png'
+import {
+  pilcrow as paragraphIcon,
+  codeXml as htmlIcon,
+  separatorHorizontal as hrIcon,
+  fileCog as frontMatterIcon,
+  heading1 as header1Icon,
+  heading2 as header2Icon,
+  heading3 as header3Icon,
+  heading4 as header4Icon,
+  heading5 as header5Icon,
+  heading6 as header6Icon,
+  table as newTableIcon,
+  list as bulletListIcon,
+  squareCode as codeIcon,
+  textQuote as quoteIcon,
+  listTodo as todoListIcon,
+  squareSigma as mathblockIcon,
+  listOrdered as orderListIcon,
+  workflow as flowchartIcon,
+  arrowRightLeft as sequenceIcon,
+  shapes as plantumlIcon,
+  network as mermaidIcon,
+  chartColumn as vegaIcon
+} from '../../assets/icons/lucide'
 import { isOsx } from '../../config'
 
 const COMMAND_KEY = isOsx ? '⌘' : 'Ctrl'

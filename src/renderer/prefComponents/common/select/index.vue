@@ -1,7 +1,7 @@
 <template>
   <section class="pref-select-item" :class="{'ag-underdevelop': disable}">
     <div class="description" v-if="description">
-      <span>{{description}}:</span>
+      <span>{{description}}</span>
       <i class="el-icon-info"
         v-if="more"
         @click="handleMoreClick"
@@ -68,51 +68,30 @@ export default {
 
 <style>
 .pref-select-item {
-  margin: 20px 0;
-  font-size: 14px;
-  color: var(--editorColor);
-  & .notes {
-    margin-top: 10px;
-    font-style: italic;
-    font-size: 12px;
+  margin: var(--space-4) 0;
+  font-size: var(--font-size-md);
+  color: var(--editorColor80);
+  & .description {
+    margin-bottom: var(--space-2);
   }
   & .el-select {
     width: 100%;
   }
-  & input.el-input__inner {
-    height: 30px;
-    background: transparent;
-    color: var(--editorColor);
-    border-color: var(--editorColor10);
-  }
-  & .el-input__icon,
-  & .el-input__inner {
-    line-height: 30px;
-  }
-}
-.pref-select-item .description {
-  margin-bottom: 10px;
-  & i {
+  & .description i,
+  & i.el-icon-info {
+    margin-left: var(--space-1);
     cursor: pointer;
-    opacity: .7;
-    color: var(--iconColor);
+    color: var(--text-muted);
   }
-  & i:hover {
+  & .description i:hover,
+  & i.el-icon-info:hover {
     color: var(--themeColor);
   }
-}
-li.el-select-dropdown__item {
-  color: var(--editorColor);
-  height: 30px;
-}
-li.el-select-dropdown__item.hover, li.el-select-dropdown__item:hover {
-  background: var(--floatHoverColor);
-}
-div.el-select-dropdown {
-  background: var(--floatBgColor);
-  border-color: var(--floatBorderColor);
-  & .popper__arrow {
-    display: none;
+  & .notes {
+    margin-top: 6px;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-ui);
+    color: var(--text-muted);
   }
 }
 </style>

@@ -30,9 +30,7 @@
         @keydown.space.prevent="handleCategoryItemClick(c)"
         :class="{active: c.label === currentCategory}"
       >
-        <svg :viewBox="c.icon.viewBox">
-          <use :xlink:href="c.icon.url"></use>
-        </svg>
+        <lucide-icon :name="c.icon" :size="16"></lucide-icon>
         <span>{{c.name}}</span>
       </div>
     </section>
@@ -115,109 +113,88 @@ export default {
     -webkit-app-region: no-drag;
     display: flex;
     flex-direction: column;
-    background: var(--sideBarBgColor);
+    background: var(--surface-sidebar);
+    border-right: 1px solid var(--border-subtle);
     width: var(--prefSideBarWidth);
     height: 100vh;
-    padding-top: 30px;
+    padding-top: 14px;
     box-sizing: border-box;
+    font-family: var(--font-ui);
     & h3 {
       -webkit-app-region: drag;
       margin: 0;
-      font-weight: normal;
+      height: 22px;
+      line-height: 22px;
+      font-size: var(--font-size-md);
+      font-weight: 600;
       text-align: center;
-      color: var(--sideBarColor);
+      color: var(--text-secondary);
     }
   }
   .search-wrapper {
     -webkit-app-region: no-drag;
-    padding: 0 20px;
-    margin: 30px 0;
+    padding: 0 var(--space-3);
+    margin: var(--space-5) 0 var(--space-3);
   }
   .el-autocomplete {
     width: 100%;
-    & .el-input__inner {
-      background: transparent;
-      height: 35px;
-      line-height: 35px;
-    }
   }
   .pref-autocomplete.el-autocomplete-suggestion {
-    background: var(--floatBgColor);
-    border-color: var(--floatBorderColor);
-    & .el-autocomplete-suggestion__wrap li:hover {
-      background: var(--floatHoverColor);
-    }
-    & .popper__arrow {
-      display: none;
-    }
     & li {
+      height: auto;
       line-height: normal;
-      padding: 7px;
-      opacity: .8;
-
+      padding: 6px var(--space-2);
       & .name {
         text-overflow: ellipsis;
         overflow: hidden;
-        color: var(--editorColor80);
+        font-weight: 500;
+        color: var(--text-primary);
       }
       & .addr {
-        font-size: 12px;
-        color: var(--editorColor);
-      }
-
-      & .highlighted .addr {
-        color: var(--editorColor);
+        font-size: var(--font-size-sm);
+        color: var(--text-muted);
       }
     }
   }
   .category {
     -webkit-app-region: no-drag;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 var(--space-2);
     & .item {
       -webkit-app-region: no-drag;
-      width: 100%;
-      height: 50px;
-      font-size: 18px;
-      color: var(--sideBarColor);
-      padding-left: 20px;
+      height: 32px;
+      padding: 0 var(--space-3);
+      font-size: var(--font-size-md);
+      color: var(--text-secondary);
       box-sizing: border-box;
       display: flex;
       flex-direction: row;
       align-items: center;
+      gap: 10px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      position: relative;
       user-select: none;
-      & > svg {
-        -webkit-app-region: no-drag;
-        width: 28px;
-        height: 28px;
-        fill: var(--iconColor);
-        margin-right: 15px;
-      }
-      & > span {
-        -webkit-app-region: no-drag;
+      outline: none;
+      transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+      & > .lucide-icon {
+        color: var(--sideBarIconColor);
       }
       &:hover {
-        background: var(--sideBarItemHoverBgColor);
+        background: var(--surface-hover);
       }
-      &::before {
-        content: '';
-        width: 4px;
-        height: 0;
-        background: var(--highlightThemeColor);
-        position: absolute;
-        left: 0;
-        border-top-right-radius: 3px;
-        border-bottom-right-radius: 3px;
-        transition: height .25s ease-in-out;
-        top: 50%;
-        transform: translateY(-50%);
+      &:focus-visible {
+        box-shadow: var(--focus-ring);
       }
       &.active {
-        color: var(--sideBarTitleColor);
-      }
-      &.active::before {
-        height: 100%;
+        color: var(--text-primary);
+        font-weight: 500;
+        background: var(--surface-active);
+        & > .lucide-icon {
+          color: var(--text-primary);
+        }
       }
     }
   }

@@ -18,24 +18,19 @@
           @click.middle="closeTab(file.id)"
           @contextmenu.prevent="handleContextMenu($event, file)"
         >
-          <span>{{ file.filename }}</span>
-          <svg class="close-icon icon" aria-hidden="true"
-            @click.stop="removeFileInTab(file)"
-          >
-            <circle id="unsaved-circle-icon" cx="6" cy="6" r="3"></circle>
-            <use id="default-close-icon" xlink:href="#icon-close-small"></use>
-          </svg>
+          <span class="name">{{ file.filename }}</span>
+          <span class="tab-action" @click.stop="removeFileInTab(file)">
+            <span class="unsaved-dot"></span>
+            <lucide-icon name="x" :size="13" class="close-icon"></lucide-icon>
+          </span>
         </li>
       </ul>
     </div>
     <div
       class="new-file"
+      @click.stop="newFile()"
     >
-      <svg class="icon" aria-hidden="true"
-        @click.stop="newFile()"
-      >
-        <use xlink:href="#icon-plus"></use>
-      </svg>
+      <lucide-icon name="plus" :size="15"></lucide-icon>
     </div>
   </div>
 </template>
@@ -200,24 +195,25 @@ export default {
 </script>
 
 <style scoped>
-  svg.close-icon #unsaved-circle-icon {
-    fill: var(--themeColor);
-  }
   .editor-tabs {
     position: relative;
     display: flex;
     flex-direction: row;
-    height: 35px;
+    align-items: center;
+    height: var(--tabBarHeight);
+    padding: 0 var(--space-2);
     user-select: none;
-    box-shadow: 0px 0px 9px 2px rgba(0, 0, 0, .1);
+    background: var(--tabBarBgColor);
+    border-bottom: 1px solid var(--tabBarBorderColor);
+    box-sizing: border-box;
     overflow: hidden;
     &:hover > .new-file {
-      opacity: 1 !important;
+      opacity: 1;
     }
   }
   .scrollable-tabs {
     flex: 0 1 auto;
-    height: 35px;
+    height: 100%;
     overflow: hidden;
   }
   .tabs-container {
@@ -225,10 +221,12 @@ export default {
     list-style: none;
     margin: 0;
     padding: 0;
-    height: 35px;
+    height: 100%;
     position: relative;
     display: flex;
     flex-direction: row;
+    align-items: center;
+    gap: 2px;
     overflow-y: hidden;
     z-index: 2;
     &::-webkit-scrollbar:horizontal {
@@ -236,83 +234,102 @@ export default {
     }
     & > li {
       position: relative;
-      padding: 0 8px;
-      color: var(--editorColor50);
-      font-size: 12px;
-      line-height: 35px;
-      height: 35px;
-      max-width: 280px;
-      background: var(--floatBgColor);
       display: flex;
       align-items: center;
+      height: 26px;
+      max-width: 220px;
+      padding: 0 4px 0 var(--space-3);
+      color: var(--text-muted);
+      font-size: var(--font-size-sm);
+      border-radius: var(--radius-sm);
+      cursor: default;
+      transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
       &[aria-grabbed="true"] {
-        color: var(--editorColor30) !important;
-      }
-      & > svg {
-        opacity: 0;
+        opacity: .5;
       }
       &:focus {
         outline: none;
       }
-      &:hover > svg {
-        opacity: 1;
+      &:hover {
+        color: var(--text-secondary);
+        background: var(--surface-hover);
       }
-      &:hover > svg.close-icon #default-close-icon {
-        display: block !important;
-      }
-      &:hover > svg.close-icon #unsaved-circle-icon {
-        display: none !important;
-      }
-      & > span {
+      & > .name {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        margin-right: 3px;
-      }
-    }
-    & > li.unsaved:not(.active) {
-      & > svg.close-icon {
-        opacity: 1;
-      }
-      & > svg.close-icon #unsaved-circle-icon {
-        display: block;
-      }
-      & > svg.close-icon #default-close-icon {
-        display: none;
+        margin-right: 2px;
       }
     }
     & > li.active {
-      background: var(--itemBgColor);
-      z-index: 3;
-      &:after {
-        content: '';
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        height: 2px;
-        background: var(--themeColor);
-      }
-      & > svg {
-        opacity: 1;
-      }
-      & > svg.close-icon #unsaved-circle-icon {
-        display: none;
-      }
+      color: var(--text-primary);
+      background: var(--surface-active);
+      font-weight: 500;
     }
   }
+
+  /* Close button doubles as the unsaved indicator. */
+  .tab-action {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-xs);
+    color: var(--text-muted);
+    & > .close-icon {
+      opacity: 0;
+      transition: opacity var(--duration-fast) var(--ease);
+    }
+    & > .unsaved-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--themeColor);
+      display: none;
+    }
+    &:hover {
+      color: var(--text-primary);
+      background: var(--surface-active);
+    }
+  }
+  .tabs-container > li:hover .tab-action > .close-icon,
+  .tabs-container > li.active .tab-action > .close-icon {
+    opacity: 1;
+  }
+  .tabs-container > li.unsaved .tab-action > .unsaved-dot {
+    display: block;
+  }
+  .tabs-container > li.unsaved .tab-action > .close-icon {
+    opacity: 0;
+  }
+  .tabs-container > li.unsaved:hover .tab-action > .unsaved-dot {
+    display: none;
+  }
+  .tabs-container > li.unsaved:hover .tab-action > .close-icon {
+    opacity: 1;
+  }
+
   .editor-tabs > .new-file {
-    flex: 0 0 35px;
-    width: 35px;
-    height: 35px;
-    border-right: none;
-    background: transparent;
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    margin-left: var(--space-1);
     display: flex;
     align-items: center;
-    justify-content: space-around;
+    justify-content: center;
     cursor: pointer;
-    color: var(--editorColor50);
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
     opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease), background-color var(--duration-fast) var(--ease);
+    &:hover {
+      color: var(--text-primary);
+      background: var(--surface-hover);
+    }
     &.always-visible {
       opacity: 1;
     }

@@ -1,7 +1,7 @@
 <template>
   <section class="pref-range-item" :class="{'ag-underdevelop': disable}">
     <div class="description">
-      <span>{{description}}:</span> <span class="value" v-if="selectValue">{{selectValue}} <span v-if="unit">{{unit}}</span></span>
+      <span>{{description}}</span> <span class="value" v-if="selectValue">{{selectValue}} <span v-if="unit">{{unit}}</span></span>
       <i class="el-icon-info" v-if="more"
         @click="handleMoreClick"
       ></i>
@@ -62,45 +62,38 @@ export default {
 
 <style>
 .pref-range-item {
-  margin: 20px 0;
-  font-size: 14px;
-  color: var(--editorColor);
+  margin: var(--space-4) 0;
+  font-size: var(--font-size-md);
+  color: var(--editorColor80);
   width: 100%;
+  & .description {
+    margin-bottom: var(--space-1);
+  }
   & .value {
-    text-align: right;
-    font-style: italic;
-    float: right
+    float: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
   }
   & .el-slider {
     width: 100%;
+    padding: 0 7px;
+    box-sizing: border-box;
   }
-  & .el-slider__runway,
-  & .el-slider__bar {
-    height: 4px;
-  }
-  & .el-slider__button {
-    width: 12px;
-    height: 12px;
-  }
-  & .el-slider__button-wrapper {
-    width: 20px;
-    height: 20px;
-    top: -9px;
-  }
-}
-.pref-select-item .description {
-  margin-bottom: 10px;
-
-  & .value {
-    color: var(--editorColor80);
-  }
-  & i {
+  & .description i,
+  & i.el-icon-info {
+    margin-left: var(--space-1);
     cursor: pointer;
-    opacity: .7;
-    color: var(--iconColor);
+    color: var(--text-muted);
   }
-  & i:hover {
+  & .description i:hover,
+  & i.el-icon-info:hover {
     color: var(--themeColor);
+  }
+  & .notes {
+    margin-top: 6px;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-ui);
+    color: var(--text-muted);
   }
 }
 </style>

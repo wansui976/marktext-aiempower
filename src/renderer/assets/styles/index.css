@@ -91,23 +91,37 @@
 
 ::-webkit-scrollbar,
 ::-webkit-scrollbar-corner {
-  background: var(--floatHoverColor);
+  background: transparent;
 }
 
 ::-webkit-scrollbar:vertical {
-  width: 12px;
+  width: 10px;
 }
 
+::-webkit-scrollbar:horizontal {
+  height: 10px;
+}
+
+/* Themes may set --scrollbarThumbColor / --scrollbarThumbHoverColor. */
 ::-webkit-scrollbar-thumb {
-  background: var(--editorColor10);
+  background: var(--scrollbarThumbColor, var(--editorColor10));
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--editorColor30);
+  background: var(--scrollbarThumbHoverColor, var(--editorColor30));
+  background-clip: padding-box;
 }
 
 :focus {
   outline: none;
+}
+
+button:focus-visible,
+a:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 
 html, body {
@@ -115,6 +129,12 @@ html, body {
   padding: 0;
   background: transparent !important;
   caret-color: var(--editorColor);
+}
+
+/* Higher specificity than Muya's `html, body` default font. */
+html body {
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
@@ -140,251 +160,10 @@ body {
   white-space: nowrap;
 }
 
-/* Overwrite Element style */
-.el-tooltip__popper {
-  background: var(--floatBgColor);
-  color: var(--sideBarColor);
-  box-shadow: 0 4px 8px 0 var(--floatBorderColor);
-  border: solid 1px var(--floatBorderColor);
-}
-
-.el-tooltip__popper[x-placement^=left] .popper__arrow {
-  border-bottom-color: var(--floatBorderColor);
-}
-.el-tooltip__popper[x-placement^=top] .popper__arrow {
-  border-bottom-color: var(--floatBorderColor);
-}
-.el-tooltip__popper[x-placement^=right] .popper__arrow {
-  border-bottom-color: var(--floatBorderColor);
-}
-.el-tooltip__popper[x-placement^=bottom] .popper__arrow {
-  border-bottom-color: var(--floatBorderColor);
-}
-
-.el-button:hover,
-.el-button--primary:hover {
-  border-color: unset;
-}
-.el-button:active,
-.el-button--primary:active {
-  border-color: unset;
-}
-.el-button:focus,
-.el-button--primary:focus {
-  border-color: unset;
-}
-
-.el-slider__button {
-  border-color: var(--themeColor);
-}
-
-.el-slider__bar {
-  background-color: var(--themeColor);
-}
-
-.el-dialog,
-.el-dialog.ag-dialog-table {
-  border-radius: 8px;
-  box-shadow: 0 4px 8px 0 var(--floatBorderColor);
-  border: solid 1px var(--floatBorderColor);
-  background-color: var(--floatBgColor);
-}
-.el-dialog__header {
-  position: relative;
-  display: block;
-  padding: 8px 6px;
-}
-
-input.el-input__inner {
-  background: var(--inputBgColor);
-  border: 1px solid var(--editorColor10);
-  color: var(--editorColor80);
-}
-
-.el-input-number.is-controls-right span.el-input-number__decrease,
-.el-input-number.is-controls-right span.el-input-number__increase {
-  background: var(--buttonBgColor);
-  border-left: none;
-  color: var(--editorColor80);
-}
-
-.el-input-number.is-controls-right span.el-input-number__increase {
-  border-bottom: none;
-}
-
-.el-tabs__nav-wrap::after {
-  background: var(--editorColor04);
-}
-
-div.el-tabs__item {
-  color: var(--editorColor);
-}
-
-div.el-tab-pane {
-  color: var(--editorColor);
-  font-size: 14px;
-}
-
-.ag-dialog-table .dialog-title svg {
-  width: 1.5em;
-  height: 1.5em;
-}
-
 .ag-underdevelop {
   opacity: .3;
   pointer-events: none;
   cursor: not-allowed;
-}
-
-.button,
-.muya-button,
-.el-button {
-  cursor: pointer;
-  text-decoration: none;
-  color: var(--buttonFontColor);
-  background: var(--buttonBgColor);
-  border: var(--buttonBorder);
-  border-radius: 5px;
-  box-shadow: var(--buttonShadow);
-  padding: 7px 14px;
-}
-.button:hover,
-.muya-button:hover,
-.el-button:hover {
-  color: var(--buttonFontColorHover);
-  background: var(--buttonBgColorHover);
-  border: var(--buttonBorderHover);
-}
-.button:active,
-.muya-button:active,
-.el-button:active {
-  color: var(--buttonFontColorActive);
-  background: var(--buttonBgColorActive);
-  border: var(--buttonBorderActive);
-}
-.button:focus,
-.muya-button:focus,
-.el-button:focus {
-  outline: none;
-  border: var(--buttonFocusBorder);
-}
-
-.button-primary,
-.muya-button-primary,
-.el-button--primary {
-  cursor: pointer;
-  text-decoration: none;
-  color: var(--buttonPrimaryFontColor);
-  background: var(--buttonPrimaryBgColor);
-  border: var(--buttonPrimaryBorder);
-  border-radius: 5px;
-  box-shadow: var(--buttonPrimaryShadow);
-  padding: 7px 14px;
-}
-.button-primary:hover,
-.muya-button-primary:hover,
-.el-button--primary:hover {
-  color: var(--buttonPrimaryFontColorHover);
-  background: var(--buttonPrimaryBgColorHover);
-  border: var(--buttonPrimaryBorderHover);
-}
-.button-primary:active,
-.muya-button-primary:active,
-.el-button--primary:active {
-  color: var(--buttonPrimaryFontColorActive);
-  background: var(--buttonPrimaryBgColorActive);
-  border: var(--buttonPrimaryBorderActive);
-}
-button.button-primary:not(.custom):focus,
-.button-primary:focus,
-.muya-button-primary:focus,
-.el-button--primary:focus {
-  outline: none;
-  border: var(--buttonPrimaryFocusBorder);
-  box-shadow: var(--buttonPrimaryFocusShadow);
-}
-
-.button.disabled,
-.button[disabled],
-.muya-button.disabled,
-.muya-button[disabled],
-.el-button.disabled,
-.el-button[disabled],
-.button-primary.disabled,
-.button-primary[disabled],
-.el-button--primary.disabled,
-.el-button--primary[disabled] {
-  cursor: not-allowed !important;
-  opacity: .65 !important;
-  box-shadow: none !important;
-}
-
-.button.small,
-.muya-button.small,
-.el-button.small,
-.button-primary.small,
-.muya-button-primary.small,
-.el-button--primary.small {
-  padding: 5px 8px;
-}
-.button.tiny,
-.muya-button.tiny,
-.el-button.tiny,
-.button-primary.tiny,
-.muya-button-primary.tiny,
-.el-button--primary.tiny {
-  font-size: 13px;
-  padding: 4px 7px;
-}
-
-.button-group {
-  /* Remove space between buttons */
-  font-size: 0;
-}
-.button-group > button:first-child:not(:last-child) {
-  border-bottom-right-radius: 0;
-  border-top-right-radius: 0;
-  margin-left: 0;
-  border-right: none;
-}
-.button-group > button:not(:first-child):not(:last-child) {
-  border-radius: 0;
-  margin-left: 0;
-  margin-right: 0;
-  border-right: none;
-}
-.button-group > button:last-child:not(:first-child) {
-  border-bottom-left-radius: 0;
-  border-top-left-radius: 0;
-  margin-right: 0;
-}
-
-/* Overwrite element UI button padding */
-.el-button,
-.el-button--primary {
-  padding: 7px 14px;
-}
-.el-button:focus {
-  background-color: var(--buttonBgColor);
-}
-.el-button--primary:focus {
-  background-color: var(--buttonPrimaryBgColor);
-}
-.el-button.is-disabled,
-.el-button.is-disabled:focus,
-.el-button.is-disabled:hover {
-  color: var(--buttonFontColor);
-  background: var(--buttonBgColor);
-  border: var(--buttonBorder);
-  box-shadow: none;
-}
-.el-button--primary.is-disabled,
-.el-button--primary.is-disabled:focus,
-.el-button--primary.is-disabled:hover {
-  color: var(--buttonPrimaryFontColor);
-  background: var(--buttonPrimaryBgColor);
-  border: var(--buttonPrimaryBorder);
-  box-shadow: none;
 }
 
 .image-viewer {

@@ -40,6 +40,11 @@
     "type": "boolean",
     "default": false
   },
+  "sideBarVibrancy": {
+    "description": "General--Use a translucent (vibrancy) sidebar. macOS only.",
+    "type": "boolean",
+    "default": false
+  },
   "wordWrapInToc": {
     "description": "General--Whether to enable word wrap in TOC.",
     "type": "boolean",

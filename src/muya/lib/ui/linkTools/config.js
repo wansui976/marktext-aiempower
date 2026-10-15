@@ -1,5 +1,4 @@
-import unlinkIcon from '../../assets/pngicon/unlink/2.png'
-import linkJumpIcon from '../../assets/pngicon/link_jump/2.png'
+import { unlink as unlinkIcon, externalLink as linkJumpIcon } from '../../assets/icons/lucide'
 
 const icons = [
   {

@@ -1,11 +1,13 @@
 // used for render table tookbar or others.
 import { h } from '../snabbdom'
 import { CLASS_OR_ID } from '../../../config'
-import TableIcon from '../../../assets/pngicon/table/table@2x.png'
-import AlignLeftIcon from '../../../assets/pngicon/algin_left/2.png'
-import AlignRightIcon from '../../../assets/pngicon/algin_right/2.png'
-import AlignCenterIcon from '../../../assets/pngicon/algin_center/2.png'
-import DeleteIcon from '../../../assets/pngicon/table_delete/2.png'
+import {
+  tableProperties as TableIcon,
+  alignLeft as AlignLeftIcon,
+  alignRight as AlignRightIcon,
+  alignCenter as AlignCenterIcon,
+  trash2 as DeleteIcon
+} from '../../../assets/icons/lucide'
 
 export const TABLE_TOOLS = Object.freeze([{
   label: 'table',

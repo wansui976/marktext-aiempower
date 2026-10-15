@@ -24,6 +24,8 @@ export default {
         exportMarkdown: 'Export Markdown'
       },
       settings: {
+        connection: 'Connection',
+        writing: 'Writing',
         provider: 'Provider',
         providerHint: 'Choose a provider compatible with Anthropic Messages API or OpenAI Chat Completions.',
         apiKey: '{provider} API Key',
@@ -51,7 +53,8 @@ export default {
       },
       empty: {
         title: 'Ask about this document',
-        copy: 'Use a writing template below, or ask a direct question about the Markdown you are editing.'
+        copy: 'Pick a suggestion, or ask a question about the Markdown you are editing. Type / for quick prompts.',
+        suggestions: 'Suggestions'
       },
       messages: {
         you: 'You',
@@ -137,7 +140,12 @@ export default {
         insert_text: 'Inserting text',
         read_file: 'Reading file',
         list_directory: 'Listing directory',
-        fetch_url: 'Fetching URL'
+        fetch_url: 'Fetching URL',
+        get_document_outline: 'Reading outline',
+        get_document_section: 'Reading section',
+        search_document: 'Searching document',
+        glob_files: 'Finding files',
+        grep_files: 'Searching files'
       },
       export: {
         saved: 'Chat exported to {path}',
@@ -175,6 +183,8 @@ export default {
         exportMarkdown: '导出 Markdown'
       },
       settings: {
+        connection: '连接',
+        writing: '写作',
         provider: '服务商',
         providerHint: '选择兼容 Anthropic Messages API 或 OpenAI Chat Completions 的服务商。',
         apiKey: '{provider} API Key',
@@ -202,7 +212,8 @@ export default {
       },
       empty: {
         title: '询问当前文档',
-        copy: '可以使用下面的写作模板，也可以直接询问正在编辑的 Markdown。'
+        copy: '选一个建议，或直接询问正在编辑的 Markdown。输入 / 可调出快捷提示。',
+        suggestions: '建议'
       },
       messages: {
         you: '你',
@@ -288,7 +299,12 @@ export default {
         insert_text: '插入文本',
         read_file: '读取文件',
         list_directory: '列出目录',
-        fetch_url: '访问 URL'
+        fetch_url: '访问 URL',
+        get_document_outline: '读取大纲',
+        get_document_section: '读取小节',
+        search_document: '搜索文档',
+        glob_files: '查找文件',
+        grep_files: '搜索文件'
       },
       export: {
         saved: '对话已导出到 {path}',

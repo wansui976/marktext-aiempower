@@ -1,19 +1,17 @@
-import FilesIcon from '@/assets/icons/files.svg'
-import SearchIcon from '@/assets/icons/search.svg'
-import TocIcon from '@/assets/icons/toc.svg'
 import ClaudeIcon from '@/assets/icons/claude.svg'
-import SettingIcon from '@/assets/icons/setting.svg'
+
+// Entries use either a Lucide icon name (`lucide`) or a custom sprite icon (`icon`).
 
 export const sideBarIcons = [
   {
     name: 'files',
-    icon: FilesIcon
+    lucide: 'files'
   }, {
     name: 'search',
-    icon: SearchIcon
+    lucide: 'search'
   }, {
     name: 'toc',
-    icon: TocIcon
+    lucide: 'list-tree'
   }, {
     name: 'claude',
     icon: ClaudeIcon
@@ -23,6 +21,6 @@ export const sideBarIcons = [
 export const sideBarBottomIcons = [
   {
     name: 'settings',
-    icon: SettingIcon
+    lucide: 'settings'
   }
 ]

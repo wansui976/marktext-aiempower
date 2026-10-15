@@ -1,7 +1,7 @@
 <template>
   <section class="pref-font-input-item" :class="{'ag-underdevelop': disable}">
     <div class="description">
-      <span>{{description}}:</span>
+      <span>{{description}}</span>
       <i class="el-icon-info" v-if="more" @click="handleMoreClick"></i>
     </div>
     <el-autocomplete
@@ -112,76 +112,44 @@ export default {
 </script>
 
 <style>
-.el-autocomplete-suggestion {
-  border: 1px solid var(--floatBorderColor);
-  background-color: var(--floatBgColor);
-}
-.el-popper[x-placement^=top] .popper__arrow {
-  border-top-color: var(--floatBorderColor);
-}
-.el-popper[x-placement^=bottom] .popper__arrow {
-  border-bottom-color: var(--floatBorderColor);
-}
-.el-popper[x-placement^=top] .popper__arrow::after {
-  border-top-color: var(--floatBgColor);
-}
-.el-popper[x-placement^=bottom] .popper__arrow::after {
-  border-bottom-color: var(--floatBgColor);
-}
-
-.el-autocomplete-suggestion li {
-  color: var(--editorColor);
-}
-.el-autocomplete-suggestion li.highlighted,
-.el-autocomplete-suggestion li:hover {
-  background: var(--floatHoverColor);
-}
-
 .pref-font-input-item {
-  margin: 20px 0;
-  font-size: 14px;
-  color: var(--editorColor);
+  margin: var(--space-4) 0;
+  font-size: var(--font-size-md);
+  color: var(--editorColor80);
   & .font-autocomplete {
     width: 100%;
   }
-  & input.el-input__inner {
-    height: 30px;
-    background: transparent;
-    color: var(--editorColor);
-    border-color: var(--editorColor10);
+  & .description {
+    margin-bottom: var(--space-2);
   }
-  & .el-input.is-active .el-input__inner,
-  & .el-input__inner:focus {
-    border-color: var(--themeColor);
-  }
-  & .el-input__icon,
-  & .el-input__inner {
-    line-height: 30px;
-  }
-}
-.pref-font-input-item .description {
-  margin-bottom: 10px;
-  & i {
+  & .description i,
+  & i.el-icon-info {
+    margin-left: var(--space-1);
     cursor: pointer;
-    opacity: 0.7;
-    color: var(--iconColor);
+    color: var(--text-muted);
   }
-  & i:hover {
+  & .description i:hover,
+  & i.el-icon-info:hover {
     color: var(--themeColor);
   }
+  & .notes {
+    margin-top: 6px;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-ui);
+    color: var(--text-muted);
+  }
 }
-.pref-font-input-item .font-autocomplete-popper {
-  li {
-    line-height: normal;
-    padding: 7px;
-    .value {
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-    .link {
-      font-size: 12px;
-      color: #b4b4b4;
-    }
+.font-autocomplete-popper li {
+  height: auto;
+  line-height: normal;
+  padding: 6px var(--space-2);
+  & .value {
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  & .link {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
   }
 }
 </style>

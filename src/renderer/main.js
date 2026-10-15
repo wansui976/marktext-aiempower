@@ -6,7 +6,6 @@ import VueRouter from 'vue-router'
 import axios from './axios'
 import store from './store'
 import i18n from './i18n'
-import './assets/symbolIcon'
 import {
   Dialog,
   Form,
@@ -36,8 +35,11 @@ import {
 import services from './services'
 import routes from './router'
 import { addElementStyle } from '@/util/theme'
+import LucideIcon from './components/lucideIcon'
 
+import './assets/styles/tokens.css'
 import './assets/styles/index.css'
+import './assets/styles/element-overrides.css'
 import './assets/styles/printService.css'
 
 // -----------------------------------------------
@@ -83,6 +85,8 @@ Vue.use(TableColumn)
 Vue.use(Tabs)
 Vue.use(TabPane)
 Vue.use(Input)
+
+Vue.component('LucideIcon', LucideIcon)
 
 Vue.use(VueRouter)
 

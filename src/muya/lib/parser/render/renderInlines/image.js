@@ -1,8 +1,6 @@
 import { CLASS_OR_ID } from '../../../config'
 import { getImageInfo } from '../../../utils'
-import ImageIcon from '../../../assets/pngicon/image/2.png'
-import ImageFailIcon from '../../../assets/pngicon/image_fail/2.png'
-import DeleteIcon from '../../../assets/pngicon/delete/2.png'
+import { image as ImageIcon, imageOff as ImageFailIcon, trash2 as DeleteIcon } from '../../../assets/icons/lucide'
 
 const renderIcon = (h, className, icon) => {
   const selector = `a.${className}`

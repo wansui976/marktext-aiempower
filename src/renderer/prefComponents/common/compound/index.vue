@@ -24,40 +24,45 @@ export default {
 
 <style>
   .pref-compound-item {
-    font-size: 14px;
+    font-size: var(--font-size-md);
     user-select: none;
-    margin: 20px 0;
-    color: var(--editorColor);
+    margin: 0 0 var(--space-6);
+    color: var(--editorColor80);
 
     & .pref-compound-head h6.title {
-      font-weight: 400;
-      font-size: 1.1em;
-      padding-bottom: 6px;
+      margin: 0 0 var(--space-2) 2px;
+      padding: 0;
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
     }
 
+    /* Settings rows inside a card, separated by hairlines. */
     & .pref-compound-body {
-      padding: 8px 16px 8px 16px;
-      margin-top: -12px;
-      background: rgba(0, 0, 0, .04);
-      border: 1px solid rgba(255, 255, 255, .03);
+      padding: 0 var(--space-4);
+      margin: 0 0 var(--space-5);
+      background: var(--editorColor04);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      & > section {
+        margin: 0;
+        padding: var(--space-3) 0;
+      }
+      & > section + section {
+        border-top: 1px solid var(--border-subtle);
+      }
     }
 
     & .description {
-      margin-bottom: 10px;
-      & i {
-        cursor: pointer;
-        opacity: .7;
-        color: var(--iconColor);
-      }
-      & i:hover {
-        color: var(--themeColor);
-      }
+      margin-bottom: var(--space-2);
     }
 
     & .notes {
-      margin-top: 10px;
-      font-style: italic;
-      font-size: 12px;
+      margin-top: 6px;
+      font-size: var(--font-size-sm);
+      color: var(--text-muted);
     }
   }
 </style>

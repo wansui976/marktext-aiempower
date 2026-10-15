@@ -14,7 +14,7 @@
         </el-table-column>
         <el-table-column prop="accelerator" label="Key Combination" width="220">
         </el-table-column>
-        <el-table-column fixed="right" label="Options" width="90">
+        <el-table-column fixed="right" label="Options" width="112">
           <template slot-scope="scope">
             <el-button @click="handleEditClick(scope.$index, scope.row)" type="text" size="small" title="Edit">
               <i class="el-icon-edit"></i>
@@ -172,77 +172,69 @@ export default {
 .pref-keybindings {
   & .keyboard-debug,
   & .keybindings {
-    font-size: 14px;
-    margin: 20px 0;
-    color: var(--editorColor);
-    & .link {
-      cursor: pointer;
-    }
+    font-size: var(--font-size-md);
+    margin: 0 0 var(--space-5);
+    color: var(--editorColor80);
   }
   & .keybindings > div.text {
-    margin-bottom: 10px;
+    margin-bottom: var(--space-4);
+    line-height: var(--line-height-ui);
+    color: var(--text-secondary);
   }
   & .link {
     color: var(--themeColor);
     cursor: pointer;
   }
-  & button.el-button {
-    font-size: 13px;
-  }
-}
-.el-table, .el-table__expanded-cell {
-  background: var(--editorBgColor);
-}
-.el-table button {
-  padding: 2px 2px;
-  margin: 4px 0px;
-  color: var(--themeColor);
-  background: none;
-  border: none;
-}
-.el-table button:not(:last-child) {
-  margin-right: 4px;
-}
-.el-table button:hover,
-.el-table button:active {
-  opacity: 0.9;
-  background: none;
 }
 </style>
 <style>
-.pref-keybindings .el-table table {
-  margin: 0;
-  border: none;
+.pref-keybindings .el-table {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
-.pref-keybindings .el-table th,
-.pref-keybindings .el-table tr {
-  background: var(--editorBgColor);
-}
-.pref-keybindings .el-table th.el-table__cell.is-leaf,
-.pref-keybindings .el-table th,
-.pref-keybindings .el-table td {
-  border: none;
-}
-.pref-keybindings .el-table th.el-table__cell.is-leaf:last-child,
-.pref-keybindings .el-table th:last-child,
-.pref-keybindings .el-table td:last-child {
-  border-right: 1px solid var(--tableBorderColor);
-}
-.pref-keybindings .el-table--border::after,
-.pref-keybindings .el-table--group::after,
 .pref-keybindings .el-table::before,
 .pref-keybindings .el-table__fixed-right::before,
 .pref-keybindings .el-table__fixed::before {
-  background: var(--tableBorderColor);
+  display: none;
 }
-.pref-keybindings .el-table__body tr.hover-row.current-row>td,
-.pref-keybindings .el-table__body tr.hover-row.el-table__row--striped.current-row>td,
-.pref-keybindings .el-table__body tr.hover-row.el-table__row--striped>td,
-.pref-keybindings .el-table__body tr.hover-row>td {
-  background: var(--selectionColor);
+.pref-keybindings .el-table th.el-table__cell {
+  background: var(--editorColor04);
 }
-.pref-keybindings .el-table .el-table__cell {
-  padding: 2px 0;
+.pref-keybindings .el-table th.el-table__cell,
+.pref-keybindings .el-table td.el-table__cell {
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pref-keybindings .el-table tr:last-child td.el-table__cell {
+  border-bottom: none;
+}
+.pref-keybindings .el-table__fixed-right {
+  background: var(--editorBgColor);
+}
+.pref-keybindings .el-table__body tr.hover-row > td.el-table__cell {
+  background: var(--surface-hover);
+}
+.pref-keybindings .el-table td.el-table__cell:nth-child(2) .cell {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.pref-keybindings .el-table .el-button--text {
+  min-height: 24px;
+  width: 24px;
+  padding: 0;
   margin: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: var(--radius-xs);
+}
+.pref-keybindings .el-table .el-button--text + .el-button--text {
+  margin-left: 2px;
+}
+.pref-keybindings .el-table .el-button--text:hover {
+  color: var(--text-primary);
+  background: var(--surface-active);
 }
 </style>

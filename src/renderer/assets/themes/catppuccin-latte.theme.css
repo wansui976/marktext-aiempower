@@ -61,7 +61,7 @@
   --sideBarIconColor: var(--iconColor);
   --sideBarTitleColor: rgba(23, 146, 153, 1);
   --sideBarTextColor: rgba(76, 79, 105, 0.4);
-  --sideBarBgColor: rgba(242, 244, 247, 0.9);
+  --sideBarBgColor: #e6e9ef; /* mantle */
   --sideBarItemHoverBgColor: rgba(76, 79, 105, 0.03);
   --itemBgColor: rgba(229, 231, 235, 0.6);
 
@@ -73,45 +73,9 @@
   --editorAreaWidth: 750px;
 }
 
-.editor-tabs {
-  background: #e8eaee !important;
-  box-shadow: none !important;
-}
-.editor-tabs:after {
-  position: absolute;
-  content: '';
-  border-bottom: 1px solid #d2d4d8;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1;
-}
-.editor-tabs ul.tabs-container:after {
-  position: absolute;
-  content: '';
-  border-bottom: 1px solid #d2d4d8;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-}
-.title-bar-editor-bg.tabs-visible {
-  background: #e8eaee !important;
-}
-
-.tabs-container > li {
-  background: none !important;
-}
-.tabs-container > li.active {
-  border: 1px solid #d2d4d8;
-  border-top: none;
-  border-bottom: none;
-  background: var(--floatBgColor) !important;
-}
-.tabs-container > li.active:after {
-  top: 0 !important;
-  bottom: auto !important;
-  background: var(--themeColor) !important;
+:root {
+  /* Tab bar merges with the editor (base); borders use crust. */
+  --tabBarBorderColor: #dce0e8;
 }
 
 /* ------------------------------------ */

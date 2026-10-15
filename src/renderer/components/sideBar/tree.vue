@@ -7,19 +7,13 @@
     <!-- Opened tabs -->
     <div class="opened-files">
       <div class="title">
-        <svg class="icon icon-arrow" :class="{'fold': !showOpenedFiles}" aria-hidden="true" @click.stop="toggleOpenedFiles()">
-          <use xlink:href="#icon-arrow"></use>
-        </svg>
+        <lucide-icon name="chevron-right" :size="14" class="icon-arrow" :class="{'fold': !showOpenedFiles}" @click.native.stop="toggleOpenedFiles()"></lucide-icon>
         <span class="default-cursor text-overflow" @click.stop="toggleOpenedFiles()">Opened files</span>
         <a href="javascript:;" @click.stop="saveAll(false)" title="Save All">
-          <svg class="icon" aria-hidden="true">
-            <use xlink:href="#icon-save-all"></use>
-          </svg>
+          <lucide-icon name="save-all" :size="14"></lucide-icon>
         </a>
         <a href="javascript:;" @click.stop="saveAll(true)" title="Close All">
-          <svg class="icon" aria-hidden="true">
-            <use xlink:href="#icon-close-all"></use>
-          </svg>
+          <lucide-icon name="list-x" :size="14"></lucide-icon>
         </a>
       </div>
       <div class="opened-files-list" v-show="showOpenedFiles">
@@ -38,9 +32,7 @@
       class="project-tree" v-if="projectTree"
     >
       <div class="title">
-        <svg class="icon icon-arrow" :class="{'fold': !showDirectories}" aria-hidden="true" @click.stop="toggleDirectories()">
-          <use xlink:href="#icon-arrow"></use>
-        </svg>
+        <lucide-icon name="chevron-right" :size="14" class="icon-arrow" :class="{'fold': !showDirectories}" @click.native.stop="toggleDirectories()"></lucide-icon>
         <span class="default-cursor text-overflow" @click.stop="toggleDirectories()">{{ projectTree.name }}</span>
       </div>
       <div class="tree-wrapper" v-show="showDirectories">
@@ -51,7 +43,7 @@
         ></folder>
         <input
           type="text" class="new-input" v-show="createCache.dirname === projectTree.pathname"
-          :style="{'margin-left': `${depth * 5 + 15}px` }"
+          :style="{'margin-left': `${depth * 16 + 12}px` }"
           ref="input"
           v-model="createName"
           @keydown.enter="handleInputEnter"
@@ -165,76 +157,75 @@ export default {
 </script>
 
 <style scoped>
-  .list-item {
-    display: inline-block;
-    margin-right: 10px;
-  }
-
   .list-enter-active, .list-leave-active {
-    transition: all .2s;
+    transition: all var(--duration-normal) var(--ease);
   }
-  .list-enter, .list-leave-to
-  /* .list-leave-active for below version 2.1.8 */ {
+  .list-enter, .list-leave-to {
     opacity: 0;
-    transform: translateX(-50px);
+    transform: translateX(-12px);
   }
   .tree-view {
-    font-size: 14px;
-    color: var(--sideBarColor);
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
     display: flex;
     flex-direction: column;
     height: 100%;
   }
   .tree-view > .title {
     height: 35px;
-    line-height: 35px;
-    padding: 0 15px;
-    display: flex;
     flex-shrink: 0;
-    flex-direction: row-reverse;
   }
 
   .icon-arrow {
-    margin-right: 5px;
-    transition: all .25s ease-out;
+    margin-right: var(--space-1);
+    color: var(--text-muted);
+    transition: transform var(--duration-normal) var(--ease);
     transform: rotate(90deg);
-    fill: var(--sideBarTextColor);
   }
-
   .icon-arrow.fold {
     transform: rotate(0);
   }
 
-  .opened-files,
-  .project-tree {
-    & > .title {
-      height: 30px;
-      line-height: 30px;
-      font-size: 14px;
+  /* Section headers */
+  .opened-files > .title,
+  .project-tree > .title {
+    display: flex;
+    align-items: center;
+    height: 28px;
+    margin: var(--space-1) var(--space-2) 0;
+    padding: 0 var(--space-1) 0 var(--space-1);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    & > span {
+      flex: 1;
+      user-select: none;
+    }
+    & > a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      margin-left: 2px;
+      text-decoration: none;
+      color: var(--text-muted);
+      border-radius: var(--radius-xs);
+      opacity: 0;
+      transition: opacity var(--duration-fast) var(--ease), background-color var(--duration-fast) var(--ease);
+      &:hover {
+        color: var(--text-primary);
+        background: var(--surface-active);
+      }
+    }
+    &:hover > a {
+      opacity: 1;
     }
   }
 
-  .opened-files .title {
-    padding-right: 15px;
-    display: flex;
-    align-items: center;
-    & > span {
-      flex: 1;
-    }
-    & > a {
-      display: none;
-      text-decoration: none;
-      color: var(--sideBarColor);
-      margin-left: 8px;
-    }
-  }
-  .opened-files div.title:hover > a,
-  .opened-files div.title > a:hover {
-    display: block;
-    &:hover {
-      color: var(--highlightThemeColor);
-    }
-  }
   .opened-files {
     display: flex;
     flex-direction: column;
@@ -245,9 +236,7 @@ export default {
   .opened-files .opened-files-list {
     max-height: 200px;
     overflow: auto;
-    &::-webkit-scrollbar:vertical {
-      width: 8px;
-    }
+    padding: 2px var(--space-2);
     flex: 1;
   }
 
@@ -255,39 +244,13 @@ export default {
     display: flex;
     flex-direction: column;
     overflow: auto;
-    & > .title {
-      padding-right: 15px;
-      display: flex;
-      align-items: center;
-      & > span {
-        flex: 1;
-        user-select: none;
-      }
-      & > a {
-        pointer-events: auto;
-        cursor: pointer;
-        margin-left: 8px;
-        color: var(--sideBarIconColor);
-        opacity: 0;
-      }
-      & > a:hover {
-        color: var(--highlightThemeColor);
-      }
-      & > a.active {
-        color: var(--highlightThemeColor);
-      }
-    }
+    margin-top: var(--space-2);
+    flex: 1;
     & > .tree-wrapper {
       overflow: auto;
       flex: 1;
-      &::-webkit-scrollbar:vertical {
-        width: 8px;
-      }
+      padding: 2px var(--space-2) var(--space-4);
     }
-    flex: 1;
-  }
-  .project-tree div.title:hover > a {
-    opacity: 1;
   }
   .open-project {
     flex: 1;
@@ -301,20 +264,20 @@ export default {
       flex-direction: column;
       align-items: center;
     }
-    & button.button-primary {
-      display: block;
-    }
   }
   .new-input {
     outline: none;
-    height: 22px;
-    margin: 5px 0;
-    padding: 0 6px;
-    color: var(--sideBarColor);
-    border: 1px solid var(--floatBorderColor);
-    background: var(--floatBorderColor);
+    height: 24px;
+    margin: 2px 0;
+    padding: 0 var(--space-2);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    border: 1px solid var(--themeColor);
+    background: var(--surface-base);
     width: calc(100% - 45px);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
+    box-shadow: var(--focus-ring);
   }
   .tree-wrapper {
     position: relative;
@@ -323,15 +286,17 @@ export default {
     position: absolute;
     top: 0;
     left: 0;
-    font-size: 14px;
+    right: 0;
+    font-size: var(--font-size-md);
+    color: var(--text-muted);
     display: flex;
     flex-direction: column;
     padding-top: 40px;
     align-items: center;
     & > a {
-      color: var(--highlightThemeColor);
+      color: var(--text-accent);
       text-align: center;
-      margin-top: 15px;
+      margin-top: var(--space-3);
       text-decoration: none;
     }
   }

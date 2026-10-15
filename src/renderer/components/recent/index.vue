@@ -41,12 +41,12 @@ export default {
       flex-direction: column;
       align-items: center;
       & svg {
-        width: 200px;
+        width: 160px;
         fill: var(--themeColor);
+        opacity: .5;
       }
       & button.button-primary {
-        display: block;
-        margin-top: 20px;
+        margin-top: var(--space-6);
       }
     }
   }

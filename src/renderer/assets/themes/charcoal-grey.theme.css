@@ -74,26 +74,9 @@
   --editorAreaWidth: 750px;
 }
 
-::-webkit-scrollbar,
-::-webkit-scrollbar-corner {
-  background: var(--editorBgColor);
-}
-::-webkit-scrollbar:vertical {
-  width: 10px;
-}
-::-webkit-scrollbar:vertical:hover {
-  width: 12px;
-}
-::-webkit-scrollbar-thumb {
-  background: #5b5f65;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #696d72;
-}
-
-.ag-front-menu .submenu,
-.ag-float-wrapper {
-  box-shadow: 0 4px 8px 0 var(--floatShadow) !important;
+:root {
+  --scrollbarThumbColor: #5b5f65;
+  --scrollbarThumbHoverColor: #696d72;
 }
 
 .title-bar .frameless-titlebar-button > div > svg {
@@ -113,31 +96,8 @@
   box-shadow: none !important;
 }
 
-.editor-tabs {
-  box-shadow: none !important;
-}
-.editor-tabs:after {
-  position: absolute;
-  content: '';
-  border-bottom: 1px solid #272a2f;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1;
-}
-.editor-tabs ul.tabs-container:after {
-  position: absolute;
-  content: '';
-  border-bottom: 1px solid #272a2f;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-}
-
-.tabs-container > li,
-.tabs-container > li.active {
-  background: var(--editorBgColor) !important;
+:root {
+  --tabBarBorderColor: #272a2f;
 }
 
 .open-project button,

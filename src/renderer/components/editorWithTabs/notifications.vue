@@ -21,9 +21,7 @@
           class="inline-button"
           @click.stop="handleClick(false)"
         >
-          <svg class="close-icon icon" aria-hidden="true">
-            <use id="default-close-icon" xlink:href="#icon-close-small"></use>
-          </svg>
+          <lucide-icon name="x" :size="14"></lucide-icon>
         </span>
       </div>
     </div>
@@ -74,11 +72,14 @@ export default {
     position: relative;
     display: flex;
     flex-direction: row;
+    align-items: center;
     max-height: 100px;
-    margin-top: 4px;
+    margin: var(--space-2) var(--space-3) 0;
+    padding: 6px var(--space-2) 6px var(--space-3);
     background: var(--notificationPrimaryBg);
     color: var(--notificationPrimaryColor);
-    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
     user-select: none;
     overflow: hidden;
     &.warn {
@@ -91,33 +92,36 @@ export default {
     }
   }
   .msg {
-    font-size: 13px;
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-ui);
     flex: 1;
   }
   .controls {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    margin-left: var(--space-2);
     & > div {
       display: flex;
       flex-direction: row;
-    }
-    & .inline-button:not(:last-child) {
-      margin-right: 3px;
+      gap: var(--space-1);
     }
     & .inline-button {
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 24px;
+      min-width: 24px;
       height: 24px;
-      font-size: 12px;
+      padding: 0 6px;
+      box-sizing: border-box;
+      font-size: var(--font-size-sm);
+      font-weight: 500;
       cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-sm);
+      transition: background-color var(--duration-fast) var(--ease);
     }
     & .inline-button:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, .18);
     }
   }
 </style>

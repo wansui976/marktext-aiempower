@@ -1,18 +1,20 @@
 .ag-quick-insert {
-  width: 360px;
-  max-height: 307px;
-  padding: 0 0 20px 0;
+  width: 340px;
+  max-height: 320px;
+  padding: 0 6px 6px;
+  box-sizing: border-box;
   overflow-y: auto;
 }
 
 .ag-quick-insert .title {
-  color: var(--editorColor);
-  line-height: 120%;
-  font-size: 14px;
-  padding: 10px 14px 10px 14px;
+  color: var(--editorColor50);
+  line-height: 1;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 12px 8px 6px;
   display: flex;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: .06em;
   position: sticky;
   top: 0;
   background: var(--floatBgColor);
@@ -22,7 +24,9 @@
 .ag-quick-insert .item {
   display: flex;
   flex-direction: row;
-  padding: 6px 0;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm, 6px);
   cursor: pointer;
   user-select: none;
 }
@@ -32,71 +36,76 @@
 }
 .ag-quick-insert .active,
 .ag-quick-insert div.item:hover {
- background-color: var(--floatHoverColor);
+  background-color: var(--floatHoverColor);
 }
 
 .ag-quick-insert .no-result {
-  margin-top: 20px;
-  padding: 0 20px;
-  font-size: 14px;
+  margin-top: 16px;
+  padding: 0 16px;
+  font-size: 13px;
   text-align: center;
-  color: var(--themeColor);
+  color: var(--editorColor50);
 }
 
 .ag-quick-insert .icon-container {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--floatBorderColor);
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--editorColor10);
+  background: var(--editorBgColor);
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
-  border-radius: 6px;
-  margin-left: 14px;
+  border-radius: var(--radius-sm, 6px);
+  box-sizing: border-box;
 }
 
 .ag-quick-insert .icon-container > i.icon {
   display: inline-block;
   position: relative;
-  height:20px;
-  width: 20px;
+  height: 18px;
+  width: 18px;
   overflow: hidden;
   color: var(--iconColor);
-  opacity: .5;
-  transition: all .25s ease-in-out;
 }
 
 .ag-quick-insert .icon-container > i.icon > i[class^=icon-] {
   display: inline-block;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(20px 0 currentColor);
+  filter: drop-shadow(18px 0 currentColor);
   position: relative;
-  left: -20px;
+  left: -18px;
 }
 
 .ag-quick-insert .description {
-  margin-left: 8px;
+  margin-left: 10px;
   flex: 1;
+  min-width: 0;
 }
 
 .ag-quick-insert .short-cut {
-  width: 70px;
-  margin-right: 20px;
-  flex-shrink: 1;
+  flex-shrink: 0;
+  margin-right: 4px;
   text-align: right;
   color: var(--editorColor50);
-  font-size: 14px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: .02em;
 }
 
 .ag-quick-insert .big-title {
-  font-size: 14px;
-  color: var(--editorColor);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--editorColor80);
 }
 
 .ag-quick-insert .sub-title {
   font-size: 12px;
+  line-height: 1.4;
   color: var(--editorColor50);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ag-quick-insert .hide {

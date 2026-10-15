@@ -61,7 +61,7 @@ export default {
 
 <style>
 .pref-container {
-  --prefSideBarWidth: 280px;
+  --prefSideBarWidth: 220px;
 
   width: 100vw;
   height: 100vh;
@@ -73,9 +73,13 @@ export default {
   display: flex;
   background: var(--editorBgColor);
 
+  font-family: var(--font-ui);
+
   & h4 {
-    margin: 0;
-    font-weight: normal;
+    margin: var(--space-2) 0 var(--space-5);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
   & h5 {
@@ -97,7 +101,7 @@ export default {
       -webkit-app-region: drag;
     }
     & .pref-setting {
-      padding: 50px 20px;
+      padding: 0 var(--space-6) 48px;
       padding-top: var(--titleBarHeight);
       flex: 1;
       height: calc(100vh - var(--titleBarHeight));

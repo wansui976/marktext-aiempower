@@ -1,9 +1,9 @@
 .ag-float-wrapper.ag-image-toolbar-container {
   overflow: visible;
-  border-radius: 2px;
+  border-radius: var(--radius-md, 8px);
 }
 .ag-image-toolbar {
-  height: 30px;
+  height: 36px;
   width: 240px;
 }
 
@@ -14,47 +14,39 @@
 }
 
 .ag-image-toolbar ul {
+  height: 100%;
   padding: 0 7px;
   display: flex;
+  align-items: center;
 }
 
 .ag-image-toolbar li.item {
   position: relative;
   list-style: none;
   width: 28px;
-  height: 30px;
+  height: 28px;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
+  border-radius: var(--radius-sm, 6px);
   cursor: pointer;
 }
 
 .ag-image-toolbar li.item div.tooltip {
-  min-width: 100px;
   box-sizing: border-box;
-  height: 30px;
+  height: 26px;
+  padding: 0 8px;
+  white-space: nowrap;
   text-align: center;
-  display: block;
   position: absolute;
-  top: -38px;
+  top: -36px;
   background: var(--floatBgColor);
-  border-radius: 2px;
-  line-height: 30px;
-  color: var(--editorColor);
-  box-shadow: var(--floatShadow);
+  border-radius: var(--radius-sm, 6px);
+  line-height: 26px;
+  font-size: 12px;
+  color: var(--editorColor80);
+  box-shadow: var(--shadow-2, var(--floatShadow));
   display: none;
-}
-
-.ag-image-toolbar li.item div.tooltip::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  display: block;
-  background: var(--floatBgColor);
-  position: absolute;
-  bottom: -1px;
-  transform: rotate(-45deg) translateX(-50%);
-  left: 50%;
 }
 
 .ag-image-toolbar li.item:hover {
@@ -81,7 +73,7 @@
   height: 16px;
   background: var(--editorColor10);
   right: -10px;
-  top: 7px;
+  top: 6px;
 }
 
 .ag-image-toolbar li.item.delete {
@@ -96,7 +88,7 @@
   height: 16px;
   background: var(--editorColor10);
   left: -10px;
-  top: 7px;
+  top: 6px;
 }
 
 .ag-image-toolbar li.item .icon-wrapper {

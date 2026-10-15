@@ -1,0 +1,80 @@
+/*
+ * Design tokens shared by all application chrome (not the exported document).
+ *
+ * Semantic tokens are derived from the legacy theme variables so that every
+ * built-in and user theme keeps working. Themes may override any token below.
+ */
+:root {
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  /* Radius */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Typography */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans", "Helvetica Neue", Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 14px;
+  --line-height-ui: 1.45;
+
+  /* Motion */
+  --ease: cubic-bezier(.2, 0, 0, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+
+  /* Elevation */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .06);
+  --shadow-2: 0 0 0 1px var(--border-subtle), 0 4px 12px rgba(0, 0, 0, .08);
+  --shadow-3: 0 0 0 1px var(--border-subtle), 0 12px 32px rgba(0, 0, 0, .14), 0 2px 6px rgba(0, 0, 0, .06);
+
+  /* Semantic surfaces */
+  --surface-base: var(--editorBgColor);
+  --surface-sidebar: var(--sideBarBgColor);
+  --surface-overlay: var(--floatBgColor);
+  --surface-hover: var(--sideBarItemHoverBgColor);
+  --surface-active: var(--editorColor10);
+  --surface-selected: var(--surface-active);
+  --surface-input: var(--inputBgColor);
+
+  /* Semantic borders */
+  --border-subtle: var(--editorColor10);
+  --border-strong: var(--editorColor30);
+
+  /* Semantic text */
+  --text-primary: var(--sideBarTitleColor);
+  --text-secondary: var(--sideBarColor);
+  --text-muted: var(--sideBarTextColor);
+  --text-accent: var(--themeColor);
+
+  /* Tab bar (themes may override the colors) */
+  --tabBarBgColor: var(--editorBgColor);
+  --tabBarBorderColor: var(--border-subtle);
+  --tabBarHeight: 36px;
+
+  /* Tint over the macOS vibrancy material when the sidebar is translucent */
+  --sideBarVibrancyTint: rgba(255, 255, 255, .35);
+
+  /* Controls */
+  --control-height: 30px;
+  --control-height-sm: 26px;
+  --focus-ring: 0 0 0 2px var(--themeColor30);
+}
+
+body.dark {
+  --sideBarVibrancyTint: rgba(0, 0, 0, .25);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-2: 0 0 0 1px var(--border-subtle), 0 4px 12px rgba(0, 0, 0, .3);
+  --shadow-3: 0 0 0 1px var(--border-subtle), 0 12px 32px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .25);
+}

@@ -1,15 +1,15 @@
 .ag-footnote-tool-container {
   width: 300px;
-  border-radius: 5px;
+  border-radius: var(--radius-md, 8px);
 }
 
 .ag-footnote-tool-container .ag-footnote-tool > div {
   display: flex;
-  height: 35px;
+  height: 36px;
   align-items: center;
-  color: var(--editorColor);
+  color: var(--editorColor80);
   font-size: 12px;
-  padding: 0 10px;
+  padding: 0 12px;
 }
 
 .ag-footnote-tool .text {
@@ -20,9 +20,16 @@
 }
 
 .ag-footnote-tool .btn {
-  width: 40px;
   display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs, 4px);
+  color: var(--themeColor);
+  font-weight: 500;
   cursor: pointer;
+}
+.ag-footnote-tool .btn:hover {
+  background: var(--floatHoverColor);
 }
 
 .ag-footnote-tool .icon-wrapper {

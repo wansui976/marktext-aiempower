@@ -16,9 +16,7 @@
             :key="index"
           >
             {{ path }}
-            <svg class="icon" aria-hidden="true">
-              <use xlink:href="#icon-arrow-right"></use>
-            </svg>
+            <lucide-icon name="chevron-right" :size="12" class="path-separator"></lucide-icon>
           </span>
           <span
             class="filename"
@@ -256,7 +254,6 @@ export default {
   .title-bar-editor-bg {
     height: var(--titleBarHeight);
     background: var(--editorBgColor);
-    border-bottom: 1px solid var(--editorColor10);
     position: relative;
     left: 0;
     top: 0;
@@ -268,17 +265,17 @@ export default {
     background: transparent;
     height: var(--titleBarHeight);
     box-sizing: border-box;
-    color: var(--sideBarColor);
+    color: var(--text-muted);
     position: fixed;
     left: 0;
     top: 0;
     right: 0;
     z-index: 2;
-    transition: color .4s ease-in-out;
+    transition: color var(--duration-normal) var(--ease);
     cursor: default;
   }
   .active {
-    color: var(--sideBarTitleColor);
+    color: var(--text-secondary);
   }
   img {
     height: 90%;
@@ -289,13 +286,18 @@ export default {
     padding: 0 142px;
     height: 100%;
     line-height: var(--titleBarHeight);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     text-align: center;
-    transition: all .25s ease-in-out;
+    transition: color var(--duration-normal) var(--ease);
     & .filename {
-      font-weight: 600;
-      color: var(--sideBarTitleColor);
-      transition: all .25s ease-in-out;
+      font-weight: 500;
+      color: var(--text-primary);
+      transition: color var(--duration-fast) var(--ease);
+    }
+    & .path-separator {
+      margin: 0 2px;
+      opacity: .6;
+      vertical-align: -2px;
     }
     &::after {
       content: '';
@@ -320,21 +322,24 @@ export default {
     color: var(--themeColor);
   }
 
-  .active .save-dot {
-    margin-left: 3px;
-    width: 7px;
-    height: 7px;
+  .save-dot {
     display: inline-block;
+    margin-left: 6px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: var(--highlightThemeColor);
-    opacity: .7;
+    vertical-align: 1px;
+    background: var(--themeColor);
     visibility: hidden;
   }
-  .active .save-dot.show {
+  .save-dot.show {
     visibility: visible;
   }
+  .title-bar:not(.active) .save-dot {
+    opacity: .5;
+  }
   .title:hover {
-    color: var(--sideBarTitleColor);
+    color: var(--text-secondary);
   }
 
   .left-toolbar {
@@ -357,26 +362,26 @@ export default {
     align-items: center;
     flex-direction: row-reverse;
     & .item {
-      margin-right: 10px;
+      margin-right: var(--space-2);
     }
   }
 
   .word-count {
     cursor: pointer;
-    font-size: 14px;
-    color: var(--sideBarColor);
+    font-size: var(--font-size-sm);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
     text-align: center;
-    line-height: 24px;
-    padding: 0 5px;
+    line-height: 22px;
     box-sizing: border-box;
-    transition: all .25s ease-in-out;
     & > .text-center-vertical {
-      padding: 2px 5px;
-      border-radius: 3px;
+      padding: 2px var(--space-2);
+      border-radius: var(--radius-sm);
+      transition: background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
     }
     &:hover > span {
-      background: var(--sideBarBgColor);
-      color: var(--sideBarTitleColor);
+      background: var(--surface-hover);
+      color: var(--text-primary);
     }
   }
 
@@ -389,6 +394,7 @@ export default {
     display: block;
     width: 46px;
     height: var(--titleBarHeight);
+    transition: background-color var(--duration-fast) var(--ease);
   }
   .frameless-titlebar-button > div {
     position: absolute;
@@ -398,20 +404,20 @@ export default {
     transform: translateX(-50%) translateY(-50%);
   }
   .frameless-titlebar-menu {
-    color: var(--sideBarColor);
+    color: var(--text-secondary);
   }
   .frameless-titlebar-close:hover {
-    background-color: rgb(228, 79, 79);
+    background-color: #e81123;
   }
   .frameless-titlebar-minimize:hover,
   .frameless-titlebar-toggle:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--surface-active);
   }
   .frameless-titlebar-button svg {
-    fill: #000000
+    fill: var(--text-secondary);
   }
   .frameless-titlebar-close:hover svg {
-    fill: #ffffff
+    fill: #ffffff;
   }
 
   .text-center-vertical {
@@ -423,13 +429,17 @@ export default {
 
 <style>
 .title-item {
-  height: 28px;
-  line-height: 28px;
+  display: flex;
+  justify-content: space-between;
+  height: 22px;
+  line-height: 22px;
   & .front {
-    opacity: .7;
+    color: var(--text-muted);
   }
   & .text {
-    margin-left: 10px;
+    margin-left: var(--space-4);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
   }
 }
 </style>
